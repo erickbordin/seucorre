@@ -1,6 +1,4 @@
 Criado por Erick Bordin e Sarah Nour
-<<<<<<< Updated upstream
-=======
 
 para rodar 
 1- mvn clean compile (para subir o projeto)
@@ -8,4 +6,4 @@ para rodar
 
 tambem tem esse comando
 ./mvnw clean spring-boot:run
->>>>>>> Stashed changes
+

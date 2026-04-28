@@ -24,9 +24,8 @@ public class Usuario {
     
     private LocalDateTime createdAt = LocalDateTime.now();
 
-    
     public boolean estaAptoParaTreinar() {
-        
+      
         return nome != null && !nome.isEmpty();
     }
 }
