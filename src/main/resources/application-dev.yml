@@ -1,0 +1,22 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/seucorre_db
+    username: user
+    password: password
+  jpa:
+    hibernate:
+      ddl-auto: validate # Flyway gerencia o schema
+    show-sql: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+  flyway:
+    enabled: true
+  ai:
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY:mock-key} # Mock para dev
+
+logging:
+  level:
+    com.seucorre: DEBUG
