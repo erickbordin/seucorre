@@ -38,7 +38,10 @@ public class ZonaFC {
     }
 
     public boolean contemFrequencia(int fc) {
-        return fc >= minBpm && fc <= maxBpm;
+        if (numero == 5) {
+            return fc >= minBpm && fc <= maxBpm;
+        }
+        return fc >= minBpm && fc < maxBpm;
     }
 
     public int getAmplitude() {
