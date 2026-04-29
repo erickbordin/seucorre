@@ -15,7 +15,7 @@ public class UsuarioAppService {
 
     public Usuario registrar(UsuarioCadastroRequest request) {
         Usuario usuario = new Usuario();
-        usuario.setId(UuidGenerator.generate());
+        usuario.setId(UuidGenerator.generateUuid());
         usuario.setNome(request.nome());
         usuario.setEmail(request.email());
         usuario.setSenha(request.senha());

@@ -18,7 +18,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 public class Usuario implements UserDetails {
     
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private UUID id;
     
     private String nome;
