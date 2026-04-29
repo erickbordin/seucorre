@@ -13,6 +13,9 @@ public class IMC {
      * Factory Method para instanciar e calcular o IMC.
      */
     public static IMC calcular(double peso, double altura) {
+        if (!Double.isFinite(peso) || !Double.isFinite(altura)) {
+            throw new IllegalArgumentException("Peso e altura devem ser valores finitos.");
+        }
         if (peso <= 0 || altura <= 0) {
             throw new IllegalArgumentException("Peso e altura devem ser maiores que zero.");
         }
