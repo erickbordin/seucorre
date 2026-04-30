@@ -16,7 +16,7 @@
     <description>API para Geração de Treinos de Corrida com IA</description>    
 
     <properties>
-        <java.version>21</java.version>
+        <java.version>17</java.version>
         <spring-ai.version>0.8.1</spring-ai.version>
     </properties>
 
