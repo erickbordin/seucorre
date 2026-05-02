@@ -1,9 +1,13 @@
 Criado por Erick Bordin e Sarah Nour
 
-para rodar 
-1- mvn clean compile (para subir o projeto)
-2- docker compose up -d (para subir o banco)
+como subir o projeto:
+1- abra o docker desktop
+2- de um docker compose up -d no terminal do projeto (para subir o banco)
+3- de um ./mvnw clean spring-boot:run (para subir o spring)
 
-tambem tem esse comando
-./mvnw clean spring-boot:run
+para usar o openclaude
+1- docker attach openclaude-java
+2- docker ps
+3- docker exec -it nomedodocker bash
+4- openclaude
 
