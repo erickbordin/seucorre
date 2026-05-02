@@ -3,6 +3,7 @@ package com.seucorre.usuario.api;
 import com.seucorre.usuario.application.dto.LoginRequest;
 import com.seucorre.infra.security.JwtService;
 import com.seucorre.usuario.infrastructure.UsuarioRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,10 +13,12 @@ public class AuthController {
 
     private final UsuarioRepository repository;
     private final JwtService tokenService;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthController(UsuarioRepository repository, JwtService tokenService) {
+    public AuthController(UsuarioRepository repository, JwtService tokenService, PasswordEncoder passwordEncoder) {
         this.repository = repository;
         this.tokenService = tokenService;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @PostMapping("/login")
@@ -23,8 +26,7 @@ public class AuthController {
         var usuario = this.repository.findByEmail(data.email())
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
 
-        // Por enquanto, validamos a senha de forma simples (depois usaremos BCrypt)
-        if (data.senha().equals(usuario.getSenha())) {
+        if (passwordEncoder.matches(data.senha(), usuario.getSenhaHash())) {
             var token = tokenService.gerarToken(usuario);
             return ResponseEntity.ok(new LoginResponse(token));
         }
