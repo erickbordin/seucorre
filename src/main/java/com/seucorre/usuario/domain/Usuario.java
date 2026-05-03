@@ -59,7 +59,7 @@ public class Usuario implements UserDetails {
     @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    private List<Relogio> relogios = new ArrayList<>();
+    private List<DispositivoExterno> dispositivos = new ArrayList<>();
 
     @Column(name = "criado_em", updatable = false)
     private LocalDateTime criadoEm = LocalDateTime.now();
@@ -113,17 +113,17 @@ public class Usuario implements UserDetails {
         condicoesSaude.add(condicaoSaude);
     }
 
-    public void substituirRelogios(List<Relogio> novosRelogios) {
-        relogios.clear();
-        if (novosRelogios == null) {
+    public void substituirDispositivos(List<DispositivoExterno> novosDispositivos) {
+        dispositivos.clear();
+        if (novosDispositivos == null) {
             return;
         }
-        novosRelogios.forEach(this::vincularRelogio);
+        novosDispositivos.forEach(this::vincularDispositivo);
     }
 
-    public void vincularRelogio(Relogio relogio) {
-        relogio.setUsuario(this);
-        relogios.add(relogio);
+    public void vincularDispositivo(DispositivoExterno dispositivoExterno) {
+        dispositivoExterno.setUsuario(this);
+        dispositivos.add(dispositivoExterno);
     }
 
     public IMC calcularIMC() {

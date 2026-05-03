@@ -1,8 +1,11 @@
 package com.seucorre.usuario.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.seucorre.shared.domain.enums.PlataformaRelogio;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
@@ -19,7 +22,7 @@ import java.util.UUID;
 @Entity
 @Table(name = "relogio")
 @Data
-public class Relogio {
+public class DispositivoExterno {
 
     @Id
     private UUID id;
@@ -30,7 +33,9 @@ public class Relogio {
     @EqualsAndHashCode.Exclude
     private Usuario usuario;
 
-    private String plataforma;
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
+    private PlataformaRelogio plataforma;
 
     @JsonIgnore
     @Column(name = "token_acesso", length = 1000)
@@ -44,6 +49,10 @@ public class Relogio {
         return tokenAcesso != null
                 && tokenExpiresAt != null
                 && tokenExpiresAt.isAfter(LocalDateTime.now());
+    }
+
+    public void renovarToken(String tokenAcesso) {
+        this.tokenAcesso = tokenAcesso;
     }
 
     @PrePersist

@@ -8,5 +8,5 @@ public record OnboardingRequest(
         PerfilAtletaRequest perfilAtleta,
         PerfilCorridaRequest perfilCorrida,
         List<CondicaoSaudeRequest> condicoesSaude,
-        List<RelogioRequest> relogios
+        List<DispositivoExternoRequest> dispositivos
 ) {}
