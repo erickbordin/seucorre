@@ -2,6 +2,7 @@ package com.seucorre.usuario.api;
 
 import com.seucorre.infra.security.JwtService;
 import com.seucorre.usuario.application.dto.LoginRequest;
+import com.seucorre.usuario.application.dto.LoginResponse;
 import com.seucorre.usuario.domain.Usuario;
 import com.seucorre.usuario.infrastructure.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,7 +46,7 @@ class AuthControllerTest {
         ResponseEntity<?> response = controller.login(new LoginRequest("ana@email.com", "senha123"));
 
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
-        assertThat(response.getBody()).isEqualTo(new AuthController.LoginResponse("jwt-token"));
+        assertThat(response.getBody()).isEqualTo(new LoginResponse("jwt-token"));
     }
 
     @Test

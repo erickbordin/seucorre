@@ -1,6 +1,7 @@
 package com.seucorre.usuario.api;
 
 import com.seucorre.usuario.application.dto.LoginRequest;
+import com.seucorre.usuario.application.dto.LoginResponse;
 import com.seucorre.infra.security.JwtService;
 import com.seucorre.usuario.infrastructure.UsuarioRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,7 +34,4 @@ public class AuthController {
 
         return ResponseEntity.badRequest().build();
     }
-
-    // Record interno para facilitar a resposta
-    public record LoginResponse(String token) { }
 }
