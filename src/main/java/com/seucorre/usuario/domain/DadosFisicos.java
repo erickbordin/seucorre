@@ -67,6 +67,17 @@ public class DadosFisicos implements Serializable {
         return BigDecimal.valueOf(vo2).setScale(2, RoundingMode.HALF_UP).doubleValue();
     }
 
+    public String gerarResumoMetricasParaIA() {
+        return "Métricas físicas: peso " + formatarDecimal(pesoKg) + " kg, altura "
+                + formatarDecimal(alturaCm) + " cm, idade " + valorOuNaoInformado(getIdade())
+                + ", gênero " + valorOuNaoInformado(genero)
+                + ", IMC " + resumirImc()
+                + ", FC repouso " + valorOuNaoInformado(fcRepouso)
+                + ", FC máxima " + valorOuNaoInformado(fcMaxima)
+                + ", horas médias de sono " + valorOuNaoInformado(horasSonoMedia)
+                + ", sedentário " + descreverBooleano(sedentario);
+    }
+
     @Transient
     public Integer getIdade() {
         if (dataNascimento == null) {
@@ -111,5 +122,33 @@ public class DadosFisicos implements Serializable {
         if (dataNascimento.isAfter(LocalDate.now())) {
             throw new IllegalArgumentException("Data de nascimento não pode estar no futuro.");
         }
+    }
+
+    private String resumirImc() {
+        if (pesoKg == null || alturaCm == null || pesoKg.signum() <= 0 || alturaCm.signum() <= 0) {
+            return "não informado";
+        }
+
+        IMC imc = calcularIMC();
+        BigDecimal valor = BigDecimal.valueOf(imc.getValor()).setScale(2, RoundingMode.HALF_UP);
+        return valor + " (" + imc.getClassificacao() + ")";
+    }
+
+    private String formatarDecimal(BigDecimal valor) {
+        if (valor == null) {
+            return "não informado";
+        }
+        return valor.setScale(2, RoundingMode.HALF_UP).stripTrailingZeros().toPlainString();
+    }
+
+    private String valorOuNaoInformado(Object valor) {
+        return valor == null ? "não informado" : valor.toString();
+    }
+
+    private String descreverBooleano(Boolean valor) {
+        if (valor == null) {
+            return "não informado";
+        }
+        return Boolean.TRUE.equals(valor) ? "sim" : "não";
     }
 }
