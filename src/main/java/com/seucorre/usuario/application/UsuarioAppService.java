@@ -19,7 +19,6 @@ import com.seucorre.usuario.domain.PerfilAtleta;
 import com.seucorre.usuario.domain.PerfilCorrida;
 import com.seucorre.usuario.domain.Usuario;
 import com.seucorre.usuario.domain.ZonaFCPersistida;
-import com.seucorre.usuario.infrastructure.PerfilCorridaRepository;
 import com.seucorre.usuario.infrastructure.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -33,7 +32,6 @@ import java.util.List;
 public class UsuarioAppService {
 
     private final UsuarioRepository repository;
-    private final PerfilCorridaRepository perfilCorridaRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
@@ -226,18 +224,18 @@ public class UsuarioAppService {
 
     private PerfilCorrida salvarPerfilCorrida(Usuario usuario, PerfilCorrida perfilCorrida) {
         if (perfilCorrida == null) {
-            perfilCorridaRepository.findByUsuarioId(usuario.getId()).ifPresent(perfilCorridaRepository::delete);
+            repository.deletePerfilCorridaByUsuarioId(usuario.getId());
             return null;
         }
         perfilCorrida.setUsuario(usuario);
-        return perfilCorridaRepository.save(perfilCorrida);
+        return repository.savePerfilCorrida(perfilCorrida);
     }
 
     private PerfilCorrida buscarPerfilCorrida(Usuario usuario) {
         if (usuario.getId() == null) {
             return null;
         }
-        return perfilCorridaRepository.findByUsuarioId(usuario.getId()).orElse(null);
+        return repository.findPerfilCorridaByUsuarioId(usuario.getId()).orElse(null);
     }
 
     private void anexarPerfilCorrida(Usuario usuario, PerfilCorrida perfilCorrida) {
