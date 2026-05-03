@@ -11,7 +11,6 @@ import com.seucorre.usuario.domain.ZonaFCPersistida;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -19,7 +18,6 @@ public record UsuarioResponse(
         UUID id,
         String nome,
         String email,
-        String telefone,
         BigDecimal pesoKg,
         BigDecimal alturaCm,
         LocalDate dataNascimento,
@@ -37,8 +35,7 @@ public record UsuarioResponse(
         PerfilCorridaResponse perfilCorrida,
         List<CondicaoSaudeResponse> condicoesSaude,
         List<DispositivoExternoResponse> dispositivos,
-        LocalDateTime criadoEm,
-        LocalDateTime atualizadoEm
+        LocalDate criadoEm
 ) {
 
     public static UsuarioResponse from(Usuario usuario) {
@@ -46,7 +43,6 @@ public record UsuarioResponse(
                 usuario.getId(),
                 usuario.getNome(),
                 usuario.getEmail(),
-                usuario.getTelefone(),
                 usuario.getPesoKg(),
                 usuario.getAlturaCm(),
                 usuario.getDataNascimento(),
@@ -61,11 +57,10 @@ public record UsuarioResponse(
                 usuario.getFcRepouso(),
                 usuario.getFcMaxima(),
                 usuario.estaAptoParaTreinar(),
-                PerfilCorridaResponse.from(usuario.getPerfilCorrida()),
+                PerfilCorridaResponse.from(usuario.getPerfilAtleta() == null ? null : usuario.getPerfilAtleta().getPerfilCorrida()),
                 usuario.getCondicoesSaude().stream().map(CondicaoSaudeResponse::from).toList(),
                 usuario.getDispositivos().stream().map(DispositivoExternoResponse::from).toList(),
-                usuario.getCriadoEm(),
-                usuario.getAtualizadoEm()
+                usuario.getCriadoEm()
         );
     }
 

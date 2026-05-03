@@ -19,6 +19,7 @@ import com.seucorre.usuario.domain.PerfilAtleta;
 import com.seucorre.usuario.domain.PerfilCorrida;
 import com.seucorre.usuario.domain.Usuario;
 import com.seucorre.usuario.domain.ZonaFCPersistida;
+import com.seucorre.usuario.infrastructure.PerfilCorridaRepository;
 import com.seucorre.usuario.infrastructure.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -32,6 +33,7 @@ import java.util.List;
 public class UsuarioAppService {
 
     private final UsuarioRepository repository;
+    private final PerfilCorridaRepository perfilCorridaRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Transactional
@@ -45,7 +47,8 @@ public class UsuarioAppService {
         usuario.setNome(request.nome());
         usuario.setEmail(request.email());
         usuario.setSenhaHash(passwordEncoder.encode(request.senha()));
-        usuario.setRole("USER");
+
+        PerfilCorrida perfilCorrida = toPerfilCorrida(request.perfilCorrida());
 
         aplicarOnboarding(usuario, new OnboardingRequest(
                 request.telefone(),
@@ -54,9 +57,12 @@ public class UsuarioAppService {
                 request.perfilCorrida(),
                 request.condicoesSaude(),
                 request.dispositivos()
-        ));
+        ), perfilCorrida);
 
-        return UsuarioResponse.from(repository.save(usuario));
+        Usuario usuarioSalvo = repository.save(usuario);
+        PerfilCorrida perfilCorridaSalvo = salvarPerfilCorrida(usuarioSalvo, perfilCorrida);
+        anexarPerfilCorrida(usuarioSalvo, perfilCorridaSalvo);
+        return UsuarioResponse.from(usuarioSalvo);
     }
 
     @Transactional
@@ -64,27 +70,34 @@ public class UsuarioAppService {
         Usuario usuario = repository.findById(usuarioId)
                 .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado."));
 
-        aplicarOnboarding(usuario, request);
-        return UsuarioResponse.from(repository.save(usuario));
+        PerfilCorrida perfilCorrida = mergePerfilCorrida(usuario, request.perfilCorrida());
+        aplicarOnboarding(usuario, request, perfilCorrida);
+
+        Usuario usuarioSalvo = repository.save(usuario);
+        PerfilCorrida perfilCorridaSalvo = salvarPerfilCorrida(usuarioSalvo, perfilCorrida);
+        anexarPerfilCorrida(usuarioSalvo, perfilCorridaSalvo);
+        return UsuarioResponse.from(usuarioSalvo);
     }
 
     @Transactional(readOnly = true)
     public List<UsuarioResponse> listarTodos() {
-        return repository.findAll().stream().map(UsuarioResponse::from).toList();
+        return repository.findAll().stream()
+                .peek(usuario -> anexarPerfilCorrida(usuario, buscarPerfilCorrida(usuario)))
+                .map(UsuarioResponse::from)
+                .toList();
     }
 
-    private void aplicarOnboarding(Usuario usuario, OnboardingRequest request) {
+    private void aplicarOnboarding(Usuario usuario, OnboardingRequest request, PerfilCorrida perfilCorrida) {
         if (request == null) {
             return;
         }
 
-        usuario.setTelefone(request.telefone());
         aplicarDadosFisicos(usuario, request.dadosFisicos());
         aplicarPerfilAtleta(usuario, request.perfilAtleta());
-        usuario.definirPerfilCorrida(toPerfilCorrida(request.perfilCorrida()));
         usuario.substituirCondicoesSaude(toCondicoesSaude(request.condicoesSaude()));
         usuario.substituirDispositivos(toDispositivos(request.dispositivos()));
-        validarOnboarding(usuario);
+        anexarPerfilCorrida(usuario, perfilCorrida);
+        validarOnboarding(usuario, perfilCorrida);
     }
 
     private void aplicarDadosFisicos(Usuario usuario, DadosFisicosRequest dadosFisicos) {
@@ -179,7 +192,7 @@ public class UsuarioAppService {
         }).toList();
     }
 
-    private void validarOnboarding(Usuario usuario) {
+    private void validarOnboarding(Usuario usuario, PerfilCorrida perfilCorrida) {
         if (usuario.getDiasDisponiveisSemana() != null
                 && usuario.getDiasSemanaTreino() != null
                 && !usuario.getDiasSemanaTreino().isBlank()) {
@@ -189,12 +202,47 @@ public class UsuarioAppService {
             }
         }
 
-        if (usuario.getPerfilCorrida() != null) {
-            usuario.getPerfilCorrida().getZonasFc().forEach(zona -> {
+        if (perfilCorrida != null) {
+            perfilCorrida.getZonasFc().forEach(zona -> {
                 if (zona.getFcMin() != null && zona.getFcMax() != null && zona.getFcMax() < zona.getFcMin()) {
                     throw new BusinessRuleException("FC máxima da zona deve ser maior ou igual à FC mínima.");
                 }
             });
+        }
+    }
+
+    private PerfilCorrida mergePerfilCorrida(Usuario usuario, PerfilCorridaRequest request) {
+        PerfilCorrida perfilExistente = buscarPerfilCorrida(usuario);
+        if (request == null) {
+            return perfilExistente;
+        }
+
+        PerfilCorrida perfilCorrida = toPerfilCorrida(request);
+        if (perfilExistente != null) {
+            perfilCorrida.setId(perfilExistente.getId());
+        }
+        return perfilCorrida;
+    }
+
+    private PerfilCorrida salvarPerfilCorrida(Usuario usuario, PerfilCorrida perfilCorrida) {
+        if (perfilCorrida == null) {
+            perfilCorridaRepository.findByUsuarioId(usuario.getId()).ifPresent(perfilCorridaRepository::delete);
+            return null;
+        }
+        perfilCorrida.setUsuario(usuario);
+        return perfilCorridaRepository.save(perfilCorrida);
+    }
+
+    private PerfilCorrida buscarPerfilCorrida(Usuario usuario) {
+        if (usuario.getId() == null) {
+            return null;
+        }
+        return perfilCorridaRepository.findByUsuarioId(usuario.getId()).orElse(null);
+    }
+
+    private void anexarPerfilCorrida(Usuario usuario, PerfilCorrida perfilCorrida) {
+        if (usuario.getPerfilAtleta() != null) {
+            usuario.getPerfilAtleta().atualizarPerfilCorrida(perfilCorrida);
         }
     }
 }
