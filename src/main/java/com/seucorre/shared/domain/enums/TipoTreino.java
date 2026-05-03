@@ -7,11 +7,11 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public enum TipoTreino {
     
-    FORCA("Treino de Força (Musculação)", 1.2),
-    CARDIO("Treino Cardiovascular", 1.0),
-    HIIT("Treino Intervalado de Alta Intensidade", 1.5),
-    MOBILIDADE("Mobilidade e Alongamento", 0.8);
+    INTERVALADO("Alternância entre explosões de alta intensidade e períodos de descanso, ideal para ganhar velocidade e potência.", 9),
+    FARTLAKE("Mistura velocidades diferentes de forma livre e contínua, alternando entre trotes leves e acelerações intensas sem pausas totais.", 8),
+    LONGO("Sessão de maior quilometragem realizada em ritmo lento para preparar o organismo para grandes distâncias.", 7),
+    REGENERATIVO("Corrida de curta duração e intensidade leve, voltada exclusivamente para a recuperação muscular ativa.", 5);
 
     private final String descricao;
-    private final double fatorCarga;
+    private final int fatorIntensidade;
 }

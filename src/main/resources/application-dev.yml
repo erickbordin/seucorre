@@ -1,18 +1,19 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/seucorre_db
-    username: user
-    password: password
+    url: ${DB_URL:jdbc:postgresql://host.docker.internal:5432/seucorre_db}
+    username: ${DB_USERNAME:user}
+    password: ${DB_PASSWORD:password}
   jpa:
     hibernate:
       ddl-auto: validate # Flyway gerencia o schema
     show-sql: true
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:host.docker.internal}
+      port: ${REDIS_PORT:6379}
   flyway:
     enabled: true
+    baseline-on-migrate: false
   ai:
     anthropic:
       api-key: ${ANTHROPIC_API_KEY:mock-key} # Mock para dev

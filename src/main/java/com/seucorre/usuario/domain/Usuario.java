@@ -74,7 +74,7 @@ public class Usuario implements UserDetails {
     @Column(name = "fc_repouso")
     private Integer fcRepouso;
 
-    @Column(name = "fc_maxima")
+    @Column(name = "fc_maximo")
     private Integer fcMaxima;
 
     @OneToOne(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
