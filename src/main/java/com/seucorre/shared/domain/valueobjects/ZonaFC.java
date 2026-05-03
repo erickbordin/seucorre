@@ -37,6 +37,19 @@ public class ZonaFC {
         return new ZonaFC(numero, min, max);
     }
 
+    public static ZonaFC of(int numero, int minBpm, int maxBpm) {
+        if (numero <= 0) {
+            throw new IllegalArgumentException("Zona deve ser positiva.");
+        }
+        if (minBpm <= 0 || maxBpm <= 0) {
+            throw new IllegalArgumentException("Frequências da zona devem ser positivas.");
+        }
+        if (maxBpm < minBpm) {
+            throw new IllegalArgumentException("FC máxima da zona deve ser maior ou igual à FC mínima.");
+        }
+        return new ZonaFC(numero, minBpm, maxBpm);
+    }
+
     public boolean contemFrequencia(int fc) {
         if (numero == 5) {
             return fc >= minBpm && fc <= maxBpm;

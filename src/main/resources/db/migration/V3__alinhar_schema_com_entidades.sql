@@ -14,11 +14,22 @@ ALTER TABLE relogio
 ALTER TABLE zona_fc
     ADD COLUMN IF NOT EXISTS perfil_corrida_id UUID;
 
-UPDATE zona_fc z
-SET perfil_corrida_id = pc.id
-FROM perfil_corrida pc
-WHERE z.perfil_corrida_id IS NULL
-  AND z.usuario_id = pc.usuario_id;
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM information_schema.columns
+        WHERE table_schema = 'public'
+          AND table_name = 'zona_fc'
+          AND column_name = 'usuario_id'
+    ) THEN
+        UPDATE zona_fc z
+        SET perfil_corrida_id = pc.id
+        FROM perfil_corrida pc
+        WHERE z.perfil_corrida_id IS NULL
+          AND z.usuario_id = pc.usuario_id;
+    END IF;
+END $$;
 
 DO $$
 BEGIN
