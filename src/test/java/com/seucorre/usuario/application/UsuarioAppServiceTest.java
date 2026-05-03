@@ -14,7 +14,6 @@ import com.seucorre.usuario.application.dto.UsuarioResponse;
 import com.seucorre.usuario.application.dto.ZonaFCRequest;
 import com.seucorre.usuario.domain.PerfilCorrida;
 import com.seucorre.usuario.domain.Usuario;
-import com.seucorre.usuario.infrastructure.PerfilCorridaRepository;
 import com.seucorre.usuario.infrastructure.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,16 +35,14 @@ import static org.mockito.Mockito.when;
 class UsuarioAppServiceTest {
 
     private UsuarioRepository repository;
-    private PerfilCorridaRepository perfilCorridaRepository;
     private PasswordEncoder passwordEncoder;
     private UsuarioAppService service;
 
     @BeforeEach
     void setUp() {
         repository = mock(UsuarioRepository.class);
-        perfilCorridaRepository = mock(PerfilCorridaRepository.class);
         passwordEncoder = mock(PasswordEncoder.class);
-        service = new UsuarioAppService(repository, perfilCorridaRepository, passwordEncoder);
+        service = new UsuarioAppService(repository, passwordEncoder);
     }
 
     @Test
@@ -53,7 +50,7 @@ class UsuarioAppServiceTest {
         when(repository.existsByEmail("ana@email.com")).thenReturn(false);
         when(passwordEncoder.encode("senha123")).thenReturn("hash-bcrypt");
         when(repository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(perfilCorridaRepository.save(any(PerfilCorrida.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(repository.savePerfilCorrida(any(PerfilCorrida.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
         UsuarioCadastroRequest request = cadastroValido("SEG,QUA,SEX");
 
