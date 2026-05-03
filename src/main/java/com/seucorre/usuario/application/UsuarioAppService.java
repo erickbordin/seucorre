@@ -13,6 +13,8 @@ import com.seucorre.usuario.application.dto.UsuarioCadastroRequest;
 import com.seucorre.usuario.application.dto.UsuarioResponse;
 import com.seucorre.usuario.application.dto.ZonaFCRequest;
 import com.seucorre.usuario.domain.CondicaoSaude;
+import com.seucorre.usuario.domain.DadosFisicos;
+import com.seucorre.usuario.domain.PerfilAtleta;
 import com.seucorre.usuario.domain.PerfilCorrida;
 import com.seucorre.usuario.domain.Relogio;
 import com.seucorre.usuario.domain.Usuario;
@@ -89,25 +91,37 @@ public class UsuarioAppService {
         if (dadosFisicos == null) {
             return;
         }
-        usuario.setPesoKg(dadosFisicos.pesoKg());
-        usuario.setAlturaCm(dadosFisicos.alturaCm());
-        usuario.setDataNascimento(dadosFisicos.dataNascimento());
-        usuario.setGenero(dadosFisicos.genero());
-        usuario.setFcRepouso(dadosFisicos.fcRepouso());
-        usuario.setFcMaxima(dadosFisicos.fcMaxima());
-        usuario.setHorasSonoMedia(dadosFisicos.horasSonoMedia());
-        usuario.setSedentario(dadosFisicos.sedentario());
+        usuario.atualizarDadosFisicos(toDadosFisicos(dadosFisicos));
     }
 
     private void aplicarPerfilAtleta(Usuario usuario, PerfilAtletaRequest perfilAtleta) {
         if (perfilAtleta == null) {
             return;
         }
-        usuario.setNivelCondicionamento(perfilAtleta.nivelCondicionamento());
-        usuario.setObjetivo(perfilAtleta.objetivo());
-        usuario.setJaCorre(perfilAtleta.jaCorre());
-        usuario.setDiasDisponiveisSemana(perfilAtleta.diasDisponiveisSemana());
-        usuario.setDiasSemanaTreino(perfilAtleta.diasSemanaTreino());
+        usuario.atualizarPerfilAtleta(toPerfilAtleta(perfilAtleta));
+    }
+
+    private DadosFisicos toDadosFisicos(DadosFisicosRequest request) {
+        DadosFisicos dadosFisicos = new DadosFisicos();
+        dadosFisicos.setPesoKg(request.pesoKg());
+        dadosFisicos.setAlturaCm(request.alturaCm());
+        dadosFisicos.setDataNascimento(request.dataNascimento());
+        dadosFisicos.setGenero(request.genero());
+        dadosFisicos.setFcRepouso(request.fcRepouso());
+        dadosFisicos.setFcMaxima(request.fcMaxima());
+        dadosFisicos.setHorasSonoMedia(request.horasSonoMedia());
+        dadosFisicos.setSedentario(request.sedentario());
+        return dadosFisicos;
+    }
+
+    private PerfilAtleta toPerfilAtleta(PerfilAtletaRequest request) {
+        PerfilAtleta perfilAtleta = new PerfilAtleta();
+        perfilAtleta.setNivelCondicionamento(request.nivelCondicionamento());
+        perfilAtleta.setObjetivo(request.objetivo());
+        perfilAtleta.setJaCorre(request.jaCorre());
+        perfilAtleta.setDiasDisponiveisSemana(request.diasDisponiveisSemana());
+        perfilAtleta.setDiasSemanaTreino(request.diasSemanaTreino());
+        return perfilAtleta;
     }
 
     private PerfilCorrida toPerfilCorrida(PerfilCorridaRequest request) {
