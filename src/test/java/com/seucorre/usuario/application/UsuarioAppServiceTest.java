@@ -2,12 +2,13 @@ package com.seucorre.usuario.application;
 
 import com.seucorre.shared.domain.enums.NivelCondicionamento;
 import com.seucorre.shared.domain.enums.Objetivo;
+import com.seucorre.shared.domain.enums.PlataformaRelogio;
 import com.seucorre.shared.exception.BusinessRuleException;
 import com.seucorre.usuario.application.dto.CondicaoSaudeRequest;
 import com.seucorre.usuario.application.dto.DadosFisicosRequest;
+import com.seucorre.usuario.application.dto.DispositivoExternoRequest;
 import com.seucorre.usuario.application.dto.PerfilAtletaRequest;
 import com.seucorre.usuario.application.dto.PerfilCorridaRequest;
-import com.seucorre.usuario.application.dto.RelogioRequest;
 import com.seucorre.usuario.application.dto.UsuarioCadastroRequest;
 import com.seucorre.usuario.application.dto.UsuarioResponse;
 import com.seucorre.usuario.application.dto.ZonaFCRequest;
@@ -61,7 +62,7 @@ class UsuarioAppServiceTest {
         assertThat(usuarioSalvo.getPerfilCorrida().getUsuario()).isSameAs(usuarioSalvo);
         assertThat(usuarioSalvo.getPerfilCorrida().getZonasFc()).hasSize(1);
         assertThat(usuarioSalvo.getCondicoesSaude()).hasSize(1);
-        assertThat(usuarioSalvo.getRelogios()).hasSize(1);
+        assertThat(usuarioSalvo.getDispositivos()).hasSize(1);
         assertThat(response.aptoParaTreinar()).isTrue();
         assertThat(response.perfilCorrida().zonasFc()).hasSize(1);
     }
@@ -117,7 +118,7 @@ class UsuarioAppServiceTest {
                         List.of(new ZonaFCRequest(1, "Leve", 95, 115, false))
                 ),
                 List.of(new CondicaoSaudeRequest("ALERGIA", "Rinite", true)),
-                List.of(new RelogioRequest("GARMIN", "token", LocalDateTime.now().plusDays(1)))
+                List.of(new DispositivoExternoRequest(PlataformaRelogio.GARMIN, "token", LocalDateTime.now().plusDays(1)))
         );
     }
 }

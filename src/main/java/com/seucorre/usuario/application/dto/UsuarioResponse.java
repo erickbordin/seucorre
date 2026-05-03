@@ -2,9 +2,10 @@ package com.seucorre.usuario.application.dto;
 
 import com.seucorre.shared.domain.enums.NivelCondicionamento;
 import com.seucorre.shared.domain.enums.Objetivo;
+import com.seucorre.shared.domain.enums.PlataformaRelogio;
 import com.seucorre.usuario.domain.CondicaoSaude;
+import com.seucorre.usuario.domain.DispositivoExterno;
 import com.seucorre.usuario.domain.PerfilCorrida;
-import com.seucorre.usuario.domain.Relogio;
 import com.seucorre.usuario.domain.Usuario;
 import com.seucorre.usuario.domain.ZonaFCPersistida;
 
@@ -35,7 +36,7 @@ public record UsuarioResponse(
         boolean aptoParaTreinar,
         PerfilCorridaResponse perfilCorrida,
         List<CondicaoSaudeResponse> condicoesSaude,
-        List<RelogioResponse> relogios,
+        List<DispositivoExternoResponse> dispositivos,
         LocalDateTime criadoEm,
         LocalDateTime atualizadoEm
 ) {
@@ -62,7 +63,7 @@ public record UsuarioResponse(
                 usuario.estaAptoParaTreinar(),
                 PerfilCorridaResponse.from(usuario.getPerfilCorrida()),
                 usuario.getCondicoesSaude().stream().map(CondicaoSaudeResponse::from).toList(),
-                usuario.getRelogios().stream().map(RelogioResponse::from).toList(),
+                usuario.getDispositivos().stream().map(DispositivoExternoResponse::from).toList(),
                 usuario.getCriadoEm(),
                 usuario.getAtualizadoEm()
         );
@@ -113,9 +114,9 @@ public record UsuarioResponse(
         }
     }
 
-    public record RelogioResponse(String plataforma, boolean tokenValido) {
-        static RelogioResponse from(Relogio relogio) {
-            return new RelogioResponse(relogio.getPlataforma(), relogio.tokenValido());
+    public record DispositivoExternoResponse(PlataformaRelogio plataforma, boolean tokenValido) {
+        static DispositivoExternoResponse from(DispositivoExterno dispositivoExterno) {
+            return new DispositivoExternoResponse(dispositivoExterno.getPlataforma(), dispositivoExterno.tokenValido());
         }
     }
 }

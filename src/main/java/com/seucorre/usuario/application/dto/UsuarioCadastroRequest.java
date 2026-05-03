@@ -15,5 +15,5 @@ public record UsuarioCadastroRequest(
     PerfilAtletaRequest perfilAtleta,
     PerfilCorridaRequest perfilCorrida,
     List<CondicaoSaudeRequest> condicoesSaude,
-    List<RelogioRequest> relogios
+    List<DispositivoExternoRequest> dispositivos
 ) {}

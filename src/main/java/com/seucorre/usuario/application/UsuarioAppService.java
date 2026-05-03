@@ -5,18 +5,18 @@ import com.seucorre.shared.exception.EntityNotFoundException;
 import com.seucorre.shared.util.UuidGenerator;
 import com.seucorre.usuario.application.dto.CondicaoSaudeRequest;
 import com.seucorre.usuario.application.dto.DadosFisicosRequest;
+import com.seucorre.usuario.application.dto.DispositivoExternoRequest;
 import com.seucorre.usuario.application.dto.OnboardingRequest;
 import com.seucorre.usuario.application.dto.PerfilAtletaRequest;
 import com.seucorre.usuario.application.dto.PerfilCorridaRequest;
-import com.seucorre.usuario.application.dto.RelogioRequest;
 import com.seucorre.usuario.application.dto.UsuarioCadastroRequest;
 import com.seucorre.usuario.application.dto.UsuarioResponse;
 import com.seucorre.usuario.application.dto.ZonaFCRequest;
 import com.seucorre.usuario.domain.CondicaoSaude;
 import com.seucorre.usuario.domain.DadosFisicos;
+import com.seucorre.usuario.domain.DispositivoExterno;
 import com.seucorre.usuario.domain.PerfilAtleta;
 import com.seucorre.usuario.domain.PerfilCorrida;
-import com.seucorre.usuario.domain.Relogio;
 import com.seucorre.usuario.domain.Usuario;
 import com.seucorre.usuario.domain.ZonaFCPersistida;
 import com.seucorre.usuario.infrastructure.UsuarioRepository;
@@ -53,7 +53,7 @@ public class UsuarioAppService {
                 request.perfilAtleta(),
                 request.perfilCorrida(),
                 request.condicoesSaude(),
-                request.relogios()
+                request.dispositivos()
         ));
 
         return UsuarioResponse.from(repository.save(usuario));
@@ -83,7 +83,7 @@ public class UsuarioAppService {
         aplicarPerfilAtleta(usuario, request.perfilAtleta());
         usuario.definirPerfilCorrida(toPerfilCorrida(request.perfilCorrida()));
         usuario.substituirCondicoesSaude(toCondicoesSaude(request.condicoesSaude()));
-        usuario.substituirRelogios(toRelogios(request.relogios()));
+        usuario.substituirDispositivos(toDispositivos(request.dispositivos()));
         validarOnboarding(usuario);
     }
 
@@ -166,16 +166,16 @@ public class UsuarioAppService {
         }).toList();
     }
 
-    private List<Relogio> toRelogios(List<RelogioRequest> requests) {
+    private List<DispositivoExterno> toDispositivos(List<DispositivoExternoRequest> requests) {
         if (requests == null) {
             return List.of();
         }
         return requests.stream().map(request -> {
-            Relogio relogio = new Relogio();
-            relogio.setPlataforma(request.plataforma());
-            relogio.setTokenAcesso(request.tokenAcesso());
-            relogio.setTokenExpiresAt(request.tokenExpiresAt());
-            return relogio;
+            DispositivoExterno dispositivoExterno = new DispositivoExterno();
+            dispositivoExterno.setPlataforma(request.plataforma());
+            dispositivoExterno.setTokenAcesso(request.tokenAcesso());
+            dispositivoExterno.setTokenExpiresAt(request.tokenExpiresAt());
+            return dispositivoExterno;
         }).toList();
     }
 

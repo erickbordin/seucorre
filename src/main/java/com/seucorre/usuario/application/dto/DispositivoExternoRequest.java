@@ -1,11 +1,11 @@
 package com.seucorre.usuario.application.dto;
 
-import jakarta.validation.constraints.NotBlank;
+import com.seucorre.shared.domain.enums.PlataformaRelogio;
 
 import java.time.LocalDateTime;
 
-public record RelogioRequest(
-        @NotBlank String plataforma,
+public record DispositivoExternoRequest(
+        PlataformaRelogio plataforma,
         String tokenAcesso,
         LocalDateTime tokenExpiresAt
 ) {}
