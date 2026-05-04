@@ -71,6 +71,16 @@ public class PlanoTreino {
                 .sum();
     }
 
+    public double calcularProgressoGeral() {
+        if (sessoes == null || sessoes.isEmpty()) {
+            return 0d;
+        }
+        long sessoesExecutadas = sessoes.stream()
+                .filter(SessaoTreino::foiExecutada)
+                .count();
+        return (sessoesExecutadas * 100d) / sessoes.size();
+    }
+
     public List<SessaoTreino> obterSessoesDaSemana(Integer semana) {
         if (semana == null) {
             return List.of();
@@ -109,6 +119,9 @@ public class PlanoTreino {
     }
 
     public void adicionarSessao(SessaoTreino sessaoTreino) {
+        if (sessaoTreino == null) {
+            return;
+        }
         sessaoTreino.setPlano(this);
         sessoes.add(sessaoTreino);
     }
