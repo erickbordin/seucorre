@@ -7,18 +7,13 @@ import com.seucorre.avaliacao.application.event.PlanoReescritoEvent;
 import com.seucorre.avaliacao.domain.CheckinSemanal;
 import com.seucorre.avaliacao.domain.ProgressoSemanal;
 import com.seucorre.avaliacao.infrastructure.CheckinRepository;
-import com.seucorre.avaliacao.infrastructure.ProgressoRepository;
 import com.seucorre.shared.domain.enums.NivelRisco;
 import com.seucorre.shared.domain.enums.StatusPlano;
-import com.seucorre.shared.domain.enums.StatusTreino;
 import com.seucorre.shared.exception.BusinessRuleException;
 import com.seucorre.shared.exception.EntityNotFoundException;
 import com.seucorre.treino.domain.GeradorPlanoIA;
 import com.seucorre.treino.domain.PlanoTreino;
-import com.seucorre.treino.domain.RegistroTreino;
-import com.seucorre.treino.domain.SessaoTreino;
 import com.seucorre.treino.infrastructure.PlanoRepository;
-import com.seucorre.treino.infrastructure.RegistroRepository;
 import com.seucorre.usuario.domain.Usuario;
 import com.seucorre.usuario.infrastructure.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -26,19 +21,14 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Objects;
 import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 public class AvaliacaoAppService {
 
-    private final ProgressoRepository progressoRepository;
-    private final RegistroRepository registroRepository;
+    private final ProgressoAppService progressoAppService;
     private final CheckinRepository checkinRepository;
     private final PlanoRepository planoRepository;
     private final UsuarioRepository usuarioRepository;
@@ -65,7 +55,7 @@ public class AvaliacaoAppService {
 
         preencherCheckin(checkinSemanal, request, usuario, planoTreino);
 
-        ProgressoSemanal progressoSemanal = buscarProgressoSemana(planoTreino.getId(), request.semana());
+        ProgressoSemanal progressoSemanal = progressoAppService.buscarProgressoSemana(planoTreino.getId(), request.semana());
         checkinSemanal.setAnaliseIA(gerarAnaliseIA(checkinSemanal, progressoSemanal));
 
         if (checkinSemanal.precisaReescreverPlano()) {
@@ -88,46 +78,7 @@ public class AvaliacaoAppService {
 
     @Transactional(readOnly = true)
     public List<ProgressoSemanalDTO> listarHistoricoProgresso(UUID usuarioId) {
-        return progressoRepository.findByPlanoUsuarioIdOrderByNumeroSemanaAsc(usuarioId).stream()
-                .map(ProgressoSemanalDTO::from)
-                .toList();
-    }
-
-    @Transactional
-    public ProgressoSemanal atualizarProgressoSemanal(RegistroTreino registroTreino) {
-        if (registroTreino == null) {
-            throw new IllegalArgumentException("Registro de treino é obrigatório.");
-        }
-
-        SessaoTreino sessaoTreino = registroTreino.getSessaoTreino();
-        if (sessaoTreino == null || sessaoTreino.getPlano() == null || sessaoTreino.getNumeroSemana() == null) {
-            throw new IllegalArgumentException("Registro precisa estar vinculado a uma sessão válida.");
-        }
-
-        PlanoTreino planoTreino = sessaoTreino.getPlano();
-        Integer numeroSemana = sessaoTreino.getNumeroSemana();
-
-        ProgressoSemanal progressoSemanal = progressoRepository.findByPlanoIdAndNumeroSemana(planoTreino.getId(), numeroSemana)
-                .orElseGet(ProgressoSemanal::new);
-        progressoSemanal.setPlano(planoTreino);
-        progressoSemanal.setNumeroSemana(numeroSemana);
-        progressoSemanal.setDataInicioSemana(calcularInicioSemana(planoTreino, numeroSemana, sessaoTreino));
-
-        List<RegistroTreino> registrosSemana = registroRepository.findByPlanoIdAndNumeroSemana(planoTreino.getId(), numeroSemana);
-        progressoSemanal.setVolumeKm(calcularVolume(registrosSemana));
-        progressoSemanal.setPaceMedio(calcularPaceMedio(registrosSemana));
-        progressoSemanal.setFcRepousoMedio(planoTreino.getUsuario() == null ? null : planoTreino.getUsuario().getFcRepouso());
-        progressoSemanal.setTreinosConcluidos(contarStatus(registrosSemana, StatusTreino.CONCLUIDO));
-        progressoSemanal.setTreinosParciais(contarStatus(registrosSemana, StatusTreino.PARCIAL));
-        progressoSemanal.setTreinosPerdidos(contarStatus(registrosSemana, StatusTreino.PERDIDO));
-
-        // O valor é persistido como histórico real; a checagem da regra serve para alimentar alertas posteriores.
-        if (numeroSemana > 1) {
-            progressoRepository.findByPlanoIdAndNumeroSemana(planoTreino.getId(), numeroSemana - 1)
-                    .ifPresent(progressoAnterior -> progressoSemanal.ultrapassouRegra10Porcento(progressoAnterior));
-        }
-
-        return progressoRepository.save(progressoSemanal);
+        return progressoAppService.listarHistoricoProgresso(usuarioId);
     }
 
     private void preencherCheckin(CheckinSemanal checkinSemanal,
@@ -144,27 +95,33 @@ public class AvaliacaoAppService {
         checkinSemanal.setAvaliacao(request.avaliacao());
     }
 
-    private ProgressoSemanal buscarProgressoSemana(UUID planoId, Integer semana) {
-        if (planoId == null || semana == null) {
-            return null;
-        }
-        return progressoRepository.findByPlanoIdAndNumeroSemana(planoId, semana).orElse(null);
-    }
-
     private String gerarAnaliseIA(CheckinSemanal checkinSemanal, ProgressoSemanal progressoSemanal) {
         String analiseCheckin = geradorPlanoIA.gerarAnaliseCheckin(checkinSemanal);
         if (progressoSemanal == null) {
             return analiseCheckin;
         }
 
+        String alertaSemanal = progressoAppService.gerarAlertaSemanal(
+                checkinSemanal.getPlano() == null ? null : checkinSemanal.getPlano().getId(),
+                checkinSemanal.getSemana()
+        );
+
         String sugestaoProgresso = geradorPlanoIA.sugerirAjuste(progressoSemanal);
-        if (sugestaoProgresso == null || sugestaoProgresso.isBlank()) {
-            return analiseCheckin;
+        String analiseComSugestao = analiseCheckin;
+        if (sugestaoProgresso != null && !sugestaoProgresso.isBlank()) {
+            if (analiseComSugestao == null || analiseComSugestao.isBlank()) {
+                analiseComSugestao = sugestaoProgresso;
+            } else {
+                analiseComSugestao = analiseComSugestao + "\nAjuste semanal: " + sugestaoProgresso;
+            }
         }
-        if (analiseCheckin == null || analiseCheckin.isBlank()) {
-            return sugestaoProgresso;
+        if (alertaSemanal == null || alertaSemanal.isBlank()) {
+            return analiseComSugestao;
         }
-        return analiseCheckin + "\nAjuste semanal: " + sugestaoProgresso;
+        if (analiseComSugestao == null || analiseComSugestao.isBlank()) {
+            return alertaSemanal;
+        }
+        return analiseComSugestao + "\n" + alertaSemanal;
     }
 
     private void persistirReescrita(PlanoTreino planoOriginal,
@@ -190,43 +147,5 @@ public class AvaliacaoAppService {
                 checkinSemanal.getSemana(),
                 nivelRisco
         ));
-    }
-
-    private LocalDate calcularInicioSemana(PlanoTreino planoTreino, Integer numeroSemana, SessaoTreino sessaoTreino) {
-        return planoTreino.obterSessoesDaSemana(numeroSemana).stream()
-                .map(SessaoTreino::getDataPrevista)
-                .filter(Objects::nonNull)
-                .min(LocalDate::compareTo)
-                .orElse(sessaoTreino.getDataPrevista());
-    }
-
-    private BigDecimal calcularVolume(List<RegistroTreino> registrosSemana) {
-        BigDecimal volume = registrosSemana.stream()
-                .map(RegistroTreino::getDistanciaRealKm)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        return volume.signum() == 0 ? null : volume.setScale(2, RoundingMode.HALF_UP);
-    }
-
-    private BigDecimal calcularPaceMedio(List<RegistroTreino> registrosSemana) {
-        List<Integer> paces = registrosSemana.stream()
-                .map(RegistroTreino::getPaceMedioReal)
-                .filter(Objects::nonNull)
-                .toList();
-        if (paces.isEmpty()) {
-            return null;
-        }
-
-        BigDecimal soma = paces.stream()
-                .map(BigDecimal::valueOf)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        return soma.divide(BigDecimal.valueOf(paces.size()), 2, RoundingMode.HALF_UP);
-    }
-
-    private int contarStatus(List<RegistroTreino> registrosSemana, StatusTreino statusTreino) {
-        return (int) registrosSemana.stream()
-                .map(RegistroTreino::getStatus)
-                .filter(statusTreino::equals)
-                .count();
     }
 }

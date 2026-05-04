@@ -7,15 +7,10 @@ import com.seucorre.avaliacao.application.event.PlanoReescritoEvent;
 import com.seucorre.avaliacao.domain.CheckinSemanal;
 import com.seucorre.avaliacao.domain.ProgressoSemanal;
 import com.seucorre.avaliacao.infrastructure.CheckinRepository;
-import com.seucorre.avaliacao.infrastructure.ProgressoRepository;
 import com.seucorre.shared.domain.enums.StatusPlano;
-import com.seucorre.shared.domain.enums.StatusTreino;
 import com.seucorre.treino.domain.GeradorPlanoIA;
 import com.seucorre.treino.domain.PlanoTreino;
-import com.seucorre.treino.domain.RegistroTreino;
-import com.seucorre.treino.domain.SessaoTreino;
 import com.seucorre.treino.infrastructure.PlanoRepository;
-import com.seucorre.treino.infrastructure.RegistroRepository;
 import com.seucorre.usuario.domain.DadosFisicos;
 import com.seucorre.usuario.domain.Usuario;
 import com.seucorre.usuario.infrastructure.UsuarioRepository;
@@ -37,8 +32,7 @@ import static org.mockito.Mockito.when;
 
 class AvaliacaoAppServiceTest {
 
-    private ProgressoRepository progressoRepository;
-    private RegistroRepository registroRepository;
+    private ProgressoAppService progressoAppService;
     private CheckinRepository checkinRepository;
     private PlanoRepository planoRepository;
     private UsuarioRepository usuarioRepository;
@@ -48,50 +42,20 @@ class AvaliacaoAppServiceTest {
 
     @BeforeEach
     void setUp() {
-        progressoRepository = mock(ProgressoRepository.class);
-        registroRepository = mock(RegistroRepository.class);
+        progressoAppService = mock(ProgressoAppService.class);
         checkinRepository = mock(CheckinRepository.class);
         planoRepository = mock(PlanoRepository.class);
         usuarioRepository = mock(UsuarioRepository.class);
         geradorPlanoIA = mock(GeradorPlanoIA.class);
         eventPublisher = mock(ApplicationEventPublisher.class);
         service = new AvaliacaoAppService(
-                progressoRepository,
-                registroRepository,
+                progressoAppService,
                 checkinRepository,
                 planoRepository,
                 usuarioRepository,
                 geradorPlanoIA,
                 eventPublisher
         );
-    }
-
-    @Test
-    void atualizaProgressoSemanalComMetricasDerivadasDosRegistros() {
-        RegistroTreino registroTreino = criarRegistro(StatusTreino.CONCLUIDO, "8.00", 340);
-        RegistroTreino registroParcial = criarRegistro(StatusTreino.PARCIAL, "4.00", 360);
-        RegistroTreino registroPerdido = criarRegistro(StatusTreino.PERDIDO, null, null);
-
-        ProgressoSemanal progressoAnterior = new ProgressoSemanal();
-        progressoAnterior.setVolumeKm(new BigDecimal("10.00"));
-
-        when(progressoRepository.findByPlanoIdAndNumeroSemana(registroTreino.getSessaoTreino().getPlano().getId(), 1))
-                .thenReturn(Optional.empty());
-        when(registroRepository.findByPlanoIdAndNumeroSemana(registroTreino.getSessaoTreino().getPlano().getId(), 1))
-                .thenReturn(List.of(registroTreino, registroParcial, registroPerdido));
-        when(progressoRepository.save(org.mockito.ArgumentMatchers.any(ProgressoSemanal.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-
-        ProgressoSemanal atualizado = service.atualizarProgressoSemanal(registroTreino);
-
-        assertThat(atualizado.getNumeroSemana()).isEqualTo(1);
-        assertThat(atualizado.getVolumeKm()).isEqualByComparingTo("12.00");
-        assertThat(atualizado.getPaceMedio()).isEqualByComparingTo("350.00");
-        assertThat(atualizado.getTreinosConcluidos()).isEqualTo(1);
-        assertThat(atualizado.getTreinosParciais()).isEqualTo(1);
-        assertThat(atualizado.getTreinosPerdidos()).isEqualTo(1);
-        assertThat(atualizado.getFcRepousoMedio()).isEqualTo(58);
-        assertThat(atualizado.getDataInicioSemana()).isEqualTo(LocalDate.of(2026, 5, 10));
     }
 
     @Test
@@ -112,7 +76,8 @@ class AvaliacaoAppServiceTest {
         when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
         when(planoRepository.findById(planoTreino.getId())).thenReturn(Optional.of(planoTreino));
         when(checkinRepository.findByPlanoIdAndSemana(planoTreino.getId(), 2)).thenReturn(Optional.empty());
-        when(progressoRepository.findByPlanoIdAndNumeroSemana(planoTreino.getId(), 2)).thenReturn(Optional.empty());
+        when(progressoAppService.buscarProgressoSemana(planoTreino.getId(), 2)).thenReturn(null);
+        when(progressoAppService.gerarAlertaSemanal(planoTreino.getId(), 2)).thenReturn(null);
         when(geradorPlanoIA.gerarAnaliseCheckin(org.mockito.ArgumentMatchers.any(CheckinSemanal.class)))
                 .thenReturn("Risco baixo, manter plano.");
         when(checkinRepository.save(org.mockito.ArgumentMatchers.any(CheckinSemanal.class)))
@@ -157,7 +122,9 @@ class AvaliacaoAppServiceTest {
         when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
         when(planoRepository.findById(planoTreino.getId())).thenReturn(Optional.of(planoTreino));
         when(checkinRepository.findByPlanoIdAndSemana(planoTreino.getId(), 3)).thenReturn(Optional.empty());
-        when(progressoRepository.findByPlanoIdAndNumeroSemana(planoTreino.getId(), 3)).thenReturn(Optional.of(progressoSemanal));
+        when(progressoAppService.buscarProgressoSemana(planoTreino.getId(), 3)).thenReturn(progressoSemanal);
+        when(progressoAppService.gerarAlertaSemanal(planoTreino.getId(), 3))
+                .thenReturn("Alerta: a semana 3 ultrapassou a Regra dos 10%.");
         when(geradorPlanoIA.gerarAnaliseCheckin(org.mockito.ArgumentMatchers.any(CheckinSemanal.class)))
                 .thenReturn("Risco alto, revisar a carga.");
         when(geradorPlanoIA.sugerirAjuste(progressoSemanal))
@@ -181,6 +148,7 @@ class AvaliacaoAppServiceTest {
         assertThat(dto.planoReescrito()).isTrue();
         assertThat(dto.analiseIA()).contains("Risco alto, revisar a carga.");
         assertThat(dto.analiseIA()).contains("Ajuste semanal");
+        assertThat(dto.analiseIA()).contains("Regra dos 10%");
         assertThat(planoTreino.getStatus()).isEqualTo(StatusPlano.CANCELADO);
         verify(geradorPlanoIA).reescreverPlano(org.mockito.ArgumentMatchers.eq(planoTreino), org.mockito.ArgumentMatchers.any(CheckinSemanal.class));
         verify(eventPublisher).publishEvent(org.mockito.ArgumentMatchers.any(PlanoReescritoEvent.class));
@@ -213,7 +181,8 @@ class AvaliacaoAppServiceTest {
         progressoSemanal.setTreinosPerdidos(1);
 
         when(checkinRepository.findByUsuarioIdOrderBySemanaAsc(usuario.getId())).thenReturn(List.of(checkinSemanal));
-        when(progressoRepository.findByPlanoUsuarioIdOrderByNumeroSemanaAsc(usuario.getId())).thenReturn(List.of(progressoSemanal));
+        when(progressoAppService.listarHistoricoProgresso(usuario.getId()))
+                .thenReturn(List.of(ProgressoSemanalDTO.from(progressoSemanal)));
 
         List<AnaliseRiscoDTO> historicoCheckins = service.listarHistoricoCheckins(usuario.getId());
         List<ProgressoSemanalDTO> historicoProgresso = service.listarHistoricoProgresso(usuario.getId());
@@ -222,23 +191,6 @@ class AvaliacaoAppServiceTest {
         assertThat(historicoCheckins.get(0).analiseIA()).isEqualTo("Sem sinais de risco.");
         assertThat(historicoProgresso).hasSize(1);
         assertThat(historicoProgresso.get(0).totalTreinos()).isEqualTo(3);
-    }
-
-    private RegistroTreino criarRegistro(StatusTreino statusTreino, String distanciaKm, Integer paceMedio) {
-        Usuario usuario = criarUsuario();
-        PlanoTreino planoTreino = criarPlano(usuario);
-
-        SessaoTreino sessaoTreino = new SessaoTreino();
-        sessaoTreino.setPlano(planoTreino);
-        sessaoTreino.setNumeroSemana(1);
-        sessaoTreino.setDataPrevista(LocalDate.of(2026, 5, 10));
-
-        RegistroTreino registroTreino = new RegistroTreino();
-        registroTreino.setSessaoTreino(sessaoTreino);
-        registroTreino.setStatus(statusTreino);
-        registroTreino.setDistanciaRealKm(distanciaKm == null ? null : new BigDecimal(distanciaKm));
-        registroTreino.setPaceMedioReal(paceMedio);
-        return registroTreino;
     }
 
     private Usuario criarUsuario() {
