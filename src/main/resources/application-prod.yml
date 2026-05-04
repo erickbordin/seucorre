@@ -23,3 +23,12 @@ server:
 logging:
   level:
     com.seucorre: INFO
+
+seucorre:
+  ia:
+    anthropic:
+      model: claude-sonnet-4
+      max-tokens: 8192
+      timeout-seconds: 30
+      max-retries: 3
+      initial-backoff-millis: 500
