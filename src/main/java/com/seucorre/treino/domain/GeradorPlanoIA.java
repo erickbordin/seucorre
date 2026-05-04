@@ -5,6 +5,7 @@ import com.seucorre.avaliacao.domain.ProgressoSemanal;
 import com.seucorre.shared.domain.enums.Objetivo;
 import com.seucorre.shared.exception.BusinessRuleException;
 import com.seucorre.usuario.domain.Usuario;
+import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -14,6 +15,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.TreeSet;
 
+@Service
 public class GeradorPlanoIA {
 
     private static final BigDecimal LIMITE_REGRA_DEZ_POR_CENTO = BigDecimal.valueOf(1.10d);
