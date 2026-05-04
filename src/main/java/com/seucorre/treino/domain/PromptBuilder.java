@@ -7,6 +7,7 @@ import com.seucorre.usuario.domain.PerfilAtleta;
 import com.seucorre.usuario.domain.PerfilCorrida;
 import com.seucorre.usuario.domain.Usuario;
 import com.seucorre.usuario.domain.ZonaFCPersistida;
+import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Component
 public class PromptBuilder {
 
     private static final int LIMITE_PLANOS_HISTORICO = 3;

@@ -19,6 +19,8 @@ public record RegistroTreinoDTO(
         Boolean doente,
         Boolean viagem,
         String observacao,
+        Double desvioDistanciaPercent,
+        Double desvioPace,
         boolean alertaSaude
 ) {
 
@@ -26,6 +28,14 @@ public record RegistroTreinoDTO(
         if (registroTreino == null) {
             return null;
         }
+
+        BigDecimal distanciaPlanejada = registroTreino.getSessaoTreino() == null
+                ? null
+                : registroTreino.getSessaoTreino().getDistanciaKm();
+        BigDecimal pacePlanejado = registroTreino.getSessaoTreino() == null
+                ? null
+                : registroTreino.getSessaoTreino().getPaceAlvo();
+
         return new RegistroTreinoDTO(
                 registroTreino.getId(),
                 registroTreino.getStatus(),
@@ -39,6 +49,8 @@ public record RegistroTreinoDTO(
                 registroTreino.getDoente(),
                 registroTreino.getViagem(),
                 registroTreino.getObservacao(),
+                registroTreino.calcularDesvioDistancia(distanciaPlanejada),
+                registroTreino.calcularDesvioPace(pacePlanejado),
                 registroTreino.temAlertaDeSaude()
         );
     }
