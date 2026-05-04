@@ -1,0 +1,14 @@
+spring:
+  profiles:
+    active: dev # Perfil padrão
+  application:
+    name: seucorre-api
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: UTC
+
+# Configurações de Negócio (Ciência da Corrida)
+seucorre:
+  treino:
+    fator-carga-base: 1.1 # Regra dos 10% para prevenção de lesões
+    frequencia-max-padrao: 220
