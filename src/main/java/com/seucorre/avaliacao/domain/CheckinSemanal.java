@@ -51,6 +51,9 @@ public class CheckinSemanal {
     @Column(length = 100)
     private String avaliacao;
 
+    @Column(name = "semana")
+    private Integer semana;
+
     @Column(name = "data_checkin")
     private LocalDate dataCheckin;
 
@@ -106,6 +109,9 @@ public class CheckinSemanal {
         List<String> partes = new ArrayList<>();
         if (dataCheckin != null) {
             partes.add("dataCheckin=" + dataCheckin);
+        }
+        if (semana != null) {
+            partes.add("semana=" + semana);
         }
         if (nivelEsforco != null) {
             partes.add("nivelEsforco=" + nivelEsforco);
