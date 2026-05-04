@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  data:
+    redis:
+      url: ${REDIS_URL}
+  flyway:
+    baseline-on-migrate: true
+  ai:
+    anthropic:
+      api-key: ${ANTHROPIC_API_KEY}
+
+server:
+  port: 8080
+  ssl: # Recomendado habilitar em prod via Load Balancer ou direto aqui
+    enabled: true
+
+logging:
+  level:
+    com.seucorre: INFO
