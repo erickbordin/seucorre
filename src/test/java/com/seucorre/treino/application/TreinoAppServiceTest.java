@@ -1,6 +1,6 @@
 package com.seucorre.treino.application;
 
-import com.seucorre.avaliacao.application.AvaliacaoAppService;
+import com.seucorre.avaliacao.application.ProgressoAppService;
 import com.seucorre.avaliacao.domain.ProgressoSemanal;
 import com.seucorre.shared.domain.enums.StatusTreino;
 import com.seucorre.shared.domain.enums.TipoTreino;
@@ -31,14 +31,14 @@ import static org.mockito.Mockito.when;
 class TreinoAppServiceTest {
 
     private RegistroRepository registroRepository;
-    private AvaliacaoAppService avaliacaoAppService;
+    private ProgressoAppService progressoAppService;
     private TreinoAppService service;
 
     @BeforeEach
     void setUp() {
         registroRepository = mock(RegistroRepository.class);
-        avaliacaoAppService = mock(AvaliacaoAppService.class);
-        service = new TreinoAppService(registroRepository, avaliacaoAppService);
+        progressoAppService = mock(ProgressoAppService.class);
+        service = new TreinoAppService(registroRepository, progressoAppService);
     }
 
     @Test
@@ -62,7 +62,7 @@ class TreinoAppServiceTest {
 
         when(registroRepository.findSessaoTreinoById(treinoId)).thenReturn(Optional.of(sessaoTreino));
         when(registroRepository.save(any(RegistroTreino.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(avaliacaoAppService.atualizarProgressoSemanal(any(RegistroTreino.class))).thenReturn(new ProgressoSemanal());
+        when(progressoAppService.atualizarProgressoSemanal(any(RegistroTreino.class))).thenReturn(new ProgressoSemanal());
 
         RegistroTreinoDTO dto = service.registrarExecucao(request);
 
@@ -72,7 +72,7 @@ class TreinoAppServiceTest {
         assertThat(dto.desvioDistanciaPercent()).isNotZero();
         assertThat(dto.desvioPace()).isNotZero();
         verify(registroRepository).save(any(RegistroTreino.class));
-        verify(avaliacaoAppService).atualizarProgressoSemanal(any(RegistroTreino.class));
+        verify(progressoAppService).atualizarProgressoSemanal(any(RegistroTreino.class));
     }
 
     @Test

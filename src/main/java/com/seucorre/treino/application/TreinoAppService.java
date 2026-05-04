@@ -1,6 +1,6 @@
 package com.seucorre.treino.application;
 
-import com.seucorre.avaliacao.application.AvaliacaoAppService;
+import com.seucorre.avaliacao.application.ProgressoAppService;
 import com.seucorre.shared.exception.EntityNotFoundException;
 import com.seucorre.treino.application.dto.RegistroTreinoDTO;
 import com.seucorre.treino.application.dto.RegistroTreinoRequest;
@@ -20,7 +20,7 @@ import java.util.UUID;
 public class TreinoAppService {
 
     private final RegistroRepository registroRepository;
-    private final AvaliacaoAppService avaliacaoAppService;
+    private final ProgressoAppService progressoAppService;
 
     @Transactional
     public RegistroTreinoDTO registrarExecucao(RegistroTreinoRequest request) {
@@ -40,7 +40,7 @@ public class TreinoAppService {
         registroTreino.temAlertaDeSaude();
 
         RegistroTreino registroSalvo = registroRepository.save(registroTreino);
-        avaliacaoAppService.atualizarProgressoSemanal(registroSalvo);
+        progressoAppService.atualizarProgressoSemanal(registroSalvo);
         return RegistroTreinoDTO.from(registroSalvo);
     }
 
