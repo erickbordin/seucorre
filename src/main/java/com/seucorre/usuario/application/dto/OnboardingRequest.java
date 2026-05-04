@@ -1,12 +1,14 @@
 package com.seucorre.usuario.application.dto;
 
+import jakarta.validation.Valid;
+
 import java.util.List;
 
 public record OnboardingRequest(
         String telefone,
-        DadosFisicosRequest dadosFisicos,
-        PerfilAtletaRequest perfilAtleta,
-        PerfilCorridaRequest perfilCorrida,
-        List<CondicaoSaudeRequest> condicoesSaude,
-        List<DispositivoExternoRequest> dispositivos
+        @Valid DadosFisicosRequest dadosFisicos,
+        @Valid PerfilAtletaRequest perfilAtleta,
+        @Valid PerfilCorridaRequest perfilCorrida,
+        List<@Valid CondicaoSaudeRequest> condicoesSaude,
+        List<@Valid DispositivoExternoRequest> dispositivos
 ) {}
