@@ -3,10 +3,13 @@ package com.seucorre.avaliacao.application;
 import com.seucorre.avaliacao.application.dto.ProgressoSemanalDTO;
 import com.seucorre.avaliacao.domain.ProgressoSemanal;
 import com.seucorre.avaliacao.infrastructure.ProgressoRepository;
+import com.seucorre.shared.exception.BusinessRuleException;
+import com.seucorre.shared.exception.EntityNotFoundException;
 import com.seucorre.shared.domain.enums.StatusTreino;
 import com.seucorre.treino.domain.PlanoTreino;
 import com.seucorre.treino.domain.RegistroTreino;
 import com.seucorre.treino.domain.SessaoTreino;
+import com.seucorre.treino.infrastructure.PlanoRepository;
 import com.seucorre.treino.infrastructure.RegistroRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -25,6 +28,7 @@ public class ProgressoAppService {
 
     private final ProgressoRepository progressoRepository;
     private final RegistroRepository registroRepository;
+    private final PlanoRepository planoRepository;
 
     @Transactional
     public ProgressoSemanal atualizarProgressoSemanal(RegistroTreino registroTreino) {
@@ -68,6 +72,21 @@ public class ProgressoAppService {
             return null;
         }
         return progressoRepository.findByPlanoIdAndNumeroSemana(planoId, semana).orElse(null);
+    }
+
+    @Transactional(readOnly = true)
+    public ProgressoSemanalDTO buscarProgressoSemana(UUID usuarioId, UUID planoId, Integer semana) {
+        PlanoTreino planoTreino = planoRepository.findById(planoId)
+                .orElseThrow(() -> new EntityNotFoundException("Plano de treino não encontrado."));
+
+        if (planoTreino.getUsuario() == null || !usuarioId.equals(planoTreino.getUsuario().getId())) {
+            throw new BusinessRuleException("O plano informado não pertence ao usuário.");
+        }
+
+        ProgressoSemanal progressoSemanal = progressoRepository.findByPlanoIdAndNumeroSemana(planoId, semana)
+                .orElseThrow(() -> new EntityNotFoundException("Progresso semanal não encontrado."));
+
+        return ProgressoSemanalDTO.from(progressoSemanal);
     }
 
     @Transactional(readOnly = true)
