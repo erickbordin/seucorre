@@ -1,5 +1,6 @@
 package com.seucorre.usuario.application;
 
+import com.seucorre.shared.domain.valueobjects.IMC;
 import com.seucorre.shared.exception.BusinessRuleException;
 import com.seucorre.shared.exception.EntityNotFoundException;
 import com.seucorre.shared.util.UuidGenerator;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -83,6 +85,23 @@ public class UsuarioAppService {
                 .peek(usuario -> anexarPerfilCorrida(usuario, buscarPerfilCorrida(usuario)))
                 .map(UsuarioResponse::from)
                 .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public UsuarioResponse buscarPorId(UUID usuarioId) {
+        Usuario usuario = buscarUsuarioPorId(usuarioId);
+        anexarPerfilCorrida(usuario, buscarPerfilCorrida(usuario));
+        return UsuarioResponse.from(usuario);
+    }
+
+    @Transactional(readOnly = true)
+    public IMC calcularImc(UUID usuarioId) {
+        Usuario usuario = buscarUsuarioPorId(usuarioId);
+        try {
+            return usuario.calcularIMC();
+        } catch (IllegalStateException | IllegalArgumentException ex) {
+            throw new BusinessRuleException(ex.getMessage());
+        }
     }
 
     private void aplicarOnboarding(Usuario usuario, OnboardingRequest request, PerfilCorrida perfilCorrida) {
@@ -236,6 +255,11 @@ public class UsuarioAppService {
             return null;
         }
         return repository.findPerfilCorridaByUsuarioId(usuario.getId()).orElse(null);
+    }
+
+    private Usuario buscarUsuarioPorId(UUID usuarioId) {
+        return repository.findById(usuarioId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado."));
     }
 
     private void anexarPerfilCorrida(Usuario usuario, PerfilCorrida perfilCorrida) {
