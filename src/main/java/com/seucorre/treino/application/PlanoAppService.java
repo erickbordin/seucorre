@@ -1,5 +1,6 @@
 package com.seucorre.treino.application;
 
+import com.seucorre.shared.exception.BusinessRuleException;
 import com.seucorre.shared.exception.EntityNotFoundException;
 import com.seucorre.treino.application.dto.GerarPlanoRequest;
 import com.seucorre.treino.application.dto.PlanoTreinoDTO;
@@ -42,6 +43,11 @@ public class PlanoAppService {
     }
 
     @Transactional(readOnly = true)
+    public PlanoTreinoDTO buscarPlano(UUID usuarioId, UUID planoId) {
+        return PlanoTreinoDTO.from(buscarPlanoDoUsuarioOuFalhar(usuarioId, planoId));
+    }
+
+    @Transactional(readOnly = true)
     public List<PlanoTreinoDTO> listarPlanosDoUsuario(UUID usuarioId) {
         return planoRepository.findByUsuarioId(usuarioId).stream()
                 .map(PlanoTreinoDTO::from)
@@ -63,8 +69,22 @@ public class PlanoAppService {
     }
 
     @Transactional
+    public PlanoTreinoDTO pausarPlano(UUID usuarioId, UUID planoId) {
+        PlanoTreino planoTreino = buscarPlanoDoUsuarioOuFalhar(usuarioId, planoId);
+        planoTreino.pausar();
+        return PlanoTreinoDTO.from(planoRepository.save(planoTreino));
+    }
+
+    @Transactional
     public PlanoTreinoDTO reativarPlano(UUID planoId) {
         PlanoTreino planoTreino = buscarPlanoOuFalhar(planoId);
+        planoTreino.reativar();
+        return PlanoTreinoDTO.from(planoRepository.save(planoTreino));
+    }
+
+    @Transactional
+    public PlanoTreinoDTO reativarPlano(UUID usuarioId, UUID planoId) {
+        PlanoTreino planoTreino = buscarPlanoDoUsuarioOuFalhar(usuarioId, planoId);
         planoTreino.reativar();
         return PlanoTreinoDTO.from(planoRepository.save(planoTreino));
     }
@@ -72,6 +92,14 @@ public class PlanoAppService {
     private PlanoTreino buscarPlanoOuFalhar(UUID planoId) {
         return planoRepository.findById(planoId)
                 .orElseThrow(() -> new EntityNotFoundException("Plano de treino não encontrado."));
+    }
+
+    private PlanoTreino buscarPlanoDoUsuarioOuFalhar(UUID usuarioId, UUID planoId) {
+        PlanoTreino planoTreino = buscarPlanoOuFalhar(planoId);
+        if (planoTreino.getUsuario() == null || !usuarioId.equals(planoTreino.getUsuario().getId())) {
+            throw new BusinessRuleException("O plano informado não pertence ao usuário.");
+        }
+        return planoTreino;
     }
 
     private Usuario carregarPerfilCompleto(UUID usuarioId) {
