@@ -1,50 +1,99 @@
 package com.seucorre.infra.security;
 
-import com.auth0.jwt.JWT;
-import com.auth0.jwt.algorithms.Algorithm;
-import com.auth0.jwt.exceptions.JWTCreationException;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SecurityException;
 import com.seucorre.usuario.domain.Usuario;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.util.Date;
+import java.util.function.Function;
+import javax.crypto.SecretKey;
 
 @Service
 public class JwtService {
 
-    // Puxa a senha mestre que criamos no application.properties
+    private static final String ISSUER = "seucorre-api";
+
     @Value("${api.security.token.secret}")
     private String secret;
 
+    @Value("${api.security.token.expiration-hours:2}")
+    private long expirationHours;
+
     public String gerarToken(Usuario usuario) {
-        try {
-            Algorithm algorithm = Algorithm.HMAC256(secret);
-            return JWT.create()
-                    .withIssuer("seucorre-api") // Quem está emitindo o token
-                    .withSubject(usuario.getEmail()) // O "dono" do token (vamos usar o email)
-                    .withExpiresAt(gerarDataExpiracao()) // Tempo de validade
-                    .sign(algorithm);
-        } catch (JWTCreationException exception) {
-            throw new RuntimeException("Erro ao gerar token JWT", exception);
+        if (usuario == null || usuario.getEmail() == null || usuario.getEmail().isBlank()) {
+            throw new IllegalArgumentException("Usuário com e-mail válido é obrigatório para gerar token.");
         }
+
+        Instant agora = Instant.now();
+        Instant expiracao = agora.plus(Duration.ofHours(expirationHours));
+
+        return Jwts.builder()
+                .issuer(ISSUER)
+                .subject(usuario.getEmail())
+                .issuedAt(Date.from(agora))
+                .expiration(Date.from(expiracao))
+                .signWith(chaveAssinatura())
+                .compact();
     }
 
     public String validarToken(String token) {
         try {
-            Algorithm algorithm = Algorithm.HMAC256(secret);
-            return JWT.require(algorithm)
-                    .withIssuer("seucorre-api")
-                    .build()
-                    .verify(token)
-                    .getSubject();
-        } catch (Exception exception) {
-            return null; 
+            return extrairSubject(token);
+        } catch (JwtException | IllegalArgumentException exception) {
+            return null;
         }
     }
-    
-    private Instant gerarDataExpiracao() {
-        return LocalDateTime.now().plusHours(2).toInstant(ZoneOffset.of("-03:00"));
+
+    public String extrairSubject(String token) {
+        return extrairClaim(token, Claims::getSubject);
     }
-} 
+
+    public <T> T extrairClaim(String token, Function<Claims, T> claimsResolver) {
+        if (claimsResolver == null) {
+            throw new IllegalArgumentException("Claims resolver é obrigatório.");
+        }
+        return claimsResolver.apply(extrairClaims(token));
+    }
+
+    public Claims extrairClaims(String token) {
+        if (token == null || token.isBlank()) {
+            throw new IllegalArgumentException("Token é obrigatório.");
+        }
+
+        Claims claims = Jwts.parser()
+                .verifyWith(chaveAssinatura())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        if (!ISSUER.equals(claims.getIssuer())) {
+            throw new SecurityException("Issuer do token inválido.");
+        }
+
+        return claims;
+    }
+
+    private SecretKey chaveAssinatura() {
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalStateException("Segredo JWT não configurado.");
+        }
+
+        try {
+            byte[] keyBytes = MessageDigest.getInstance("SHA-256")
+                    .digest(secret.getBytes(StandardCharsets.UTF_8));
+            return Keys.hmacShaKeyFor(keyBytes);
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("Algoritmo SHA-256 indisponível para derivar a chave JWT.", exception);
+        }
+    }
+}
