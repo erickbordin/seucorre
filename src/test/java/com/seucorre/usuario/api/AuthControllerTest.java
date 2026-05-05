@@ -7,6 +7,7 @@ import com.seucorre.usuario.domain.Usuario;
 import com.seucorre.usuario.infrastructure.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
@@ -50,7 +51,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void loginRetornaBadRequestQuandoSenhaNaoConfere() {
+    void loginRetornaUnauthorizedQuandoSenhaNaoConfere() {
         Usuario usuario = new Usuario();
         usuario.setEmail("ana@email.com");
         usuario.setSenhaHash("hash-bcrypt");
@@ -60,6 +61,46 @@ class AuthControllerTest {
 
         ResponseEntity<?> response = controller.login(new LoginRequest("ana@email.com", "errada"));
 
-        assertThat(response.getStatusCode().is4xxClientError()).isTrue();
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void loginRetornaUnauthorizedQuandoUsuarioNaoExiste() {
+        when(repository.findByEmail("ana@email.com")).thenReturn(Optional.empty());
+
+        ResponseEntity<?> response = controller.login(new LoginRequest("ana@email.com", "senha123"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void refreshRetornaNovoTokenQuandoBearerValido() {
+        Usuario usuario = new Usuario();
+        usuario.setEmail("ana@email.com");
+
+        when(jwtService.validarToken("token-antigo")).thenReturn("ana@email.com");
+        when(repository.findByEmail("ana@email.com")).thenReturn(Optional.of(usuario));
+        when(jwtService.gerarToken(usuario)).thenReturn("token-novo");
+
+        ResponseEntity<?> response = controller.refresh("Bearer token-antigo");
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody()).isEqualTo(new LoginResponse("token-novo"));
+    }
+
+    @Test
+    void refreshRetornaUnauthorizedQuandoHeaderNaoPossuiBearer() {
+        ResponseEntity<?> response = controller.refresh("token-sem-prefixo");
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    }
+
+    @Test
+    void refreshRetornaUnauthorizedQuandoTokenInvalido() {
+        when(jwtService.validarToken("token-invalido")).thenReturn(null);
+
+        ResponseEntity<?> response = controller.refresh("Bearer token-invalido");
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 }
