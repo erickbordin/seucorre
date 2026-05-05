@@ -9,6 +9,7 @@ import com.seucorre.treino.application.dto.RegistroTreinoDTO;
 import com.seucorre.treino.domain.RegistroTreino;
 import com.seucorre.treino.domain.SessaoTreino;
 import com.seucorre.treino.infrastructure.RegistroRepository;
+import com.seucorre.usuario.application.dto.DispositivoExternoRequest;
 import com.seucorre.usuario.domain.DispositivoExterno;
 import com.seucorre.usuario.domain.Usuario;
 import com.seucorre.usuario.infrastructure.UsuarioRepository;
@@ -31,6 +32,30 @@ public class SyncAppService {
     private final RegistroRepository registroRepository;
     private final ProgressoAppService progressoAppService;
     private final List<WearableAdapter> wearableAdapters;
+
+    @Transactional
+    public DispositivoSincronizadoDTO vincularDispositivo(UUID usuarioId, DispositivoExternoRequest request) {
+        if (usuarioId == null) {
+            throw new IllegalArgumentException("Usuário é obrigatório.");
+        }
+        if (request == null) {
+            throw new IllegalArgumentException("Request de dispositivo é obrigatória.");
+        }
+
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado."));
+
+        DispositivoExterno dispositivoExterno = usuario.getDispositivos().stream()
+                .filter(dispositivo -> request.plataforma() == dispositivo.getPlataforma())
+                .findFirst()
+                .orElseGet(() -> criarDispositivo(usuario, request.plataforma()));
+
+        dispositivoExterno.setTokenAcesso(request.tokenAcesso());
+        dispositivoExterno.setTokenExpiresAt(request.tokenExpiresAt());
+
+        usuarioRepository.save(usuario);
+        return DispositivoSincronizadoDTO.from(dispositivoExterno);
+    }
 
     @Transactional
     public List<RegistroTreinoDTO> sincronizarDados(UUID usuarioId, PlataformaRelogio plataforma) {
@@ -67,6 +92,26 @@ public class SyncAppService {
                 .filter(java.util.Objects::nonNull)
                 .map(RegistroTreinoDTO::from)
                 .toList();
+    }
+
+    @Transactional
+    public void removerDispositivo(UUID usuarioId, PlataformaRelogio plataforma) {
+        if (usuarioId == null) {
+            throw new IllegalArgumentException("Usuário é obrigatório.");
+        }
+        if (plataforma == null) {
+            throw new IllegalArgumentException("Plataforma é obrigatória.");
+        }
+
+        Usuario usuario = usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado."));
+
+        boolean removido = usuario.getDispositivos().removeIf(dispositivo -> plataforma == dispositivo.getPlataforma());
+        if (!removido) {
+            throw new EntityNotFoundException("Dispositivo não vinculado para a plataforma informada.");
+        }
+
+        usuarioRepository.save(usuario);
     }
 
     private RegistroTreino importarAtividade(UUID usuarioId,
@@ -142,6 +187,28 @@ public class SyncAppService {
     private void validarPlataformaSuportada(PlataformaRelogio plataforma) {
         if (plataforma != PlataformaRelogio.GARMIN && plataforma != PlataformaRelogio.STRAVA) {
             throw new BusinessRuleException("A sincronização suporta apenas Garmin e Strava nesta versão.");
+        }
+    }
+
+    private DispositivoExterno criarDispositivo(Usuario usuario, PlataformaRelogio plataforma) {
+        DispositivoExterno dispositivoExterno = new DispositivoExterno();
+        dispositivoExterno.setUsuario(usuario);
+        dispositivoExterno.setPlataforma(plataforma);
+        usuario.vincularDispositivo(dispositivoExterno);
+        return dispositivoExterno;
+    }
+
+    public record DispositivoSincronizadoDTO(
+            PlataformaRelogio plataforma,
+            boolean tokenValido,
+            java.time.LocalDateTime tokenExpiresAt
+    ) {
+        public static DispositivoSincronizadoDTO from(DispositivoExterno dispositivoExterno) {
+            return new DispositivoSincronizadoDTO(
+                    dispositivoExterno.getPlataforma(),
+                    dispositivoExterno.tokenValido(),
+                    dispositivoExterno.getTokenExpiresAt()
+            );
         }
     }
 }
