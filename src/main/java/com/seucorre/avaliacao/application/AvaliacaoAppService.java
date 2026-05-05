@@ -69,6 +69,17 @@ public class AvaliacaoAppService {
         return AnaliseRiscoDTO.from(checkinSalvo);
     }
 
+    @Transactional
+    public AnaliseRiscoDTO processarCheckin(UUID usuarioId, CheckinSemanalRequest request) {
+        if (request == null) {
+            throw new IllegalArgumentException("Request de check-in é obrigatória.");
+        }
+        if (!usuarioId.equals(request.usuarioId())) {
+            throw new BusinessRuleException("O usuário informado no corpo da requisição difere do usuário autenticado.");
+        }
+        return processarCheckin(request);
+    }
+
     @Transactional(readOnly = true)
     public List<AnaliseRiscoDTO> listarHistoricoCheckins(UUID usuarioId) {
         return checkinRepository.findByUsuarioIdOrderBySemanaAsc(usuarioId).stream()
