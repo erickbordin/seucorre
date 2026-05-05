@@ -30,6 +30,16 @@ public interface RegistroRepository extends JpaRepository<RegistroTreino, UUID> 
             select s
             from SessaoTreino s
             where s.plano.usuario.id = :usuarioId
+              and s.numeroSemana = :semana
+            order by s.dataPrevista asc
+            """)
+    List<SessaoTreino> findSessoesByUsuarioIdAndNumeroSemana(@Param("usuarioId") UUID usuarioId,
+                                                             @Param("semana") Integer semana);
+
+    @Query("""
+            select s
+            from SessaoTreino s
+            where s.plano.usuario.id = :usuarioId
             order by s.dataPrevista desc
             """)
     List<SessaoTreino> findSessoesByUsuarioIdOrderByDataPrevistaDesc(@Param("usuarioId") UUID usuarioId);
