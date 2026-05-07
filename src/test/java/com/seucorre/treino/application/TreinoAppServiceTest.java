@@ -5,6 +5,7 @@ import com.seucorre.avaliacao.domain.ProgressoSemanal;
 import com.seucorre.shared.domain.enums.StatusTreino;
 import com.seucorre.shared.domain.enums.TipoTreino;
 import com.seucorre.shared.exception.EntityNotFoundException;
+import com.seucorre.treino.application.dto.PlanoTreinoDTO;
 import com.seucorre.treino.application.dto.RegistroTreinoDTO;
 import com.seucorre.treino.application.dto.RegistroTreinoRequest;
 import com.seucorre.treino.application.dto.SessaoTreinoDTO;
@@ -32,13 +33,15 @@ class TreinoAppServiceTest {
 
     private RegistroRepository registroRepository;
     private ProgressoAppService progressoAppService;
+    private PlanoAppService planoAppService;
     private TreinoAppService service;
 
     @BeforeEach
     void setUp() {
         registroRepository = mock(RegistroRepository.class);
         progressoAppService = mock(ProgressoAppService.class);
-        service = new TreinoAppService(registroRepository, progressoAppService);
+        planoAppService = mock(PlanoAppService.class);
+        service = new TreinoAppService(registroRepository, progressoAppService, planoAppService);
     }
 
     @Test
@@ -116,6 +119,61 @@ class TreinoAppServiceTest {
         assertThat(historico).hasSize(2);
         assertThat(historico.get(0).dataPrevista()).isEqualTo(LocalDate.of(2026, 5, 20));
         assertThat(historico.get(1).dataPrevista()).isEqualTo(LocalDate.of(2026, 5, 10));
+    }
+
+    @Test
+    void listarSessoesDaSemanaUsaPlanoAtivoCacheado() {
+        UUID usuarioId = UUID.randomUUID();
+        SessaoTreinoDTO sessaoSemanaDois = new SessaoTreinoDTO(
+                UUID.randomUUID(),
+                2,
+                LocalDate.of(2026, 5, 18),
+                TipoTreino.LONGO,
+                new BigDecimal("12.00"),
+                60,
+                "MODERADA",
+                "Z3",
+                new BigDecimal("340.00"),
+                "Longo",
+                false,
+                false,
+                null
+        );
+        SessaoTreinoDTO sessaoSemanaUm = new SessaoTreinoDTO(
+                UUID.randomUUID(),
+                1,
+                LocalDate.of(2026, 5, 11),
+                TipoTreino.REGENERATIVO,
+                new BigDecimal("5.00"),
+                35,
+                "LEVE",
+                "Z2",
+                new BigDecimal("390.00"),
+                "Regenerativo",
+                false,
+                false,
+                null
+        );
+        PlanoTreinoDTO planoAtivo = new PlanoTreinoDTO(
+                UUID.randomUUID(),
+                4,
+                LocalDate.of(2026, 5, 11),
+                LocalDate.of(2026, 6, 8),
+                new BigDecimal("40.00"),
+                null,
+                "Plano ativo",
+                null,
+                10.0d,
+                List.of(sessaoSemanaDois, sessaoSemanaUm)
+        );
+
+        when(planoAppService.buscarPlanoAtivo(usuarioId)).thenReturn(planoAtivo);
+
+        List<SessaoTreinoDTO> sessoes = service.listarSessoesDaSemana(usuarioId, 2);
+
+        assertThat(sessoes).hasSize(1);
+        assertThat(sessoes.get(0).numeroSemana()).isEqualTo(2);
+        assertThat(sessoes.get(0).tipo()).isEqualTo(TipoTreino.LONGO);
     }
 
     private SessaoTreino criarSessao(UUID treinoId) {

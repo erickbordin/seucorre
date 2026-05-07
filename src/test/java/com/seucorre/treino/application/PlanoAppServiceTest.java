@@ -127,6 +127,24 @@ class PlanoAppServiceTest {
         assertThat(sessoes.get(0).tipo()).isEqualTo(TipoTreino.LONGO);
     }
 
+    @Test
+    void buscarPlanoAtivoRetornaPlanoAtivoMaisRecenteDoUsuario() {
+        UUID usuarioId = UUID.randomUUID();
+        Usuario usuario = criarUsuario(usuarioId);
+        PlanoTreino planoTreino = criarPlano(usuario);
+        planoTreino.setStatus(StatusPlano.ATIVO);
+        planoTreino.setDataInicio(LocalDate.of(2026, 5, 19));
+
+        when(planoRepository.findFirstByUsuarioIdAndStatusOrderByDataInicioDesc(usuarioId, StatusPlano.ATIVO))
+                .thenReturn(Optional.of(planoTreino));
+
+        PlanoTreinoDTO dto = service.buscarPlanoAtivo(usuarioId);
+
+        assertThat(dto).isNotNull();
+        assertThat(dto.id()).isEqualTo(planoTreino.getId());
+        assertThat(dto.status()).isEqualTo(StatusPlano.ATIVO);
+    }
+
     private Usuario criarUsuario(UUID usuarioId) {
         Usuario usuario = new Usuario();
         usuario.setId(usuarioId);
