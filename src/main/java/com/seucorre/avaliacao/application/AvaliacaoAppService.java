@@ -1,5 +1,6 @@
 package com.seucorre.avaliacao.application;
 
+import com.seucorre.infra.cache.CacheConfig;
 import com.seucorre.avaliacao.application.dto.AnaliseRiscoDTO;
 import com.seucorre.avaliacao.application.dto.CheckinSemanalRequest;
 import com.seucorre.avaliacao.application.dto.ProgressoSemanalDTO;
@@ -17,6 +18,7 @@ import com.seucorre.treino.infrastructure.PlanoRepository;
 import com.seucorre.usuario.domain.Usuario;
 import com.seucorre.usuario.infrastructure.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -70,6 +72,7 @@ public class AvaliacaoAppService {
     }
 
     @Transactional
+    @CacheEvict(cacheNames = CacheConfig.PLANO_ATIVO_CACHE, key = "#usuarioId")
     public AnaliseRiscoDTO processarCheckin(UUID usuarioId, CheckinSemanalRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("Request de check-in é obrigatória.");

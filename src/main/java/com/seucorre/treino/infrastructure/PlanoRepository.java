@@ -9,6 +9,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Repository
@@ -17,6 +18,8 @@ public interface PlanoRepository extends JpaRepository<PlanoTreino, UUID> {
     List<PlanoTreino> findByUsuarioId(UUID usuarioId);
 
     List<PlanoTreino> findByUsuarioIdAndStatus(UUID usuarioId, StatusPlano status);
+
+    Optional<PlanoTreino> findFirstByUsuarioIdAndStatusOrderByDataInicioDesc(UUID usuarioId, StatusPlano status);
 
     @Query("""
             select s

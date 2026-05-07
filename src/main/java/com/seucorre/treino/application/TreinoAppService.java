@@ -22,6 +22,7 @@ public class TreinoAppService {
 
     private final RegistroRepository registroRepository;
     private final ProgressoAppService progressoAppService;
+    private final PlanoAppService planoAppService;
 
     @Transactional
     public RegistroTreinoDTO registrarExecucao(RegistroTreinoRequest request) {
@@ -69,8 +70,9 @@ public class TreinoAppService {
 
     @Transactional(readOnly = true)
     public List<SessaoTreinoDTO> listarSessoesDaSemana(UUID usuarioId, Integer semana) {
-        return registroRepository.findSessoesByUsuarioIdAndNumeroSemana(usuarioId, semana).stream()
-                .map(SessaoTreinoDTO::from)
+        return planoAppService.buscarPlanoAtivo(usuarioId).sessoes().stream()
+                .filter(sessaoTreino -> semana.equals(sessaoTreino.numeroSemana()))
+                .sorted(java.util.Comparator.comparing(SessaoTreinoDTO::dataPrevista, java.util.Comparator.nullsLast(java.util.Comparator.naturalOrder())))
                 .toList();
     }
 
