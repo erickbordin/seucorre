@@ -20,11 +20,13 @@ public class UsuarioRepositoryImpl implements UsuarioRepositoryCustom {
     @Override
     public Optional<PerfilCorrida> findPerfilCorridaByUsuarioId(UUID usuarioId) {
         return entityManager.createQuery(
-                        "select p from PerfilCorrida p where p.usuario.id = :usuarioId",
+                        "select distinct p from PerfilCorrida p left join fetch p.zonasFc where p.usuario.id = :usuarioId",
                         PerfilCorrida.class
                 )
                 .setParameter("usuarioId", usuarioId)
-                .getResultStream()
+                .setMaxResults(1)
+                .getResultList()
+                .stream()
                 .findFirst();
     }
 
