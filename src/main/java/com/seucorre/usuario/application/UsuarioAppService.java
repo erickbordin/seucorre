@@ -27,7 +27,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 
 @Service
 @RequiredArgsConstructor
@@ -237,8 +239,37 @@ public class UsuarioAppService {
         PerfilCorrida perfilCorrida = toPerfilCorrida(request);
         if (perfilExistente != null) {
             perfilCorrida.setId(perfilExistente.getId());
+            preservarIdentidadesDasZonas(perfilExistente, perfilCorrida);
         }
         return perfilCorrida;
+    }
+
+    private void preservarIdentidadesDasZonas(PerfilCorrida perfilExistente, PerfilCorrida perfilAtualizado) {
+        if (perfilExistente == null
+                || perfilExistente.getZonasFc() == null
+                || perfilExistente.getZonasFc().isEmpty()
+                || perfilAtualizado == null
+                || perfilAtualizado.getZonasFc() == null
+                || perfilAtualizado.getZonasFc().isEmpty()) {
+            return;
+        }
+
+        Map<Integer, ZonaFCPersistida> zonasExistentesPorNumero = perfilExistente.getZonasFc().stream()
+                .filter(zona -> zona.getZona() != null)
+                .collect(java.util.stream.Collectors.toMap(
+                        ZonaFCPersistida::getZona,
+                        Function.identity(),
+                        (zona1, zona2) -> zona1
+                ));
+
+        perfilAtualizado.getZonasFc().stream()
+                .filter(zona -> zona.getZona() != null)
+                .forEach(zonaAtualizada -> {
+                    ZonaFCPersistida zonaExistente = zonasExistentesPorNumero.get(zonaAtualizada.getZona());
+                    if (zonaExistente != null && zonaExistente.getId() != null) {
+                        zonaAtualizada.setId(zonaExistente.getId());
+                    }
+                });
     }
 
     private PerfilCorrida salvarPerfilCorrida(Usuario usuario, PerfilCorrida perfilCorrida) {
