@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -93,6 +94,17 @@ public class ProgressoAppService {
     public List<ProgressoSemanalDTO> listarHistoricoProgresso(UUID usuarioId) {
         return progressoRepository.findByPlanoUsuarioIdOrderByNumeroSemanaAsc(usuarioId).stream()
                 .map(ProgressoSemanalDTO::from)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
+    public List<ProgressoSemanal> listarUltimosProgressosDoPlano(UUID planoId) {
+        if (planoId == null) {
+            return List.of();
+        }
+
+        return progressoRepository.findTop3ByPlanoIdOrderByNumeroSemanaDesc(planoId).stream()
+                .sorted(Comparator.comparing(ProgressoSemanal::getNumeroSemana, Comparator.nullsLast(Comparator.naturalOrder())))
                 .toList();
     }
 

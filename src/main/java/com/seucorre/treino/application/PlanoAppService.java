@@ -1,6 +1,9 @@
 package com.seucorre.treino.application;
 
 import com.seucorre.infra.cache.CacheConfig;
+import com.seucorre.infra.events.EventPublisher;
+import com.seucorre.shared.domain.enums.Objetivo;
+import com.seucorre.shared.domain.event.PlanoGeradoEvent;
 import com.seucorre.shared.exception.BusinessRuleException;
 import com.seucorre.shared.domain.enums.StatusPlano;
 import com.seucorre.shared.exception.EntityNotFoundException;
@@ -29,6 +32,7 @@ public class PlanoAppService {
     private final PlanoRepository planoRepository;
     private final UsuarioRepository usuarioRepository;
     private final GeradorPlanoIA geradorPlanoIA;
+    private final EventPublisher eventPublisher;
 
     @Transactional
     @CachePut(cacheNames = CacheConfig.PLANO_ATIVO_CACHE, key = "#usuarioId")
@@ -38,8 +42,11 @@ public class PlanoAppService {
         }
 
         Usuario usuario = carregarPerfilCompleto(usuarioId);
-        PlanoTreino planoTreino = geradorPlanoIA.gerarPlano(usuario, request.objetivo());
+        List<PlanoTreino> historicoPlanos = planoRepository.findTop3ByUsuarioIdOrderByDataInicioDesc(usuarioId);
+        Objetivo objetivo = request.objetivo() != null ? request.objetivo() : usuario.getObjetivo();
+        PlanoTreino planoTreino = geradorPlanoIA.gerarPlano(usuario, request.objetivo(), historicoPlanos);
         PlanoTreino planoSalvo = planoRepository.save(planoTreino);
+        eventPublisher.publish(new PlanoGeradoEvent(usuarioId, planoSalvo.getId(), objetivo, planoSalvo.getTotalSemanas()));
         return PlanoTreinoDTO.from(planoSalvo);
     }
 

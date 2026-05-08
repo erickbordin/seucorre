@@ -1,6 +1,8 @@
 package com.seucorre.treino.application;
 
 import com.seucorre.avaliacao.application.ProgressoAppService;
+import com.seucorre.infra.events.EventPublisher;
+import com.seucorre.shared.domain.event.TreinoConcluidoEvent;
 import com.seucorre.shared.exception.BusinessRuleException;
 import com.seucorre.shared.exception.EntityNotFoundException;
 import com.seucorre.treino.application.dto.RegistroTreinoDTO;
@@ -23,6 +25,7 @@ public class TreinoAppService {
     private final RegistroRepository registroRepository;
     private final ProgressoAppService progressoAppService;
     private final PlanoAppService planoAppService;
+    private final EventPublisher eventPublisher;
 
     @Transactional
     public RegistroTreinoDTO registrarExecucao(RegistroTreinoRequest request) {
@@ -41,9 +44,7 @@ public class TreinoAppService {
         registroTreino.calcularDesvioDistancia(sessaoTreino.getDistanciaKm());
         registroTreino.temAlertaDeSaude();
 
-        RegistroTreino registroSalvo = registroRepository.save(registroTreino);
-        progressoAppService.atualizarProgressoSemanal(registroSalvo);
-        return RegistroTreinoDTO.from(registroSalvo);
+        return salvarRegistroEAtualizarFluxo(sessaoTreino, registroTreino);
     }
 
     @Transactional
@@ -63,9 +64,7 @@ public class TreinoAppService {
         registroTreino.calcularDesvioDistancia(sessaoTreino.getDistanciaKm());
         registroTreino.temAlertaDeSaude();
 
-        RegistroTreino registroSalvo = registroRepository.save(registroTreino);
-        progressoAppService.atualizarProgressoSemanal(registroSalvo);
-        return RegistroTreinoDTO.from(registroSalvo);
+        return salvarRegistroEAtualizarFluxo(sessaoTreino, registroTreino);
     }
 
     @Transactional(readOnly = true)
@@ -110,5 +109,28 @@ public class TreinoAppService {
         registroTreino.setViagem(Boolean.TRUE.equals(request.viagem()));
         registroTreino.setObservacao(request.observacao());
         return registroTreino;
+    }
+
+    private RegistroTreinoDTO salvarRegistroEAtualizarFluxo(SessaoTreino sessaoTreino, RegistroTreino registroTreino) {
+        RegistroTreino registroSalvo = registroRepository.save(registroTreino);
+        progressoAppService.atualizarProgressoSemanal(registroSalvo);
+        publicarTreinoConcluido(sessaoTreino, registroSalvo);
+        return RegistroTreinoDTO.from(registroSalvo);
+    }
+
+    private void publicarTreinoConcluido(SessaoTreino sessaoTreino, RegistroTreino registroTreino) {
+        if (sessaoTreino == null || sessaoTreino.getPlano() == null || sessaoTreino.getPlano().getUsuario() == null) {
+            return;
+        }
+
+        eventPublisher.publish(new TreinoConcluidoEvent(
+                sessaoTreino.getPlano().getUsuario().getId(),
+                sessaoTreino.getPlano().getId(),
+                sessaoTreino.getId(),
+                registroTreino.getId(),
+                sessaoTreino.getNumeroSemana(),
+                sessaoTreino.getTipo(),
+                registroTreino.temAlertaDeSaude()
+        ));
     }
 }

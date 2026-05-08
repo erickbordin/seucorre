@@ -2,6 +2,7 @@ package com.seucorre.treino.application;
 
 import com.seucorre.avaliacao.application.ProgressoAppService;
 import com.seucorre.avaliacao.domain.ProgressoSemanal;
+import com.seucorre.infra.events.EventPublisher;
 import com.seucorre.shared.domain.enums.StatusTreino;
 import com.seucorre.shared.domain.enums.TipoTreino;
 import com.seucorre.shared.exception.EntityNotFoundException;
@@ -13,6 +14,7 @@ import com.seucorre.treino.domain.PlanoTreino;
 import com.seucorre.treino.domain.RegistroTreino;
 import com.seucorre.treino.domain.SessaoTreino;
 import com.seucorre.treino.infrastructure.RegistroRepository;
+import com.seucorre.usuario.domain.Usuario;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -34,6 +36,7 @@ class TreinoAppServiceTest {
     private RegistroRepository registroRepository;
     private ProgressoAppService progressoAppService;
     private PlanoAppService planoAppService;
+    private EventPublisher eventPublisher;
     private TreinoAppService service;
 
     @BeforeEach
@@ -41,7 +44,8 @@ class TreinoAppServiceTest {
         registroRepository = mock(RegistroRepository.class);
         progressoAppService = mock(ProgressoAppService.class);
         planoAppService = mock(PlanoAppService.class);
-        service = new TreinoAppService(registroRepository, progressoAppService, planoAppService);
+        eventPublisher = mock(EventPublisher.class);
+        service = new TreinoAppService(registroRepository, progressoAppService, planoAppService, eventPublisher);
     }
 
     @Test
@@ -76,6 +80,7 @@ class TreinoAppServiceTest {
         assertThat(dto.desvioPace()).isNotZero();
         verify(registroRepository).save(any(RegistroTreino.class));
         verify(progressoAppService).atualizarProgressoSemanal(any(RegistroTreino.class));
+        verify(eventPublisher).publish(any());
     }
 
     @Test
@@ -179,6 +184,9 @@ class TreinoAppServiceTest {
     private SessaoTreino criarSessao(UUID treinoId) {
         PlanoTreino planoTreino = new PlanoTreino();
         planoTreino.setId(UUID.randomUUID());
+        Usuario usuario = new Usuario();
+        usuario.setId(UUID.randomUUID());
+        planoTreino.setUsuario(usuario);
 
         SessaoTreino sessaoTreino = new SessaoTreino();
         sessaoTreino.setId(treinoId);
