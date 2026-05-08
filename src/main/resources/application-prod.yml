@@ -32,3 +32,8 @@ seucorre:
       timeout-seconds: 30
       max-retries: 3
       initial-backoff-millis: 500
+
+api:
+  security:
+    token:
+      secret: ${JWT_SECRET}
