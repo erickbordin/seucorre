@@ -15,6 +15,7 @@ import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Date;
+import java.util.UUID;
 import java.util.function.Function;
 import javax.crypto.SecretKey;
 
@@ -22,33 +23,42 @@ import javax.crypto.SecretKey;
 public class JwtService {
 
     private static final String ISSUER = "seucorre-api";
+    private static final String TOKEN_TYPE_CLAIM = "token_type";
+    private static final String ACCESS_TOKEN_TYPE = "access";
+    private static final String REFRESH_TOKEN_TYPE = "refresh";
 
     @Value("${api.security.token.secret}")
     private String secret;
 
     @Value("${api.security.token.expiration-hours:2}")
-    private long expirationHours;
+    private long accessTokenExpirationHours;
+
+    @Value("${api.security.token.refresh-expiration-days:7}")
+    private long refreshTokenExpirationDays;
 
     public String gerarToken(Usuario usuario) {
-        if (usuario == null || usuario.getEmail() == null || usuario.getEmail().isBlank()) {
-            throw new IllegalArgumentException("Usuário com e-mail válido é obrigatório para gerar token.");
-        }
+        return gerarAccessToken(usuario);
+    }
 
-        Instant agora = Instant.now();
-        Instant expiracao = agora.plus(Duration.ofHours(expirationHours));
+    public String gerarAccessToken(Usuario usuario) {
+        return gerarToken(usuario, ACCESS_TOKEN_TYPE, Duration.ofHours(accessTokenExpirationHours));
+    }
 
-        return Jwts.builder()
-                .issuer(ISSUER)
-                .subject(usuario.getEmail())
-                .issuedAt(Date.from(agora))
-                .expiration(Date.from(expiracao))
-                .signWith(chaveAssinatura())
-                .compact();
+    public String gerarRefreshToken(Usuario usuario) {
+        return gerarToken(usuario, REFRESH_TOKEN_TYPE, Duration.ofDays(refreshTokenExpirationDays));
     }
 
     public String validarToken(String token) {
         try {
-            return extrairSubject(token);
+            return extrairSubjectPorTipo(token, ACCESS_TOKEN_TYPE);
+        } catch (JwtException | IllegalArgumentException exception) {
+            return null;
+        }
+    }
+
+    public String validarRefreshToken(String token) {
+        try {
+            return extrairSubjectPorTipo(token, REFRESH_TOKEN_TYPE);
         } catch (JwtException | IllegalArgumentException exception) {
             return null;
         }
@@ -81,6 +91,40 @@ public class JwtService {
         }
 
         return claims;
+    }
+
+    private String extrairSubjectPorTipo(String token, String tipoEsperado) {
+        Claims claims = extrairClaims(token);
+        String tipoToken = claims.get(TOKEN_TYPE_CLAIM, String.class);
+        if (!tipoEsperado.equals(tipoToken)) {
+            throw new SecurityException("Tipo de token inválido.");
+        }
+        return claims.getSubject();
+    }
+
+    private String gerarToken(Usuario usuario, String tipoToken, Duration expiracao) {
+        if (usuario == null || usuario.getEmail() == null || usuario.getEmail().isBlank()) {
+            throw new IllegalArgumentException("Usuário com e-mail válido é obrigatório para gerar token.");
+        }
+        if (tipoToken == null || tipoToken.isBlank()) {
+            throw new IllegalArgumentException("Tipo de token é obrigatório.");
+        }
+        if (expiracao == null || expiracao.isZero() || expiracao.isNegative()) {
+            throw new IllegalArgumentException("Expiração do token deve ser positiva.");
+        }
+
+        Instant agora = Instant.now();
+        Instant expiraEm = agora.plus(expiracao);
+
+        return Jwts.builder()
+                .id(UUID.randomUUID().toString())
+                .issuer(ISSUER)
+                .subject(usuario.getEmail())
+                .claim(TOKEN_TYPE_CLAIM, tipoToken)
+                .issuedAt(Date.from(agora))
+                .expiration(Date.from(expiraEm))
+                .signWith(chaveAssinatura())
+                .compact();
     }
 
     private SecretKey chaveAssinatura() {

@@ -188,7 +188,54 @@ class UsuarioIntegrationTest {
         assertThat(usuarioRepository.findDispositivosByUsuarioId(usuarioPersistido.getId())).hasSize(1);
     }
 
+    @Test
+    void cicloJwtValidaLoginAcessoNegacaoERefreshToken() throws Exception {
+        UsuarioCadastroRequest cadastro = cadastroValido("jwt.integration@seucorre.dev", "SEG,QUA,SEX");
+
+        mockMvc.perform(post("/api/usuarios/registrar")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(cadastro)))
+                .andExpect(status().isCreated());
+
+        LoginResponse loginResponse = autenticarCompleto(cadastro.email(), cadastro.senha());
+
+        mockMvc.perform(get("/api/usuarios/me")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(loginResponse.token())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value(cadastro.email()));
+
+        mockMvc.perform(get("/api/usuarios/me"))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(get("/api/usuarios/me")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("token-invalido")))
+                .andExpect(status().isUnauthorized());
+
+        mockMvc.perform(get("/api/usuarios/me")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(loginResponse.refreshToken())))
+                .andExpect(status().isUnauthorized());
+
+        MvcResult refreshResult = mockMvc.perform(post("/auth/refresh")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(loginResponse.refreshToken())))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        LoginResponse refreshResponse = fromJson(refreshResult, new TypeReference<>() {
+        });
+        assertThat(refreshResponse.token()).isNotBlank();
+        assertThat(refreshResponse.refreshToken()).isNotBlank();
+        assertThat(refreshResponse.token()).isNotEqualTo(loginResponse.token());
+
+        mockMvc.perform(post("/auth/refresh")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(loginResponse.token())))
+                .andExpect(status().isUnauthorized());
+    }
+
     private String autenticar(String email, String senha) throws Exception {
+        return autenticarCompleto(email, senha).token();
+    }
+
+    private LoginResponse autenticarCompleto(String email, String senha) throws Exception {
         MvcResult result = mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(json(new LoginRequest(email, senha))))
@@ -198,7 +245,8 @@ class UsuarioIntegrationTest {
         LoginResponse response = fromJson(result, new TypeReference<>() {
         });
         assertThat(response.token()).isNotBlank();
-        return response.token();
+        assertThat(response.refreshToken()).isNotBlank();
+        return response;
     }
 
     private String json(Object body) throws Exception {
