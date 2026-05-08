@@ -68,4 +68,16 @@ class NotificacaoServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessage("Evento de plano reescrito é obrigatório.");
     }
+
+    @Test
+    void processaLembreteTreinoValido() {
+        assertThatCode(() -> service.enviarLembreteTreino(UUID.randomUUID(), 2, 1))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void processaAberturaCheckinValida() {
+        assertThatCode(() -> service.enviarAberturaCheckin(UUID.randomUUID(), 4))
+                .doesNotThrowAnyException();
+    }
 }

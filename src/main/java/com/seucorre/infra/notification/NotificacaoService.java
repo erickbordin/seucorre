@@ -51,6 +51,35 @@ public class NotificacaoService {
         enviarPush(event.usuarioId(), "Treino registrado", mensagem);
     }
 
+    @Async
+    public void enviarLembreteTreino(UUID usuarioId, Integer semana, int totalTreinosPendentes) {
+        if (semana == null) {
+            throw new IllegalArgumentException("Semana do lembrete é obrigatória.");
+        }
+        if (totalTreinosPendentes <= 0) {
+            throw new IllegalArgumentException("Quantidade de treinos pendentes deve ser positiva.");
+        }
+
+        String mensagem = totalTreinosPendentes == 1
+                ? "Voce tem 1 treino previsto para hoje na semana " + semana + "."
+                : "Voce tem " + totalTreinosPendentes + " treinos previstos para hoje na semana " + semana + ".";
+
+        enviarPush(usuarioId, "Lembrete de treino", mensagem);
+    }
+
+    @Async
+    public void enviarAberturaCheckin(UUID usuarioId, Integer semana) {
+        if (semana == null) {
+            throw new IllegalArgumentException("Semana do check-in é obrigatória.");
+        }
+
+        enviarPush(
+                usuarioId,
+                "Check-in liberado",
+                "Seu check-in da semana " + semana + " ja esta disponivel para preenchimento."
+        );
+    }
+
     private void enviarPush(UUID usuarioId, String titulo, String mensagem) {
         if (usuarioId == null) {
             throw new IllegalArgumentException("Usuário destinatário é obrigatório.");
