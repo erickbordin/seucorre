@@ -42,12 +42,13 @@ class AuthControllerTest {
 
         when(repository.findByEmail("ana@email.com")).thenReturn(Optional.of(usuario));
         when(passwordEncoder.matches("senha123", "hash-bcrypt")).thenReturn(true);
-        when(jwtService.gerarToken(usuario)).thenReturn("jwt-token");
+        when(jwtService.gerarAccessToken(usuario)).thenReturn("jwt-token");
+        when(jwtService.gerarRefreshToken(usuario)).thenReturn("refresh-token");
 
         ResponseEntity<?> response = controller.login(new LoginRequest("ana@email.com", "senha123"));
 
         assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
-        assertThat(response.getBody()).isEqualTo(new LoginResponse("jwt-token"));
+        assertThat(response.getBody()).isEqualTo(new LoginResponse("jwt-token", "refresh-token"));
     }
 
     @Test
@@ -78,14 +79,15 @@ class AuthControllerTest {
         Usuario usuario = new Usuario();
         usuario.setEmail("ana@email.com");
 
-        when(jwtService.validarToken("token-antigo")).thenReturn("ana@email.com");
+        when(jwtService.validarRefreshToken("refresh-antigo")).thenReturn("ana@email.com");
         when(repository.findByEmail("ana@email.com")).thenReturn(Optional.of(usuario));
-        when(jwtService.gerarToken(usuario)).thenReturn("token-novo");
+        when(jwtService.gerarAccessToken(usuario)).thenReturn("token-novo");
+        when(jwtService.gerarRefreshToken(usuario)).thenReturn("refresh-novo");
 
-        ResponseEntity<?> response = controller.refresh("Bearer token-antigo");
+        ResponseEntity<?> response = controller.refresh("Bearer refresh-antigo");
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo(new LoginResponse("token-novo"));
+        assertThat(response.getBody()).isEqualTo(new LoginResponse("token-novo", "refresh-novo"));
     }
 
     @Test
@@ -97,7 +99,7 @@ class AuthControllerTest {
 
     @Test
     void refreshRetornaUnauthorizedQuandoTokenInvalido() {
-        when(jwtService.validarToken("token-invalido")).thenReturn(null);
+        when(jwtService.validarRefreshToken("token-invalido")).thenReturn(null);
 
         ResponseEntity<?> response = controller.refresh("Bearer token-invalido");
 

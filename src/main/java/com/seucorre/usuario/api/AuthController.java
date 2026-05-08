@@ -34,7 +34,10 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        return ResponseEntity.ok(new LoginResponse(tokenService.gerarToken(usuario)));
+        return ResponseEntity.ok(new LoginResponse(
+                tokenService.gerarAccessToken(usuario),
+                tokenService.gerarRefreshToken(usuario)
+        ));
     }
 
     @PostMapping("/refresh")
@@ -44,7 +47,7 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        String email = tokenService.validarToken(token);
+        String email = tokenService.validarRefreshToken(token);
         if (email == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
@@ -54,7 +57,10 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        return ResponseEntity.ok(new LoginResponse(tokenService.gerarToken(usuario)));
+        return ResponseEntity.ok(new LoginResponse(
+                tokenService.gerarAccessToken(usuario),
+                tokenService.gerarRefreshToken(usuario)
+        ));
     }
 
     private String extrairToken(String authorizationHeader) {
