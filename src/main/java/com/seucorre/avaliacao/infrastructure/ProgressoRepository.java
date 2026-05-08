@@ -15,5 +15,7 @@ public interface ProgressoRepository extends JpaRepository<ProgressoSemanal, UUI
 
     List<ProgressoSemanal> findByPlanoIdOrderByNumeroSemanaAsc(UUID planoId);
 
+    List<ProgressoSemanal> findTop3ByPlanoIdOrderByNumeroSemanaDesc(UUID planoId);
+
     Optional<ProgressoSemanal> findByPlanoIdAndNumeroSemana(UUID planoId, Integer numeroSemana);
 }

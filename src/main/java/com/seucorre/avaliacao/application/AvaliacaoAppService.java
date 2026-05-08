@@ -9,6 +9,7 @@ import com.seucorre.avaliacao.application.dto.ProgressoSemanalDTO;
 import com.seucorre.avaliacao.domain.CheckinSemanal;
 import com.seucorre.avaliacao.domain.ProgressoSemanal;
 import com.seucorre.shared.domain.event.PlanoReescritoEvent;
+import com.seucorre.shared.domain.event.CheckinProcessadoEvent;
 import com.seucorre.avaliacao.infrastructure.CheckinRepository;
 import com.seucorre.shared.domain.enums.NivelRisco;
 import com.seucorre.shared.domain.enums.StatusPlano;
@@ -70,13 +71,15 @@ public class AvaliacaoAppService {
         checkinSemanal.setAnaliseIA(gerarAnaliseIA(checkinSemanal, progressoSemanal));
 
         if (checkinSemanal.precisaReescreverPlano()) {
-            PlanoTreino planoReescrito = geradorPlanoIA.reescreverPlano(planoTreino, checkinSemanal);
+            List<ProgressoSemanal> progressosRecentes = progressoAppService.listarUltimosProgressosDoPlano(planoTreino.getId());
+            PlanoTreino planoReescrito = geradorPlanoIA.reescreverPlano(planoTreino, checkinSemanal, progressosRecentes);
             persistirReescrita(planoTreino, planoReescrito, checkinSemanal);
         } else {
             checkinSemanal.setPlanoReescrito(false);
         }
 
         CheckinSemanal checkinSalvo = checkinRepository.save(checkinSemanal);
+        publicarCheckinProcessado(checkinSalvo);
         return AnaliseRiscoDTO.from(checkinSalvo);
     }
 
@@ -250,6 +253,17 @@ public class AvaliacaoAppService {
                 checkinSemanal.getId(),
                 checkinSemanal.getSemana(),
                 nivelRisco
+        ));
+    }
+
+    private void publicarCheckinProcessado(CheckinSemanal checkinSemanal) {
+        eventPublisher.publish(new CheckinProcessadoEvent(
+                checkinSemanal.getUsuario() == null ? null : checkinSemanal.getUsuario().getId(),
+                checkinSemanal.getPlano() == null ? null : checkinSemanal.getPlano().getId(),
+                checkinSemanal.getId(),
+                checkinSemanal.getSemana(),
+                checkinSemanal.avaliarNivelRisco(),
+                checkinSemanal.getPlanoReescrito()
         ));
     }
 

@@ -36,10 +36,14 @@ public class GeradorPlanoIA {
     }
 
     public PlanoTreino gerarPlano(Usuario usuario, Objetivo objetivo) {
+        return gerarPlano(usuario, objetivo, List.of());
+    }
+
+    public PlanoTreino gerarPlano(Usuario usuario, Objetivo objetivo, List<PlanoTreino> historicoPlanos) {
         validarUsuario(usuario);
 
         Objetivo objetivoEfetivo = objetivo != null ? objetivo : usuario.getObjetivo();
-        String prompt = construirContexto(usuario, objetivoEfetivo);
+        String prompt = construirContexto(usuario, objetivoEfetivo, historicoPlanos);
         String resposta = iaClient.gerarResposta(prompt);
 
         PlanoTreino planoTreino = parsearResposta(resposta, usuario);
@@ -48,6 +52,10 @@ public class GeradorPlanoIA {
     }
 
     public PlanoTreino reescreverPlano(PlanoTreino plano, CheckinSemanal checkin) {
+        return reescreverPlano(plano, checkin, List.of());
+    }
+
+    public PlanoTreino reescreverPlano(PlanoTreino plano, CheckinSemanal checkin, List<ProgressoSemanal> progressos) {
         if (plano == null) {
             throw new IllegalArgumentException("Plano é obrigatório.");
         }
@@ -61,7 +69,7 @@ public class GeradorPlanoIA {
             return plano;
         }
 
-        String prompt = promptBuilder.construirPromptReescrita(plano, checkin, List.of());
+        String prompt = promptBuilder.construirPromptReescrita(plano, checkin, progressos);
         String resposta = iaClient.gerarResposta(prompt);
 
         PlanoTreino planoReescrito = parsearResposta(resposta, plano.getUsuario());
@@ -113,7 +121,11 @@ public class GeradorPlanoIA {
     }
 
     private String construirContexto(Usuario usuario, Objetivo objetivo) {
-        return promptBuilder.construirPromptPlano(usuario, objetivo, List.of());
+        return construirContexto(usuario, objetivo, List.of());
+    }
+
+    private String construirContexto(Usuario usuario, Objetivo objetivo, List<PlanoTreino> historicoPlanos) {
+        return promptBuilder.construirPromptPlano(usuario, objetivo, historicoPlanos);
     }
 
     private PlanoTreino parsearResposta(String json, Usuario usuario) {

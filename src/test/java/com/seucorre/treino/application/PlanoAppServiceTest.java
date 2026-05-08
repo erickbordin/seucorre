@@ -1,5 +1,6 @@
 package com.seucorre.treino.application;
 
+import com.seucorre.infra.events.EventPublisher;
 import com.seucorre.shared.domain.enums.NivelCondicionamento;
 import com.seucorre.shared.domain.enums.Objetivo;
 import com.seucorre.shared.domain.enums.StatusPlano;
@@ -37,6 +38,7 @@ class PlanoAppServiceTest {
     private PlanoRepository planoRepository;
     private UsuarioRepository usuarioRepository;
     private GeradorPlanoIA geradorPlanoIA;
+    private EventPublisher eventPublisher;
     private PlanoAppService service;
 
     @BeforeEach
@@ -44,7 +46,8 @@ class PlanoAppServiceTest {
         planoRepository = mock(PlanoRepository.class);
         usuarioRepository = mock(UsuarioRepository.class);
         geradorPlanoIA = mock(GeradorPlanoIA.class);
-        service = new PlanoAppService(planoRepository, usuarioRepository, geradorPlanoIA);
+        eventPublisher = mock(EventPublisher.class);
+        service = new PlanoAppService(planoRepository, usuarioRepository, geradorPlanoIA, eventPublisher);
     }
 
     @Test
@@ -56,7 +59,8 @@ class PlanoAppServiceTest {
 
         when(usuarioRepository.findById(usuarioId)).thenReturn(Optional.of(usuario));
         when(usuarioRepository.findPerfilCorridaByUsuarioId(usuarioId)).thenReturn(Optional.of(perfilCorrida));
-        when(geradorPlanoIA.gerarPlano(usuario, Objetivo.COMPLETAR_10K)).thenReturn(planoTreino);
+        when(planoRepository.findTop3ByUsuarioIdOrderByDataInicioDesc(usuarioId)).thenReturn(List.of(planoTreino));
+        when(geradorPlanoIA.gerarPlano(usuario, Objetivo.COMPLETAR_10K, List.of(planoTreino))).thenReturn(planoTreino);
         when(planoRepository.save(planoTreino)).thenReturn(planoTreino);
 
         PlanoTreinoDTO dto = service.criarPlano(usuarioId, new GerarPlanoRequest(Objetivo.COMPLETAR_10K));
@@ -64,8 +68,9 @@ class PlanoAppServiceTest {
         assertThat(usuario.getPerfilAtleta().getPerfilCorrida()).isSameAs(perfilCorrida);
         assertThat(dto.id()).isEqualTo(planoTreino.getId());
         assertThat(dto.sessoes()).hasSize(1);
-        verify(geradorPlanoIA).gerarPlano(usuario, Objetivo.COMPLETAR_10K);
+        verify(geradorPlanoIA).gerarPlano(usuario, Objetivo.COMPLETAR_10K, List.of(planoTreino));
         verify(planoRepository).save(planoTreino);
+        verify(eventPublisher).publish(any());
     }
 
     @Test
