@@ -1,6 +1,7 @@
 package com.seucorre.avaliacao.application;
 
 import com.seucorre.infra.cache.CacheConfig;
+import com.seucorre.infra.events.EventPublisher;
 import com.seucorre.avaliacao.application.dto.AnaliseRiscoDTO;
 import com.seucorre.avaliacao.application.dto.CheckinSemanalRequest;
 import com.seucorre.avaliacao.application.dto.ProgressoSemanalDTO;
@@ -19,7 +20,6 @@ import com.seucorre.usuario.domain.Usuario;
 import com.seucorre.usuario.infrastructure.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,7 +35,7 @@ public class AvaliacaoAppService {
     private final PlanoRepository planoRepository;
     private final UsuarioRepository usuarioRepository;
     private final GeradorPlanoIA geradorPlanoIA;
-    private final ApplicationEventPublisher eventPublisher;
+    private final EventPublisher eventPublisher;
 
     @Transactional
     public AnaliseRiscoDTO processarCheckin(CheckinSemanalRequest request) {
@@ -153,7 +153,7 @@ public class AvaliacaoAppService {
         PlanoTreino novoPlanoSalvo = planoRepository.save(planoReescrito);
 
         NivelRisco nivelRisco = checkinSemanal.avaliarNivelRisco();
-        eventPublisher.publishEvent(new PlanoReescritoEvent(
+        eventPublisher.publish(new PlanoReescritoEvent(
                 checkinSemanal.getUsuario() == null ? null : checkinSemanal.getUsuario().getId(),
                 planoOriginal.getId(),
                 novoPlanoSalvo.getId(),
