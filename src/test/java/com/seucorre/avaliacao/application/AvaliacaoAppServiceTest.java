@@ -6,6 +6,7 @@ import com.seucorre.avaliacao.application.dto.ProgressoSemanalDTO;
 import com.seucorre.avaliacao.domain.CheckinSemanal;
 import com.seucorre.avaliacao.domain.ProgressoSemanal;
 import com.seucorre.avaliacao.infrastructure.CheckinRepository;
+import com.seucorre.infra.events.EventPublisher;
 import com.seucorre.shared.domain.event.PlanoReescritoEvent;
 import com.seucorre.shared.domain.enums.StatusPlano;
 import com.seucorre.treino.domain.GeradorPlanoIA;
@@ -16,7 +17,6 @@ import com.seucorre.usuario.domain.Usuario;
 import com.seucorre.usuario.infrastructure.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.context.ApplicationEventPublisher;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -37,7 +37,7 @@ class AvaliacaoAppServiceTest {
     private PlanoRepository planoRepository;
     private UsuarioRepository usuarioRepository;
     private GeradorPlanoIA geradorPlanoIA;
-    private ApplicationEventPublisher eventPublisher;
+    private EventPublisher eventPublisher;
     private AvaliacaoAppService service;
 
     @BeforeEach
@@ -47,7 +47,7 @@ class AvaliacaoAppServiceTest {
         planoRepository = mock(PlanoRepository.class);
         usuarioRepository = mock(UsuarioRepository.class);
         geradorPlanoIA = mock(GeradorPlanoIA.class);
-        eventPublisher = mock(ApplicationEventPublisher.class);
+        eventPublisher = mock(EventPublisher.class);
         service = new AvaliacaoAppService(
                 progressoAppService,
                 checkinRepository,
@@ -90,7 +90,7 @@ class AvaliacaoAppServiceTest {
         assertThat(dto.planoReescrito()).isFalse();
         assertThat(dto.analiseIA()).isEqualTo("Risco baixo, manter plano.");
         verify(geradorPlanoIA, never()).reescreverPlano(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.any());
-        verify(eventPublisher, never()).publishEvent(org.mockito.ArgumentMatchers.any());
+        verify(eventPublisher, never()).publish(org.mockito.ArgumentMatchers.any());
     }
 
     @Test
@@ -151,7 +151,7 @@ class AvaliacaoAppServiceTest {
         assertThat(dto.analiseIA()).contains("Regra dos 10%");
         assertThat(planoTreino.getStatus()).isEqualTo(StatusPlano.CANCELADO);
         verify(geradorPlanoIA).reescreverPlano(org.mockito.ArgumentMatchers.eq(planoTreino), org.mockito.ArgumentMatchers.any(CheckinSemanal.class));
-        verify(eventPublisher).publishEvent(org.mockito.ArgumentMatchers.any(PlanoReescritoEvent.class));
+        verify(eventPublisher).publish(org.mockito.ArgumentMatchers.any(PlanoReescritoEvent.class));
     }
 
     @Test
