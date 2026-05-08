@@ -2,6 +2,7 @@ package com.seucorre.avaliacao.application;
 
 import com.seucorre.infra.cache.CacheConfig;
 import com.seucorre.infra.events.EventPublisher;
+import com.seucorre.infra.notification.NotificacaoService;
 import com.seucorre.avaliacao.application.dto.AnaliseRiscoDTO;
 import com.seucorre.avaliacao.application.dto.CheckinSemanalRequest;
 import com.seucorre.avaliacao.application.dto.ProgressoSemanalDTO;
@@ -15,7 +16,10 @@ import com.seucorre.shared.exception.BusinessRuleException;
 import com.seucorre.shared.exception.EntityNotFoundException;
 import com.seucorre.treino.domain.GeradorPlanoIA;
 import com.seucorre.treino.domain.PlanoTreino;
+import com.seucorre.treino.domain.RegistroTreino;
+import com.seucorre.treino.domain.SessaoTreino;
 import com.seucorre.treino.infrastructure.PlanoRepository;
+import com.seucorre.treino.infrastructure.RegistroRepository;
 import com.seucorre.usuario.domain.Usuario;
 import com.seucorre.usuario.infrastructure.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +27,10 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -36,6 +43,8 @@ public class AvaliacaoAppService {
     private final UsuarioRepository usuarioRepository;
     private final GeradorPlanoIA geradorPlanoIA;
     private final EventPublisher eventPublisher;
+    private final RegistroRepository registroRepository;
+    private final NotificacaoService notificacaoService;
 
     @Transactional
     public AnaliseRiscoDTO processarCheckin(CheckinSemanalRequest request) {
@@ -93,6 +102,87 @@ public class AvaliacaoAppService {
     @Transactional(readOnly = true)
     public List<ProgressoSemanalDTO> listarHistoricoProgresso(UUID usuarioId) {
         return progressoAppService.listarHistoricoProgresso(usuarioId);
+    }
+
+    @Transactional(readOnly = true)
+    public int enviarLembretesMatinais() {
+        LocalDate hoje = LocalDate.now();
+        int lembretesEnviados = 0;
+
+        for (PlanoTreino planoTreino : listarPlanosAtivos()) {
+            Integer semanaAtual = calcularSemanaAtual(planoTreino, hoje);
+            if (semanaAtual == null) {
+                continue;
+            }
+
+            List<SessaoTreino> treinosHoje = planoTreino.obterSessoesDaSemana(semanaAtual).stream()
+                    .filter(sessaoTreino -> hoje.equals(sessaoTreino.getDataPrevista()))
+                    .filter(SessaoTreino::estaPendente)
+                    .toList();
+
+            if (treinosHoje.isEmpty() || planoTreino.getUsuario() == null || planoTreino.getUsuario().getId() == null) {
+                continue;
+            }
+
+            notificacaoService.enviarLembreteTreino(planoTreino.getUsuario().getId(), semanaAtual, treinosHoje.size());
+            lembretesEnviados++;
+        }
+
+        return lembretesEnviados;
+    }
+
+    @Transactional
+    public int abrirCheckinsSemanais() {
+        LocalDate hoje = LocalDate.now();
+        int checkinsAbertos = 0;
+
+        for (PlanoTreino planoTreino : listarPlanosAtivos()) {
+            Integer semanaAtual = calcularSemanaAtual(planoTreino, hoje);
+            if (semanaAtual == null || planoTreino.getUsuario() == null || planoTreino.getUsuario().getId() == null) {
+                continue;
+            }
+
+            if (checkinRepository.findByPlanoIdAndSemana(planoTreino.getId(), semanaAtual).isPresent()) {
+                continue;
+            }
+
+            CheckinSemanal checkinSemanal = new CheckinSemanal();
+            checkinSemanal.setUsuario(planoTreino.getUsuario());
+            checkinSemanal.setPlano(planoTreino);
+            checkinSemanal.setSemana(semanaAtual);
+            checkinSemanal.setDataCheckin(hoje);
+            checkinSemanal.setAvaliacao("Check-in semanal aberto automaticamente.");
+            checkinSemanal.setPlanoReescrito(false);
+            checkinRepository.save(checkinSemanal);
+
+            notificacaoService.enviarAberturaCheckin(planoTreino.getUsuario().getId(), semanaAtual);
+            checkinsAbertos++;
+        }
+
+        return checkinsAbertos;
+    }
+
+    @Transactional
+    public int recalcularProgressosAutomaticos() {
+        LocalDate hoje = LocalDate.now();
+        int progressosRecalculados = 0;
+
+        for (PlanoTreino planoTreino : listarPlanosAtivos()) {
+            Integer semanaAtual = calcularSemanaAtual(planoTreino, hoje);
+            if (semanaAtual == null) {
+                continue;
+            }
+
+            List<RegistroTreino> registrosSemana = registroRepository.findByPlanoIdAndNumeroSemana(planoTreino.getId(), semanaAtual);
+            if (registrosSemana.isEmpty()) {
+                continue;
+            }
+
+            progressoAppService.atualizarProgressoSemanal(registrosSemana.get(registrosSemana.size() - 1));
+            progressosRecalculados++;
+        }
+
+        return progressosRecalculados;
     }
 
     private void preencherCheckin(CheckinSemanal checkinSemanal,
@@ -161,5 +251,30 @@ public class AvaliacaoAppService {
                 checkinSemanal.getSemana(),
                 nivelRisco
         ));
+    }
+
+    private List<PlanoTreino> listarPlanosAtivos() {
+        return planoRepository.findByStatus(StatusPlano.ATIVO).stream()
+                .filter(Objects::nonNull)
+                .filter(PlanoTreino::estaNoPrazo)
+                .filter(planoTreino -> planoTreino.getUsuario() != null)
+                .toList();
+    }
+
+    private Integer calcularSemanaAtual(PlanoTreino planoTreino, LocalDate referencia) {
+        if (planoTreino == null || referencia == null || planoTreino.getDataInicio() == null) {
+            return null;
+        }
+        if (referencia.isBefore(planoTreino.getDataInicio())) {
+            return null;
+        }
+
+        long semanasDesdeInicio = ChronoUnit.WEEKS.between(planoTreino.getDataInicio(), referencia);
+        int semanaAtual = Math.toIntExact(semanasDesdeInicio) + 1;
+
+        if (planoTreino.getTotalSemanas() != null && semanaAtual > planoTreino.getTotalSemanas()) {
+            return null;
+        }
+        return semanaAtual;
     }
 }

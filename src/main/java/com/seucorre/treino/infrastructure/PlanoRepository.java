@@ -19,6 +19,8 @@ public interface PlanoRepository extends JpaRepository<PlanoTreino, UUID> {
 
     List<PlanoTreino> findByUsuarioIdAndStatus(UUID usuarioId, StatusPlano status);
 
+    List<PlanoTreino> findByStatus(StatusPlano status);
+
     Optional<PlanoTreino> findFirstByUsuarioIdAndStatusOrderByDataInicioDesc(UUID usuarioId, StatusPlano status);
 
     @Query("""

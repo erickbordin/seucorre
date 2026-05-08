@@ -12,3 +12,9 @@ seucorre:
   treino:
     fator-carga-base: 1.1 # Regra dos 10% para prevenção de lesões
     frequencia-max-padrao: 220
+  scheduler:
+    zone: UTC
+    treino:
+      lembrete-manha-cron: "0 0 6 * * *"
+      abertura-checkin-cron: "0 0 8 * * MON"
+      calculo-progresso-cron: "0 0 23 * * *"

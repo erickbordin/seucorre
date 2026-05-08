@@ -7,11 +7,15 @@ import com.seucorre.avaliacao.domain.CheckinSemanal;
 import com.seucorre.avaliacao.domain.ProgressoSemanal;
 import com.seucorre.avaliacao.infrastructure.CheckinRepository;
 import com.seucorre.infra.events.EventPublisher;
+import com.seucorre.infra.notification.NotificacaoService;
 import com.seucorre.shared.domain.event.PlanoReescritoEvent;
 import com.seucorre.shared.domain.enums.StatusPlano;
 import com.seucorre.treino.domain.GeradorPlanoIA;
 import com.seucorre.treino.domain.PlanoTreino;
+import com.seucorre.treino.domain.RegistroTreino;
+import com.seucorre.treino.domain.SessaoTreino;
 import com.seucorre.treino.infrastructure.PlanoRepository;
+import com.seucorre.treino.infrastructure.RegistroRepository;
 import com.seucorre.usuario.domain.DadosFisicos;
 import com.seucorre.usuario.domain.Usuario;
 import com.seucorre.usuario.infrastructure.UsuarioRepository;
@@ -38,6 +42,8 @@ class AvaliacaoAppServiceTest {
     private UsuarioRepository usuarioRepository;
     private GeradorPlanoIA geradorPlanoIA;
     private EventPublisher eventPublisher;
+    private RegistroRepository registroRepository;
+    private NotificacaoService notificacaoService;
     private AvaliacaoAppService service;
 
     @BeforeEach
@@ -48,13 +54,17 @@ class AvaliacaoAppServiceTest {
         usuarioRepository = mock(UsuarioRepository.class);
         geradorPlanoIA = mock(GeradorPlanoIA.class);
         eventPublisher = mock(EventPublisher.class);
+        registroRepository = mock(RegistroRepository.class);
+        notificacaoService = mock(NotificacaoService.class);
         service = new AvaliacaoAppService(
                 progressoAppService,
                 checkinRepository,
                 planoRepository,
                 usuarioRepository,
                 geradorPlanoIA,
-                eventPublisher
+                eventPublisher,
+                registroRepository,
+                notificacaoService
         );
     }
 
@@ -191,6 +201,76 @@ class AvaliacaoAppServiceTest {
         assertThat(historicoCheckins.get(0).analiseIA()).isEqualTo("Sem sinais de risco.");
         assertThat(historicoProgresso).hasSize(1);
         assertThat(historicoProgresso.get(0).totalTreinos()).isEqualTo(3);
+    }
+
+    @Test
+    void enviarLembretesMatinaisDisparaNotificacaoQuandoHaTreinoHojePendente() {
+        Usuario usuario = criarUsuario();
+        PlanoTreino planoTreino = criarPlano(usuario);
+        planoTreino.setStatus(StatusPlano.ATIVO);
+        planoTreino.setDataInicio(LocalDate.now().minusDays(1));
+        planoTreino.setTotalSemanas(4);
+
+        SessaoTreino sessaoTreino = new SessaoTreino();
+        sessaoTreino.setId(UUID.randomUUID());
+        sessaoTreino.setPlano(planoTreino);
+        sessaoTreino.setNumeroSemana(1);
+        sessaoTreino.setDataPrevista(LocalDate.now());
+        planoTreino.adicionarSessao(sessaoTreino);
+
+        when(planoRepository.findByStatus(StatusPlano.ATIVO)).thenReturn(List.of(planoTreino));
+
+        int lembretesEnviados = service.enviarLembretesMatinais();
+
+        assertThat(lembretesEnviados).isEqualTo(1);
+        verify(notificacaoService).enviarLembreteTreino(usuario.getId(), 1, 1);
+    }
+
+    @Test
+    void abrirCheckinsSemanaisCriaCheckinQuandoNaoExisteParaSemanaAtual() {
+        Usuario usuario = criarUsuario();
+        PlanoTreino planoTreino = criarPlano(usuario);
+        planoTreino.setStatus(StatusPlano.ATIVO);
+        planoTreino.setDataInicio(LocalDate.now().minusDays(1));
+        planoTreino.setTotalSemanas(4);
+
+        when(planoRepository.findByStatus(StatusPlano.ATIVO)).thenReturn(List.of(planoTreino));
+        when(checkinRepository.findByPlanoIdAndSemana(planoTreino.getId(), 1)).thenReturn(Optional.empty());
+        when(checkinRepository.save(org.mockito.ArgumentMatchers.any(CheckinSemanal.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        int checkinsAbertos = service.abrirCheckinsSemanais();
+
+        assertThat(checkinsAbertos).isEqualTo(1);
+        verify(checkinRepository).save(org.mockito.ArgumentMatchers.any(CheckinSemanal.class));
+        verify(notificacaoService).enviarAberturaCheckin(usuario.getId(), 1);
+    }
+
+    @Test
+    void recalcularProgressosAutomaticosAtualizaSemanaQuandoHaRegistros() {
+        Usuario usuario = criarUsuario();
+        PlanoTreino planoTreino = criarPlano(usuario);
+        planoTreino.setStatus(StatusPlano.ATIVO);
+        planoTreino.setDataInicio(LocalDate.now().minusDays(1));
+        planoTreino.setTotalSemanas(4);
+
+        SessaoTreino sessaoTreino = new SessaoTreino();
+        sessaoTreino.setId(UUID.randomUUID());
+        sessaoTreino.setPlano(planoTreino);
+        sessaoTreino.setNumeroSemana(1);
+
+        RegistroTreino registroTreino = new RegistroTreino();
+        registroTreino.setId(UUID.randomUUID());
+        registroTreino.setSessaoTreino(sessaoTreino);
+
+        when(planoRepository.findByStatus(StatusPlano.ATIVO)).thenReturn(List.of(planoTreino));
+        when(registroRepository.findByPlanoIdAndNumeroSemana(planoTreino.getId(), 1)).thenReturn(List.of(registroTreino));
+        when(progressoAppService.atualizarProgressoSemanal(registroTreino)).thenReturn(new ProgressoSemanal());
+
+        int progressosRecalculados = service.recalcularProgressosAutomaticos();
+
+        assertThat(progressosRecalculados).isEqualTo(1);
+        verify(progressoAppService).atualizarProgressoSemanal(registroTreino);
     }
 
     private Usuario criarUsuario() {
