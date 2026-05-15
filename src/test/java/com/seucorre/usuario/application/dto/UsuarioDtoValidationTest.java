@@ -36,6 +36,25 @@ class UsuarioDtoValidationTest {
     }
 
     @Test
+    void aceitaUsuarioCadastroInicialSemOnboarding() {
+        UsuarioCadastroRequest request = new UsuarioCadastroRequest(
+                "Ana Runner",
+                "ana@email.com",
+                "senha123",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        Set<ConstraintViolation<UsuarioCadastroRequest>> violations = validator.validate(request);
+
+        assertThat(violations).isEmpty();
+    }
+
+    @Test
     void recusaUsuarioCadastroComCamposObrigatoriosAninhadosInvalidos() {
         UsuarioCadastroRequest request = new UsuarioCadastroRequest(
                 "",

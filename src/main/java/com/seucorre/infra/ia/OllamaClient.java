@@ -1,8 +1,6 @@
 package com.seucorre.infra.ia;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.seucorre.shared.exception.IAUnavailableException;
 import com.seucorre.treino.domain.IAClient;
@@ -22,44 +20,44 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
-import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 
 @Service
-@ConditionalOnProperty(name = "seucorre.ia.provider", havingValue = "anthropic", matchIfMissing = true)
-public class AnthropicClient implements IAClient {
-
-    private static final String ANTHROPIC_VERSION = "2023-06-01";
+@ConditionalOnProperty(name = "seucorre.ia.provider", havingValue = "ollama")
+public class OllamaClient implements IAClient {
 
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
     private final ExecutorService executorService;
 
-    @Value("${spring.ai.anthropic.api-key}")
-    private String apiKey;
-
-    @Value("${seucorre.ia.anthropic.base-url:https://api.anthropic.com/v1/messages}")
+    @Value("${seucorre.ia.ollama.base-url:http://localhost:11434/api/generate}")
     private String baseUrl;
 
-    @Value("${seucorre.ia.anthropic.model:claude-sonnet-4}")
+    @Value("${seucorre.ia.ollama.model:llama3.2}")
     private String model;
 
-    @Value("${seucorre.ia.anthropic.max-tokens:8192}")
-    private Integer maxTokens;
-
-    @Value("${seucorre.ia.anthropic.timeout-seconds:30}")
+    @Value("${seucorre.ia.ollama.timeout-seconds:60}")
     private Long timeoutSeconds;
 
-    @Value("${seucorre.ia.anthropic.max-retries:3}")
+    @Value("${seucorre.ia.ollama.max-retries:3}")
     private Integer maxRetries;
 
-    @Value("${seucorre.ia.anthropic.initial-backoff-millis:500}")
+    @Value("${seucorre.ia.ollama.initial-backoff-millis:500}")
     private Long initialBackoffMillis;
 
-    public AnthropicClient(ObjectMapper objectMapper) {
+    @Value("${seucorre.ia.ollama.temperature:0.0}")
+    private Double temperature;
+
+    @Value("${seucorre.ia.ollama.num-predict:2600}")
+    private Integer numPredict;
+
+    @Value("${seucorre.ia.ollama.keep-alive:15m}")
+    private String keepAlive;
+
+    public OllamaClient(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
         this.httpClient = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(10))
@@ -77,53 +75,53 @@ public class AnthropicClient implements IAClient {
         } catch (IAUnavailableException exception) {
             throw exception;
         } catch (Exception exception) {
-            throw new IAUnavailableException("Falha ao consultar a Anthropic.", exception);
+            throw new IAUnavailableException("Falha ao consultar o Ollama.", exception);
         }
     }
 
     private String executarComTimeout(String prompt) {
         try {
-            return criarTimeLimiter().executeFutureSupplier(() -> executorService.submit(() -> chamarAnthropic(prompt)));
+            return criarTimeLimiter().executeFutureSupplier(() -> executorService.submit(() -> chamarOllama(prompt)));
         } catch (Exception exception) {
-            throw new IAUnavailableException("Falha ao consultar a Anthropic dentro do tempo limite.", extrairCausa(exception));
+            throw new IAUnavailableException("Falha ao consultar o Ollama dentro do tempo limite.", extrairCausa(exception));
         }
     }
 
-    private String chamarAnthropic(String prompt) {
+    private String chamarOllama(String prompt) {
         try {
-            String payload = objectMapper.writeValueAsString(new AnthropicRequest(
+            String payload = objectMapper.writeValueAsString(new OllamaRequest(
                     model,
-                    maxTokens,
-                    List.of(new AnthropicMessage("user", prompt))
+                    prompt,
+                    false,
+                    false,
+                    keepAlive,
+                    "json",
+                    new OllamaOptions(temperature, numPredict)
             ));
 
             HttpRequest request = HttpRequest.newBuilder(URI.create(baseUrl))
                     .header("content-type", "application/json")
-                    .header("x-api-key", apiKey)
-                    .header("anthropic-version", ANTHROPIC_VERSION)
                     .timeout(Duration.ofSeconds(timeoutSeconds))
                     .POST(HttpRequest.BodyPublishers.ofString(payload))
                     .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
-                throw new IAUnavailableException("Anthropic retornou status " + response.statusCode()
+                throw new IAUnavailableException("Ollama retornou status " + response.statusCode()
                         + ": " + extrairMensagemErro(response.body()));
             }
 
-            AnthropicResponse anthropicResponse = objectMapper.readValue(response.body(), AnthropicResponse.class);
-            String texto = extrairTexto(anthropicResponse);
+            OllamaResponse ollamaResponse = objectMapper.readValue(response.body(), OllamaResponse.class);
+            String texto = extrairTexto(ollamaResponse);
             if (texto.isBlank()) {
-                throw new IAUnavailableException("Anthropic retornou uma resposta vazia.");
+                throw new IAUnavailableException("Ollama retornou uma resposta vazia.");
             }
             return texto;
-        } catch (JsonProcessingException exception) {
-            throw new IAUnavailableException("Falha ao serializar ou desserializar a comunicação com a Anthropic.", exception);
         } catch (InterruptedException exception) {
             Thread.currentThread().interrupt();
-            throw new IAUnavailableException("Chamada à Anthropic foi interrompida.", exception);
+            throw new IAUnavailableException("Chamada ao Ollama foi interrompida.", exception);
         } catch (IOException exception) {
-            throw new IAUnavailableException("Erro de I/O ao chamar a Anthropic.", exception);
+            throw new IAUnavailableException("Erro de I/O ao chamar o Ollama.", exception);
         }
     }
 
@@ -133,7 +131,7 @@ public class AnthropicClient implements IAClient {
                 .intervalFunction(IntervalFunction.ofExponentialBackoff(initialBackoffMillis, 2.0d))
                 .retryExceptions(IAUnavailableException.class, TimeoutException.class)
                 .build();
-        return Retry.of("anthropicClient", retryConfig);
+        return Retry.of("ollamaClient", retryConfig);
     }
 
     private TimeLimiter criarTimeLimiter() {
@@ -148,27 +146,26 @@ public class AnthropicClient implements IAClient {
         if (prompt == null || prompt.isBlank()) {
             throw new IllegalArgumentException("Prompt é obrigatório.");
         }
-        if (apiKey == null || apiKey.isBlank()) {
-            throw new IAUnavailableException("Chave da Anthropic não configurada.");
+        if (baseUrl == null || baseUrl.isBlank()) {
+            throw new IAUnavailableException("URL do Ollama não configurada.");
+        }
+        if (model == null || model.isBlank()) {
+            throw new IAUnavailableException("Modelo do Ollama não configurado.");
         }
     }
 
-    private String extrairTexto(AnthropicResponse response) {
-        if (response == null || response.content() == null) {
+    private String extrairTexto(OllamaResponse response) {
+        if (response == null || response.response() == null) {
             return "";
         }
-        return response.content().stream()
-                .filter(content -> "text".equals(content.type()) && content.text() != null)
-                .map(AnthropicContent::text)
-                .reduce("", (texto1, texto2) -> texto1.isBlank() ? texto2 : texto1 + "\n" + texto2)
-                .trim();
+        return response.response().trim();
     }
 
     private String extrairMensagemErro(String responseBody) {
         try {
-            AnthropicErrorEnvelope errorEnvelope = objectMapper.readValue(responseBody, AnthropicErrorEnvelope.class);
-            if (errorEnvelope.error() != null && errorEnvelope.error().message() != null) {
-                return errorEnvelope.error().message();
+            OllamaErrorEnvelope errorEnvelope = objectMapper.readValue(responseBody, OllamaErrorEnvelope.class);
+            if (errorEnvelope.error() != null && !errorEnvelope.error().isBlank()) {
+                return errorEnvelope.error();
             }
         } catch (Exception ignored) {
             return responseBody;
@@ -188,29 +185,25 @@ public class AnthropicClient implements IAClient {
         executorService.shutdownNow();
     }
 
-    private record AnthropicRequest(
+    private record OllamaRequest(
             String model,
-            @JsonProperty("max_tokens") Integer maxTokens,
-            List<AnthropicMessage> messages
+            String prompt,
+            boolean stream,
+            boolean think,
+            String keep_alive,
+            String format,
+            OllamaOptions options
     ) {
     }
 
-    private record AnthropicMessage(String role, String content) {
+    private record OllamaOptions(Double temperature, Integer num_predict) {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    private record AnthropicResponse(List<AnthropicContent> content) {
+    private record OllamaResponse(String response) {
     }
 
     @JsonIgnoreProperties(ignoreUnknown = true)
-    private record AnthropicContent(String type, String text) {
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    private record AnthropicErrorEnvelope(AnthropicError error) {
-    }
-
-    @JsonIgnoreProperties(ignoreUnknown = true)
-    private record AnthropicError(String type, String message) {
+    private record OllamaErrorEnvelope(String error) {
     }
 }

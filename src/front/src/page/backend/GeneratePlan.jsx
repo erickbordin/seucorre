@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Brain, CheckCircle2, Loader2, Sparkles, Zap } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
+import { Brain, CheckCircle2, Loader2, RefreshCw, Sparkles, Zap } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -13,23 +14,33 @@ const steps = [
 
 export default function GeneratePlan() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const { hasCompletedOnboarding, user } = useAuth();
   const [currentStep, setCurrentStep] = useState(0);
   const [error, setError] = useState('');
+  const [attemptKey, setAttemptKey] = useState(0);
 
   useEffect(() => {
     let active = true;
     const run = async () => {
-      if (!user?.objetivo) {
+      if (!hasCompletedOnboarding || !user?.objetivo) {
         navigate('/onboarding');
         return;
       }
       try {
+        setError('');
+        setCurrentStep(0);
         setCurrentStep(1);
         await new Promise((resolve) => setTimeout(resolve, 500));
         setCurrentStep(2);
-        await api.planos.gerar(user.objetivo);
+        const plan = await api.planos.gerar(user.objetivo);
         if (!active) return;
+        queryClient.setQueryData(['meus-planos'], (current = []) => {
+          const otherPlans = (current || []).filter((item) => item.id !== plan.id);
+          return [plan, ...otherPlans];
+        });
+        queryClient.setQueryData(['plano', plan.id], plan);
+        queryClient.invalidateQueries({ queryKey: ['meus-planos'] });
         setCurrentStep(3);
         setTimeout(() => navigate('/plano'), 700);
       } catch (err) {
@@ -40,7 +51,7 @@ export default function GeneratePlan() {
     return () => {
       active = false;
     };
-  }, [navigate, user]);
+  }, [attemptKey, hasCompletedOnboarding, navigate, queryClient, user]);
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center px-8 max-w-lg mx-auto">
@@ -60,9 +71,24 @@ export default function GeneratePlan() {
         })}
       </div>
       {error && (
-        <div className="mt-8 text-center">
+        <div className="mt-8 text-center w-full rounded-2xl border border-destructive/20 bg-card p-5">
+          <p className="text-sm font-semibold text-foreground mb-2">Não foi possível gerar seu plano agora</p>
           <p className="text-sm text-destructive mb-4">{error}</p>
-          <button onClick={() => navigate('/plano')} className="text-sm text-primary">Voltar para o plano</button>
+          <p className="text-xs text-muted-foreground mb-5">
+            Revise os dados do seu perfil ou tente novamente. Se a IA falhar, o objetivo atual continua sendo {user?.objetivo || 'o informado no seu onboarding'}.
+          </p>
+          <div className="flex flex-col gap-3">
+            <button onClick={() => setAttemptKey((value) => value + 1)} className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-semibold inline-flex items-center justify-center gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Tentar novamente
+            </button>
+            <Link to="/onboarding" className="w-full h-12 rounded-2xl border border-border bg-card font-semibold text-foreground inline-flex items-center justify-center">
+              Revisar perfil
+            </Link>
+            <button onClick={() => navigate('/plano')} className="text-sm text-primary">
+              Voltar para o plano
+            </button>
+          </div>
         </div>
       )}
     </div>

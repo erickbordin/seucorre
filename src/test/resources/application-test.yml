@@ -18,3 +18,7 @@ api:
   security:
     token:
       secret: seucorre_integration_test_secret
+
+seucorre:
+  ia:
+    provider: anthropic

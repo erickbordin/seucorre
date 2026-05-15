@@ -74,6 +74,37 @@ class UsuarioAppServiceTest {
     }
 
     @Test
+    void registrarSemOnboardingCriaUsuarioBasicoNaoApto() {
+        when(repository.existsByEmail("ana@email.com")).thenReturn(false);
+        when(passwordEncoder.encode("senha123")).thenReturn("hash-bcrypt");
+        when(repository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        UsuarioCadastroRequest request = new UsuarioCadastroRequest(
+                "Ana Runner",
+                "ana@email.com",
+                "senha123",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        UsuarioResponse response = service.registrar(request);
+
+        ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
+        verify(repository).save(captor.capture());
+        Usuario usuarioSalvo = captor.getValue();
+
+        assertThat(usuarioSalvo.getSenhaHash()).isEqualTo("hash-bcrypt");
+        assertThat(usuarioSalvo.getDadosFisicos()).isNull();
+        assertThat(usuarioSalvo.getPerfilAtleta()).isNull();
+        assertThat(response.aptoParaTreinar()).isFalse();
+        assertThat(response.perfilCorrida()).isNull();
+    }
+
+    @Test
     void registrarRecusaEmailDuplicado() {
         when(repository.existsByEmail("ana@email.com")).thenReturn(true);
 

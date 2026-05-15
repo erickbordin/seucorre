@@ -1,9 +1,9 @@
 import { Flame, Target, TrendingUp } from 'lucide-react';
 
-export default function QuickStats({ sessions = [] }) {
+export default function QuickStats({ currentWeek = 1, sessions = [] }) {
   const completed = sessions.filter(s => s.status === 'concluido').length;
   const total = sessions.length;
-  const thisWeekSessions = sessions.filter(s => s.semana === 1);
+  const thisWeekSessions = sessions.filter(s => s.semana === currentWeek);
   const weekCompleted = thisWeekSessions.filter(s => s.status === 'concluido').length;
 
   const stats = [

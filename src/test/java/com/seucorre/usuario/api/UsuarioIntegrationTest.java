@@ -189,6 +189,45 @@ class UsuarioIntegrationTest {
     }
 
     @Test
+    void cadastroBasicoPermiteLoginEOnboardingPosterior() throws Exception {
+        UsuarioCadastroRequest cadastro = new UsuarioCadastroRequest(
+                "Conta Básica",
+                "basico.integration@seucorre.dev",
+                "senha123",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        mockMvc.perform(post("/api/usuarios/registrar")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(cadastro)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.nome").value("Conta Básica"))
+                .andExpect(jsonPath("$.aptoParaTreinar").value(false));
+
+        String token = autenticar(cadastro.email(), cadastro.senha());
+
+        mockMvc.perform(get("/api/usuarios/me")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(token)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.email").value(cadastro.email()))
+                .andExpect(jsonPath("$.objetivo").doesNotExist())
+                .andExpect(jsonPath("$.aptoParaTreinar").value(false));
+
+        mockMvc.perform(put("/api/usuarios/me/onboarding")
+                        .header(HttpHeaders.AUTHORIZATION, bearer(token))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json(onboardingAtualizado())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.objetivo").value("COMPLETAR_10K"))
+                .andExpect(jsonPath("$.aptoParaTreinar").value(true));
+    }
+
+    @Test
     void cicloJwtValidaLoginAcessoNegacaoERefreshToken() throws Exception {
         UsuarioCadastroRequest cadastro = cadastroValido("jwt.integration@seucorre.dev", "SEG,QUA,SEX");
 

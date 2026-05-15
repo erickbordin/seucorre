@@ -10,8 +10,11 @@ import GeneratePlan from '@/page/backend/GeneratePlan';
 import WorkoutDetail from '@/page/backend/WorkoutDetail';
 import Plan from '@/page/backend/Plan';
 import Progress from '@/page/backend/Progress';
-import AICoach from '@/page/backend/AiCoach';
 import Profile from '@/page/backend/Profile';
+import CheckIn from '@/page/backend/CheckIn';
+import History from '@/page/backend/History';
+import Wearables from '@/page/backend/Wearables';
+import Notifications from '@/page/backend/Notifications';
 import Paywall from '@/page/Paywall';
 
 const queryClient = new QueryClient({
@@ -32,6 +35,25 @@ const Loading = () => (
   </div>
 );
 
+const AuthRouteRedirect = () => {
+  const { hasCompletedOnboarding } = useAuth();
+  return <Navigate to={hasCompletedOnboarding ? '/' : '/onboarding'} replace />;
+};
+
+const RequireAuth = ({ children, requireOnboarding = false }) => {
+  const { isAuthenticated, hasCompletedOnboarding } = useAuth();
+
+  if (!isAuthenticated) {
+    return <Navigate to="/entrar" replace />;
+  }
+
+  if (requireOnboarding && !hasCompletedOnboarding) {
+    return <Navigate to="/onboarding" replace />;
+  }
+
+  return children;
+};
+
 const AuthenticatedRoutes = () => {
   const { isLoadingAuth, isAuthenticated } = useAuth();
 
@@ -39,15 +61,52 @@ const AuthenticatedRoutes = () => {
 
   return (
     <Routes>
-      <Route path="/entrar" element={isAuthenticated ? <Navigate to="/" replace /> : <AuthPage mode="login" />} />
-      <Route path="/onboarding" element={<AuthPage mode={isAuthenticated ? 'profile' : 'register'} />} />
-      <Route path="/gerar-plano" element={isAuthenticated ? <GeneratePlan /> : <Navigate to="/entrar" replace />} />
-      <Route path="/treino/:planoId/:sessionIdx" element={isAuthenticated ? <WorkoutDetail /> : <Navigate to="/entrar" replace />} />
+      <Route path="/entrar" element={isAuthenticated ? <AuthRouteRedirect /> : <AuthPage mode="login" />} />
+      <Route path="/cadastro" element={isAuthenticated ? <AuthRouteRedirect /> : <AuthPage mode="register" />} />
+      <Route path="/onboarding" element={
+        <RequireAuth>
+          <AuthPage mode="profile" />
+        </RequireAuth>
+      } />
+      <Route path="/gerar-plano" element={
+        <RequireAuth requireOnboarding>
+          <GeneratePlan />
+        </RequireAuth>
+      } />
+      <Route path="/treino/:planoId/:sessionIdx" element={
+        <RequireAuth requireOnboarding>
+          <WorkoutDetail />
+        </RequireAuth>
+      } />
+      <Route path="/check-in" element={
+        <RequireAuth requireOnboarding>
+          <CheckIn />
+        </RequireAuth>
+      } />
+      <Route path="/historico" element={
+        <RequireAuth requireOnboarding>
+          <History />
+        </RequireAuth>
+      } />
+      <Route path="/wearables" element={
+        <RequireAuth requireOnboarding>
+          <Wearables />
+        </RequireAuth>
+      } />
+      <Route path="/notificacoes" element={
+        <RequireAuth requireOnboarding>
+          <Notifications />
+        </RequireAuth>
+      } />
       <Route path="/paywall" element={<Paywall />} />
-      <Route element={isAuthenticated ? <AppLayout /> : <Navigate to="/entrar" replace />}>
+      <Route element={
+        <RequireAuth requireOnboarding>
+          <AppLayout />
+        </RequireAuth>
+      }>
         <Route path="/" element={<Home />} />
         <Route path="/plano" element={<Plan />} />
-        <Route path="/ia" element={<AICoach />} />
+        <Route path="/ia" element={<Navigate to="/plano" replace />} />
         <Route path="/progresso" element={<Progress />} />
         <Route path="/perfil" element={<Profile />} />
       </Route>
