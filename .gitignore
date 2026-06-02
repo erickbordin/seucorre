@@ -2,6 +2,11 @@
 !.mvn/wrapper/maven-wrapper.jar
 /target/*/
 **.tag
+node_modules/
+dist/
+build/
+.env
+*.log
 
 ### STS ###
 .apt_generated

@@ -1,0 +1,13 @@
+import { Outlet } from 'react-router-dom';
+import TabBar from './TabBar';
+
+export default function AppLayout() {
+  return (
+    <div className="min-h-screen bg-background max-w-lg mx-auto relative">
+      <main className="pb-24">
+        <Outlet />
+      </main>
+      <TabBar />
+    </div>
+  );
+}

@@ -1,4 +1,6 @@
 spring:
+  cache:
+    type: none
   datasource:
     url: ${DB_URL:jdbc:postgresql://host.docker.internal:5432/seucorre_db}
     username: ${DB_USERNAME:user}
@@ -24,12 +26,22 @@ logging:
 
 seucorre:
   ia:
+    provider: ${IA_PROVIDER:ollama}
     anthropic:
       model: claude-sonnet-4
       max-tokens: 8192
       timeout-seconds: 30
       max-retries: 3
       initial-backoff-millis: 500
+    ollama:
+      base-url: ${OLLAMA_BASE_URL:http://host.docker.internal:11434/api/generate}
+      model: ${OLLAMA_MODEL:llama3.2}
+      timeout-seconds: 180
+      max-retries: 1
+      initial-backoff-millis: 500
+      temperature: 0.0
+      num-predict: 2600
+      keep-alive: 15m
 
 api:
   security:
