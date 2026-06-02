@@ -29,6 +29,7 @@ export default function DaySelector({ selected, onChange }) {
         const isActive = selected.includes(key);
         return (
           <motion.button
+            type="button"
             key={key}
             whileTap={{ scale: 0.9 }}
             onClick={() => toggle(key)}
