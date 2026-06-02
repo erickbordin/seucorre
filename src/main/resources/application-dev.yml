@@ -34,7 +34,7 @@ seucorre:
       max-retries: 3
       initial-backoff-millis: 500
     ollama:
-      base-url: ${OLLAMA_BASE_URL:http://localhost:11434/api/generate}
+      base-url: ${OLLAMA_BASE_URL:http://host.docker.internal:11434/api/generate}
       model: ${OLLAMA_MODEL:llama3.2}
       timeout-seconds: 180
       max-retries: 1

@@ -4,6 +4,7 @@ import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import AppLayout from '@/components/layout/AppLayout';
 import PageNotFound from '@/lib/PageNotFound';
+import LandingPage from '@/page/backend/LandingPage';
 import Home from '@/page/backend/Home';
 import AuthPage from '@/page/backend/AuthPage';
 import GeneratePlan from '@/page/backend/GeneratePlan';
@@ -61,6 +62,13 @@ const AuthenticatedRoutes = () => {
 
   return (
     <Routes>
+      <Route path="/" element={isAuthenticated ? (
+        <RequireAuth requireOnboarding>
+          <AppLayout />
+        </RequireAuth>
+      ) : <LandingPage />}>
+        <Route index element={<Home />} />
+      </Route>
       <Route path="/entrar" element={isAuthenticated ? <AuthRouteRedirect /> : <AuthPage mode="login" />} />
       <Route path="/cadastro" element={isAuthenticated ? <AuthRouteRedirect /> : <AuthPage mode="register" />} />
       <Route path="/onboarding" element={
@@ -104,7 +112,6 @@ const AuthenticatedRoutes = () => {
           <AppLayout />
         </RequireAuth>
       }>
-        <Route path="/" element={<Home />} />
         <Route path="/plano" element={<Plan />} />
         <Route path="/ia" element={<Navigate to="/plano" replace />} />
         <Route path="/progresso" element={<Progress />} />
