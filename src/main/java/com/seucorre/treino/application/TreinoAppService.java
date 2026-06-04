@@ -99,6 +99,7 @@ public class TreinoAppService {
         RegistroTreino registroTreino = new RegistroTreino();
         registroTreino.setStatus(request.status());
         registroTreino.setDistanciaRealKm(request.distanciaRealKm());
+        registroTreino.setDuracaoRealMin(request.duracaoRealMin());
         registroTreino.setFcMedia(request.fcMedia());
         registroTreino.setFcMaxima(request.fcMaxima());
         registroTreino.setPaceMedioReal(request.paceMedioReal());

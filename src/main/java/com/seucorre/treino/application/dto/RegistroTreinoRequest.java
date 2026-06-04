@@ -15,6 +15,7 @@ public record RegistroTreinoRequest(
         @NotNull StatusTreino status,
         @DecimalMin(value = "0.0", inclusive = false, message = "Distância real deve ser maior que zero")
         BigDecimal distanciaRealKm,
+        @Min(1) Integer duracaoRealMin,
         @Min(1) @Max(240) Integer fcMedia,
         @Min(1) @Max(240) Integer fcMaxima,
         @Min(1) Integer paceMedioReal,

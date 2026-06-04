@@ -56,6 +56,7 @@ class TreinoAppServiceTest {
                 treinoId,
                 StatusTreino.CONCLUIDO,
                 new BigDecimal("8.80"),
+                52,
                 152,
                 176,
                 355,
@@ -75,6 +76,7 @@ class TreinoAppServiceTest {
 
         assertThat(dto.status()).isEqualTo(StatusTreino.CONCLUIDO);
         assertThat(dto.distanciaRealKm()).isEqualByComparingTo("8.80");
+        assertThat(dto.duracaoRealMin()).isEqualTo(52);
         assertThat(dto.alertaSaude()).isTrue();
         assertThat(dto.desvioDistanciaPercent()).isNotZero();
         assertThat(dto.desvioPace()).isNotZero();
@@ -90,6 +92,7 @@ class TreinoAppServiceTest {
                 treinoId,
                 StatusTreino.CONCLUIDO,
                 new BigDecimal("5.00"),
+                31,
                 150,
                 170,
                 340,

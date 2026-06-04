@@ -68,6 +68,7 @@ class SyncAppServiceTest {
                         LocalDate.of(2026, 5, 10),
                         StatusTreino.CONCLUIDO,
                         new BigDecimal("8.40"),
+                        50,
                         150,
                         176,
                         345,
@@ -83,6 +84,7 @@ class SyncAppServiceTest {
         assertThat(registros).hasSize(1);
         assertThat(registros.get(0).status()).isEqualTo(StatusTreino.CONCLUIDO);
         assertThat(registros.get(0).distanciaRealKm()).isEqualByComparingTo("8.40");
+        assertThat(registros.get(0).duracaoRealMin()).isEqualTo(50);
         assertThat(registros.get(0).alertaSaude()).isTrue();
         verify(progressoAppService).atualizarProgressoSemanal(any(RegistroTreino.class));
     }
@@ -100,6 +102,7 @@ class SyncAppServiceTest {
                         LocalDate.of(2026, 5, 10),
                         StatusTreino.CONCLUIDO,
                         new BigDecimal("8.40"),
+                        50,
                         150,
                         176,
                         345,

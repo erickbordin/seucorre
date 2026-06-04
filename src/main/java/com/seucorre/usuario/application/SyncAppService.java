@@ -109,6 +109,7 @@ public class SyncAppService {
         RegistroTreino registroTreino = new RegistroTreino();
         registroTreino.setStatus(atividadeExterna.status() == null ? StatusTreino.CONCLUIDO : atividadeExterna.status());
         registroTreino.setDistanciaRealKm(atividadeExterna.distanciaKm());
+        registroTreino.setDuracaoRealMin(atividadeExterna.duracaoRealMin());
         registroTreino.setFcMedia(atividadeExterna.fcMedia());
         registroTreino.setFcMaxima(atividadeExterna.fcMaxima());
         registroTreino.setPaceMedioReal(atividadeExterna.paceMedio());

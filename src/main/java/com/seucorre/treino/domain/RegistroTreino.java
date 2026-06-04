@@ -41,6 +41,9 @@ public class RegistroTreino {
     @Column(name = "distancia_km", precision = 6, scale = 2)
     private BigDecimal distanciaRealKm;
 
+    @Column(name = "duracao_real_min")
+    private Integer duracaoRealMin;
+
     @Column(name = "fc_media")
     private Integer fcMedia;
 
@@ -101,6 +104,9 @@ public class RegistroTreino {
         }
         if (distanciaRealKm != null) {
             partes.add("distanciaKm=" + distanciaRealKm);
+        }
+        if (duracaoRealMin != null) {
+            partes.add("duracaoRealMin=" + duracaoRealMin);
         }
         if (fcMedia != null) {
             partes.add("fcMedia=" + fcMedia);

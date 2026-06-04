@@ -116,6 +116,7 @@ export default function WorkoutDetail() {
     mutationFn: () => api.treinos.registrar(session.id, {
       status: form.status,
       distanciaRealKm: shouldShowMetrics && form.distanciaRealKm ? Number(form.distanciaRealKm) : null,
+      duracaoRealMin: shouldShowMetrics && form.duracaoRealMin ? Number(form.duracaoRealMin) : null,
       fcMedia: shouldShowMetrics && form.fcMedia ? Number(form.fcMedia) : null,
       fcMaxima: shouldShowMetrics && form.fcMaxima ? Number(form.fcMaxima) : null,
       paceMedioReal: shouldShowMetrics ? parsedPace : null,
@@ -125,7 +126,6 @@ export default function WorkoutDetail() {
       doente: form.doente,
       viagem: form.viagem,
       observacao: form.observacao.trim() || null,
-      // TODO: conectar duracao real quando o backend aceitar esse campo no endpoint de registro.
     }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['meus-planos'] });
@@ -262,8 +262,7 @@ export default function WorkoutDetail() {
               <div className="rounded-xl border border-border bg-card p-3 flex items-start gap-3">
                 <Timer className="w-4 h-4 text-muted-foreground mt-0.5" />
                 <p className="text-xs text-muted-foreground">
-                  A duração real já aparece no formulário para o fluxo ficar completo no app.
-                  Ela ainda não é persistida pela API atual.
+                  Use a duração real para comparar a execução com o treino planejado.
                 </p>
               </div>
             </section>

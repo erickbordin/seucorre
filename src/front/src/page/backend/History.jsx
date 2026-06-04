@@ -65,7 +65,7 @@ export default function History() {
                 </div>
 
                 <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-3">
-                  <span className="inline-flex items-center gap-1"><Clock3 className="w-3.5 h-3.5" /> {session.duracao_min || '-'} min</span>
+                  <span className="inline-flex items-center gap-1"><Clock3 className="w-3.5 h-3.5" /> {session.registro?.duracaoRealMin || session.duracao_min || '-'} min</span>
                   <span className="inline-flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {session.registro?.distanciaRealKm || session.distancia_km || 0} km</span>
                   {session.registro?.paceMedioReal && <span>{formatPace(session.registro.paceMedioReal)}</span>}
                 </div>
