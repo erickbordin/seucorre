@@ -1,5 +1,6 @@
 package com.seucorre.usuario.application;
 
+import com.seucorre.shared.domain.enums.PlataformaRelogio;
 import com.seucorre.shared.domain.valueobjects.IMC;
 import com.seucorre.shared.exception.BusinessRuleException;
 import com.seucorre.shared.exception.EntityNotFoundException;
@@ -37,6 +38,7 @@ public class UsuarioAppService {
 
     private final UsuarioRepository repository;
     private final PasswordEncoder passwordEncoder;
+    private final WearablePlatformRegistry wearablePlatformRegistry;
 
     @Transactional
     public UsuarioResponse registrar(UsuarioCadastroRequest request) {
@@ -202,6 +204,7 @@ public class UsuarioAppService {
         if (requests == null) {
             return List.of();
         }
+        requests.forEach(this::validarDispositivoSuportado);
         return requests.stream().map(request -> {
             DispositivoExterno dispositivoExterno = new DispositivoExterno();
             dispositivoExterno.setPlataforma(request.plataforma());
@@ -209,6 +212,20 @@ public class UsuarioAppService {
             dispositivoExterno.setTokenExpiresAt(request.tokenExpiresAt());
             return dispositivoExterno;
         }).toList();
+    }
+
+
+    private void validarDispositivoSuportado(DispositivoExternoRequest request) {
+        if (request == null || request.plataforma() == null) {
+            return;
+        }
+        validarPlataformaSuportada(request.plataforma());
+    }
+
+    private void validarPlataformaSuportada(PlataformaRelogio plataforma) {
+        if (!wearablePlatformRegistry.suporta(plataforma)) {
+            throw new BusinessRuleException(wearablePlatformRegistry.mensagemPlataformaNaoDisponivel(plataforma));
+        }
     }
 
     private void validarOnboarding(Usuario usuario, PerfilCorrida perfilCorrida) {

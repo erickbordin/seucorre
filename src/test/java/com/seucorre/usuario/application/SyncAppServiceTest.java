@@ -10,6 +10,8 @@ import com.seucorre.treino.domain.PlanoTreino;
 import com.seucorre.treino.domain.RegistroTreino;
 import com.seucorre.treino.domain.SessaoTreino;
 import com.seucorre.treino.infrastructure.RegistroRepository;
+import com.seucorre.usuario.application.dto.DispositivoExternoDTO;
+import com.seucorre.usuario.application.dto.DispositivoExternoRequest;
 import com.seucorre.usuario.domain.DispositivoExterno;
 import com.seucorre.usuario.domain.Usuario;
 import com.seucorre.usuario.infrastructure.UsuarioRepository;
@@ -36,6 +38,7 @@ class SyncAppServiceTest {
     private RegistroRepository registroRepository;
     private ProgressoAppService progressoAppService;
     private WearableAdapter garminAdapter;
+    private WearableAdapter stravaAdapter;
     private SyncAppService service;
 
     @BeforeEach
@@ -44,15 +47,80 @@ class SyncAppServiceTest {
         registroRepository = mock(RegistroRepository.class);
         progressoAppService = mock(ProgressoAppService.class);
         garminAdapter = mock(WearableAdapter.class);
+        stravaAdapter = mock(WearableAdapter.class);
 
         when(garminAdapter.plataformaSuportada()).thenReturn(PlataformaRelogio.GARMIN);
+        when(stravaAdapter.plataformaSuportada()).thenReturn(PlataformaRelogio.STRAVA);
 
         service = new SyncAppService(
                 usuarioRepository,
                 registroRepository,
                 progressoAppService,
-                List.of(garminAdapter)
+                new WearablePlatformRegistry(List.of(garminAdapter, stravaAdapter))
         );
+    }
+
+    @Test
+    void listarDispositivosRetornaStatusDoTokenEDisponibilidadeDeSincronizacao() {
+        Usuario usuario = criarUsuarioComDispositivo(PlataformaRelogio.GARMIN, true);
+        DispositivoExterno strava = new DispositivoExterno();
+        strava.setPlataforma(PlataformaRelogio.STRAVA);
+        strava.setTokenAcesso("token-strava");
+        strava.setTokenExpiresAt(LocalDateTime.now().plusDays(1));
+        usuario.vincularDispositivo(strava);
+        when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
+
+        List<DispositivoExternoDTO> dispositivos = service.listarDispositivos(usuario.getId());
+
+        assertThat(dispositivos).hasSize(2);
+        assertThat(dispositivos.get(0).plataforma()).isEqualTo(PlataformaRelogio.GARMIN);
+        assertThat(dispositivos.get(0).tokenValido()).isTrue();
+        assertThat(dispositivos.get(0).sincronizacaoDisponivel()).isTrue();
+        assertThat(dispositivos.get(1).plataforma()).isEqualTo(PlataformaRelogio.STRAVA);
+        assertThat(dispositivos.get(1).sincronizacaoDisponivel()).isTrue();
+    }
+
+    @Test
+    void vincularDispositivoAtualizaTokenDaMesmaPlataforma() {
+        Usuario usuario = criarUsuarioComDispositivo(PlataformaRelogio.GARMIN, false);
+        LocalDateTime novaExpiracao = LocalDateTime.now().plusDays(5);
+        DispositivoExternoRequest request = new DispositivoExternoRequest(
+                PlataformaRelogio.GARMIN,
+                "novo-token",
+                novaExpiracao
+        );
+
+        when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        DispositivoExternoDTO response = service.vincularDispositivo(usuario.getId(), request);
+
+        assertThat(usuario.getDispositivos()).hasSize(1);
+        assertThat(usuario.getDispositivos().get(0).getTokenAcesso()).isEqualTo("novo-token");
+        assertThat(usuario.getDispositivos().get(0).getTokenExpiresAt()).isEqualTo(novaExpiracao);
+        assertThat(response.plataforma()).isEqualTo(PlataformaRelogio.GARMIN);
+        assertThat(response.tokenValido()).isTrue();
+        assertThat(response.sincronizacaoDisponivel()).isTrue();
+    }
+
+    @Test
+    void vincularDispositivoCriaNovoRegistroQuandoUsuarioAindaNaoTemPlataforma() {
+        Usuario usuario = new Usuario();
+        usuario.setId(UUID.randomUUID());
+        DispositivoExternoRequest request = new DispositivoExternoRequest(
+                PlataformaRelogio.GARMIN,
+                "token-garmin",
+                LocalDateTime.now().plusDays(3)
+        );
+
+        when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
+        when(usuarioRepository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        DispositivoExternoDTO response = service.vincularDispositivo(usuario.getId(), request);
+
+        assertThat(usuario.getDispositivos()).hasSize(1);
+        assertThat(usuario.getDispositivos().get(0).getPlataforma()).isEqualTo(PlataformaRelogio.GARMIN);
+        assertThat(response.plataforma()).isEqualTo(PlataformaRelogio.GARMIN);
     }
 
     @Test
@@ -135,6 +203,13 @@ class SyncAppServiceTest {
         assertThatThrownBy(() -> service.sincronizarDados(usuario.getId(), PlataformaRelogio.GARMIN))
                 .isInstanceOf(EntityNotFoundException.class)
                 .hasMessage("Dispositivo não vinculado para a plataforma informada.");
+    }
+
+    @Test
+    void falhaQuandoPlataformaNaoPossuiAdapterConfigurado() {
+        assertThatThrownBy(() -> service.sincronizarDados(UUID.randomUUID(), PlataformaRelogio.POLAR))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessage("A plataforma Polar Flow ainda não está disponível nesta versão. Plataformas disponíveis: Garmin Connect, Strava.");
     }
 
     private Usuario criarUsuarioComDispositivo(PlataformaRelogio plataformaRelogio, boolean tokenValido) {

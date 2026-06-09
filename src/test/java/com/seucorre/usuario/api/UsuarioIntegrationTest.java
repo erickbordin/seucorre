@@ -376,8 +376,8 @@ class UsuarioIntegrationTest {
                         new CondicaoSaudeRequest("LESAO_ANTERIOR", "Tornozelo direito", false)
                 ),
                 List.of(new DispositivoExternoRequest(
-                        PlataformaRelogio.POLAR,
-                        "token-polar",
+                        PlataformaRelogio.STRAVA,
+                        "token-strava",
                         LocalDateTime.now().plusDays(2)
                 ))
         );

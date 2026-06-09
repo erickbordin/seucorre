@@ -1,0 +1,7 @@
+interface:
+  display_name: "SeuCorre Backend IA"
+  short_description: "Backend and AI workflow"
+  default_prompt: "Use $seucorre-backend-ia to implement or review backend and AI changes in SeuCorre while preserving business rules and output validation."
+
+policy:
+  allow_implicit_invocation: true

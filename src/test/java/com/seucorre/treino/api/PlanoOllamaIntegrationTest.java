@@ -71,6 +71,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@org.springframework.test.context.TestPropertySource(properties = "seucorre.treino.geracao.mode=ia")
 @Testcontainers
 class PlanoOllamaIntegrationTest {
 

@@ -20,5 +20,8 @@ api:
       secret: seucorre_integration_test_secret
 
 seucorre:
+  treino:
+    geracao:
+      mode: preset
   ia:
     provider: anthropic

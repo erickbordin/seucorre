@@ -9,6 +9,9 @@ import com.seucorre.treino.application.dto.RegistroTreinoDTO;
 import com.seucorre.treino.domain.RegistroTreino;
 import com.seucorre.treino.domain.SessaoTreino;
 import com.seucorre.treino.infrastructure.RegistroRepository;
+import com.seucorre.usuario.application.dto.DispositivoExternoDTO;
+import com.seucorre.usuario.application.dto.DispositivoExternoRequest;
+import com.seucorre.usuario.application.dto.SincronizacaoDispositivoDTO;
 import com.seucorre.usuario.domain.DispositivoExterno;
 import com.seucorre.usuario.domain.Usuario;
 import com.seucorre.usuario.infrastructure.UsuarioRepository;
@@ -30,24 +33,68 @@ public class SyncAppService {
     private final UsuarioRepository usuarioRepository;
     private final RegistroRepository registroRepository;
     private final ProgressoAppService progressoAppService;
-    private final List<WearableAdapter> wearableAdapters;
+    private final WearablePlatformRegistry wearablePlatformRegistry;
+
+    @Transactional(readOnly = true)
+    public List<DispositivoExternoDTO> listarDispositivos(UUID usuarioId) {
+        validarUsuarioId(usuarioId);
+        return buscarUsuarioOuFalhar(usuarioId).getDispositivos().stream()
+                .sorted(Comparator.comparing(dispositivoExterno -> dispositivoExterno.getPlataforma().name()))
+                .map(dispositivoExterno -> DispositivoExternoDTO.from(dispositivoExterno, wearablePlatformRegistry.suporta(dispositivoExterno.getPlataforma())))
+                .toList();
+    }
+
+    @Transactional
+    public DispositivoExternoDTO vincularDispositivo(UUID usuarioId, DispositivoExternoRequest request) {
+        validarUsuarioId(usuarioId);
+        if (request == null) {
+            throw new IllegalArgumentException("Dados do dispositivo são obrigatórios.");
+        }
+        validarPlataformaSuportada(request.plataforma());
+
+        Usuario usuario = buscarUsuarioOuFalhar(usuarioId);
+        DispositivoExterno dispositivoExterno = usuario.getDispositivos().stream()
+                .filter(item -> request.plataforma() == item.getPlataforma())
+                .findFirst()
+                .orElseGet(() -> {
+                    DispositivoExterno novoDispositivo = new DispositivoExterno();
+                    novoDispositivo.setPlataforma(request.plataforma());
+                    usuario.vincularDispositivo(novoDispositivo);
+                    return novoDispositivo;
+                });
+
+        dispositivoExterno.setPlataforma(request.plataforma());
+        dispositivoExterno.renovarToken(request.tokenAcesso().trim());
+        dispositivoExterno.setTokenExpiresAt(request.tokenExpiresAt());
+
+        Usuario usuarioPersistido = usuarioRepository.save(usuario);
+        DispositivoExterno dispositivoPersistido = usuarioPersistido.getDispositivos().stream()
+                .filter(item -> request.plataforma() == item.getPlataforma())
+                .findFirst()
+                .orElse(dispositivoExterno);
+
+        return DispositivoExternoDTO.from(dispositivoPersistido, wearablePlatformRegistry.suporta(request.plataforma()));
+    }
+
+    @Transactional
+    public SincronizacaoDispositivoDTO sincronizarDispositivo(UUID usuarioId, PlataformaRelogio plataforma) {
+        return SincronizacaoDispositivoDTO.from(plataforma, sincronizarDados(usuarioId, plataforma));
+    }
 
     @Transactional
     public List<RegistroTreinoDTO> sincronizarDados(UUID usuarioId, PlataformaRelogio plataforma) {
-        if (usuarioId == null) {
-            throw new IllegalArgumentException("Usuário é obrigatório.");
-        }
+        validarUsuarioId(usuarioId);
         if (plataforma == null) {
             throw new IllegalArgumentException("Plataforma é obrigatória.");
         }
         validarPlataformaSuportada(plataforma);
 
-        Usuario usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado."));
+        Usuario usuario = buscarUsuarioOuFalhar(usuarioId);
         DispositivoExterno dispositivoExterno = localizarDispositivo(usuario, plataforma);
         validarToken(dispositivoExterno);
 
-        WearableAdapter wearableAdapter = localizarAdapter(plataforma);
+        WearableAdapter wearableAdapter = wearablePlatformRegistry.localizarAdapter(plataforma)
+                .orElseThrow(() -> new BusinessRuleException("Nenhum adapter disponível para a plataforma informada."));
         List<WearableAdapter.AtividadeExterna> atividadesExternas = wearableAdapter.sincronizarDados(dispositivoExterno);
         if (atividadesExternas == null || atividadesExternas.isEmpty()) {
             return List.of();
@@ -127,22 +174,26 @@ public class SyncAppService {
                 .orElseThrow(() -> new EntityNotFoundException("Dispositivo não vinculado para a plataforma informada."));
     }
 
-    private WearableAdapter localizarAdapter(PlataformaRelogio plataforma) {
-        return wearableAdapters.stream()
-                .filter(wearableAdapter -> plataforma == wearableAdapter.plataformaSuportada())
-                .findFirst()
-                .orElseThrow(() -> new BusinessRuleException("Nenhum adapter disponível para a plataforma informada."));
-    }
-
     private void validarToken(DispositivoExterno dispositivoExterno) {
         if (!dispositivoExterno.tokenValido()) {
             throw new BusinessRuleException("O dispositivo externo precisa de um token válido para sincronizar dados.");
         }
     }
 
+    private Usuario buscarUsuarioOuFalhar(UUID usuarioId) {
+        return usuarioRepository.findById(usuarioId)
+                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado."));
+    }
+
+    private void validarUsuarioId(UUID usuarioId) {
+        if (usuarioId == null) {
+            throw new IllegalArgumentException("Usuário é obrigatório.");
+        }
+    }
+
     private void validarPlataformaSuportada(PlataformaRelogio plataforma) {
-        if (plataforma != PlataformaRelogio.GARMIN && plataforma != PlataformaRelogio.STRAVA) {
-            throw new BusinessRuleException("A sincronização suporta apenas Garmin e Strava nesta versão.");
+        if (!wearablePlatformRegistry.suporta(plataforma)) {
+            throw new BusinessRuleException(wearablePlatformRegistry.mensagemPlataformaNaoDisponivel(plataforma));
         }
     }
 }

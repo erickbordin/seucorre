@@ -1,0 +1,7 @@
+interface:
+  display_name: "SeuCorre Project"
+  short_description: "Work on SeuCorre safely"
+  default_prompt: "Use $seucorre-project to implement or review changes in the SeuCorre project while following its architecture, business rules, and AI guardrails."
+
+policy:
+  allow_implicit_invocation: true

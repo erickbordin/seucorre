@@ -183,4 +183,10 @@ export const api = {
     historico: () => request('/api/checkins/historico').then((items) => (items || []).map(normalizeCheckin)),
     enviar: (payload) => request('/api/checkins', { method: 'POST', body: payload }).then(normalizeCheckin),
   },
+  dispositivos: {
+    listar: () => request('/api/dispositivos'),
+    conectar: (payload) => request('/api/dispositivos', { method: 'POST', body: payload }),
+    sincronizar: (plataforma) => request(`/api/dispositivos/${plataforma}/sincronizar`, { method: 'POST' }),
+  },
+
 };
