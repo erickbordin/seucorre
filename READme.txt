@@ -60,7 +60,11 @@ Credenciais do pgAdmin:
 
 ### Windows PowerShell
 
-O backend usa o perfil `dev`. Para rodar no Windows, use `localhost` nas conexoes locais:
+O backend usa o perfil `dev`. Para rodar no Windows, use `localhost` nas conexoes locais.
+
+> Importante: os comandos com `$env:` funcionam somente no **PowerShell**.
+> Se o seu terminal mostra algo como `PS C:\Users\...>`, voce esta no PowerShell.
+> Se ele mostra apenas `C:\Users\...>`, voce esta no **cmd.exe** e esses comandos vao falhar.
 
 ```powershell
 cd C:\Users\KABUM\Desktop\seucorre
@@ -76,6 +80,26 @@ $env:TREINO_GERACAO_MODE="preset"
 $env:TREINO_GERACAO_FALLBACK_TO_IA="false"
 
 .\mvnw.cmd spring-boot:run
+```
+
+### Windows CMD
+
+Se voce estiver no `cmd.exe`, use `set` em vez de `$env:`:
+
+```cmd
+cd C:\Users\KABUM\Desktop\seucorre
+
+set SPRING_PROFILES_ACTIVE=dev
+set DB_URL=jdbc:postgresql://localhost:5432/seucorre_db
+set DB_USERNAME=user
+set DB_PASSWORD=password
+set REDIS_HOST=localhost
+set REDIS_PORT=6379
+set JWT_SECRET=seucorre_dev_secret
+set TREINO_GERACAO_MODE=preset
+set TREINO_GERACAO_FALLBACK_TO_IA=false
+
+mvnw.cmd spring-boot:run
 ```
 
 ### WSL ou Linux
@@ -185,6 +209,12 @@ docker compose down
 ```
 
 ## 8. Problemas comuns
+
+### Variaveis de ambiente dao erro no Windows
+
+- se apareceu erro ao usar `$env:...`, voce provavelmente executou no `cmd.exe`, nao no PowerShell
+- no PowerShell o prompt costuma comecar com `PS C:\...>`
+- no `cmd.exe`, use os comandos com `set` mostrados acima
 
 ### Backend nao conecta no banco
 
