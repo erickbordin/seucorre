@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import { api, auth, tokenStore } from '@/lib/api';
+import { hasCompletedOnboarding as checkOnboardingCompletion } from '@/lib/user';
 
 const AuthContext = createContext(null);
 
@@ -43,18 +44,23 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     auth.logout();
     setUser(null);
+    setAuthError(null);
   };
+
+  const isAuthenticated = Boolean(user);
+  const hasCompletedOnboarding = checkOnboardingCompletion(user);
 
   const value = useMemo(() => ({
     user,
-    isAuthenticated: Boolean(user),
+    isAuthenticated,
+    hasCompletedOnboarding,
     isLoadingAuth,
     isLoadingPublicSettings: false,
     authError,
     login,
     logout,
     reloadUser: loadUser,
-  }), [user, isLoadingAuth, authError]);
+  }), [user, isAuthenticated, hasCompletedOnboarding, isLoadingAuth, authError]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

@@ -171,15 +171,41 @@ public class PromptBuilder {
     private void adicionarInstrucaoSaidaPlano(StringBuilder prompt) {
         prompt.append("Saida esperada:\n");
         prompt.append("- gerar um plano semanal completo e realista\n");
-        prompt.append("- explicar de forma curta o racional principal\n");
-        prompt.append("- responder em JSON estruturado para posterior parse em PlanoTreino e SessaoTreino\n");
+        prompt.append("- responder apenas JSON puro, sem markdown, sem comentarios e sem texto antes ou depois\n");
+        prompt.append("- usar somente os tipos de treino: REGENERATIVO, INTERVALADO, LONGO ou FARTLAKE\n");
+        prompt.append("- manter a saida curta e objetiva para garantir JSON valido\n");
+        prompt.append("- preferir uma lista unica de sessoes em vez de blocos muito grandes por semana\n");
+        prompt.append("- usar a estrutura abaixo, podendo omitir totalSemanas, dataInicio, dataFim e kmTotais se necessario:\n");
+        prompt.append("""
+                {
+                  "plano": {
+                    "resumoIA": "texto curto",
+                    "guiaTiposTreino": "texto curto",
+                    "sessoes": [
+                      {
+                        "numeroSemana": 1,
+                        "dataPrevista": "YYYY-MM-DD",
+                        "tipo": "REGENERATIVO",
+                        "distanciaKm": 0,
+                        "duracaoMinutos": 0,
+                        "intensidade": "leve",
+                        "zonaFcAlvo": "Z1",
+                        "paceAlvo": 0,
+                        "descricao": "texto curto"
+                      }
+                    ]
+                  }
+                }
+                """);
     }
 
     private void adicionarInstrucaoSaidaReescrita(StringBuilder prompt) {
         prompt.append("Saida esperada:\n");
         prompt.append("- reescrever apenas o necessario para reduzir risco e preservar continuidade\n");
         prompt.append("- se houver alerta relevante, reduzir volume ou intensidade antes de progredir\n");
-        prompt.append("- responder em JSON estruturado para posterior parse em PlanoTreino e SessaoTreino\n");
+        prompt.append("- responder apenas JSON puro, sem markdown, sem comentarios e sem texto antes ou depois\n");
+        prompt.append("- usar somente os tipos de treino: REGENERATIVO, INTERVALADO, LONGO ou FARTLAKE\n");
+        prompt.append("- manter a mesma estrutura JSON enxuta exigida para o plano\n");
     }
 
     private String resumirSessoes(PlanoTreino plano) {

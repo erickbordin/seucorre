@@ -44,6 +44,13 @@ export default function Paywall() {
         <p className="text-sm text-muted-foreground">Desbloqueie todo o poder da IA para suas corridas</p>
       </div>
 
+      <div className="bg-card rounded-2xl p-4 border border-border/50 mb-8">
+        <p className="text-xs text-muted-foreground mb-1">Indicado para quem quer evoluir com menos tentativa e erro</p>
+        <p className="text-sm text-foreground">
+          O plano free cobre a base. O premium entra quando você quer check-ins adaptativos, integração com wearable e reescrita automática do ciclo com base na sua semana real.
+        </p>
+      </div>
+
       {/* Benefits icons */}
       <div className="grid grid-cols-3 gap-3 mb-8">
         {[
@@ -123,6 +130,10 @@ export default function Paywall() {
           </Button>
         </motion.div>
       </div>
+
+      <Button variant="outline" className="w-full h-12 rounded-2xl mb-4" onClick={() => navigate('/')}>
+        Continuar no plano free
+      </Button>
 
       <p className="text-[10px] text-muted-foreground text-center">
         Cancele a qualquer momento. Sem compromisso.

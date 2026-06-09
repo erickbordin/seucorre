@@ -13,6 +13,7 @@ import io.github.resilience4j.timelimiter.TimeLimiter;
 import io.github.resilience4j.timelimiter.TimeLimiterConfig;
 import jakarta.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -28,6 +29,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 
 @Service
+@ConditionalOnProperty(name = "seucorre.ia.provider", havingValue = "anthropic", matchIfMissing = true)
 public class AnthropicClient implements IAClient {
 
     private static final String ANTHROPIC_VERSION = "2023-06-01";

@@ -38,6 +38,8 @@ class PlanoAppServiceTest {
     private PlanoRepository planoRepository;
     private UsuarioRepository usuarioRepository;
     private GeradorPlanoIA geradorPlanoIA;
+    private PlanoPresetService planoPresetService;
+    private PlanoGenerationProperties planoGenerationProperties;
     private EventPublisher eventPublisher;
     private PlanoAppService service;
 
@@ -46,16 +48,19 @@ class PlanoAppServiceTest {
         planoRepository = mock(PlanoRepository.class);
         usuarioRepository = mock(UsuarioRepository.class);
         geradorPlanoIA = mock(GeradorPlanoIA.class);
+        planoPresetService = mock(PlanoPresetService.class);
+        planoGenerationProperties = new PlanoGenerationProperties();
         eventPublisher = mock(EventPublisher.class);
-        service = new PlanoAppService(planoRepository, usuarioRepository, geradorPlanoIA, eventPublisher);
+        service = new PlanoAppService(planoRepository, usuarioRepository, geradorPlanoIA, planoPresetService, planoGenerationProperties, eventPublisher);
     }
 
     @Test
-    void criarPlanoCarregaPerfilCompletoGeraESalvaPlano() {
+    void criarPlanoEmModoIaCarregaPerfilCompletoGeraESalvaPlano() {
         UUID usuarioId = UUID.randomUUID();
         Usuario usuario = criarUsuario(usuarioId);
         PerfilCorrida perfilCorrida = new PerfilCorrida();
         PlanoTreino planoTreino = criarPlano(usuario);
+        planoGenerationProperties.setMode(PlanoGenerationProperties.Mode.IA);
 
         when(usuarioRepository.findById(usuarioId)).thenReturn(Optional.of(usuario));
         when(usuarioRepository.findPerfilCorridaByUsuarioId(usuarioId)).thenReturn(Optional.of(perfilCorrida));
@@ -71,6 +76,50 @@ class PlanoAppServiceTest {
         verify(geradorPlanoIA).gerarPlano(usuario, Objetivo.COMPLETAR_10K, List.of(planoTreino));
         verify(planoRepository).save(planoTreino);
         verify(eventPublisher).publish(any());
+    }
+
+    @Test
+    void criarPlanoEmModoPresetUsaCatalogoSemPassarPelaIa() {
+        UUID usuarioId = UUID.randomUUID();
+        Usuario usuario = criarUsuario(usuarioId);
+        PerfilCorrida perfilCorrida = new PerfilCorrida();
+        PlanoTreino planoTreino = criarPlano(usuario);
+        planoGenerationProperties.setMode(PlanoGenerationProperties.Mode.PRESET);
+
+        when(usuarioRepository.findById(usuarioId)).thenReturn(Optional.of(usuario));
+        when(usuarioRepository.findPerfilCorridaByUsuarioId(usuarioId)).thenReturn(Optional.of(perfilCorrida));
+        when(planoRepository.findTop3ByUsuarioIdOrderByDataInicioDesc(usuarioId)).thenReturn(List.of());
+        when(planoPresetService.gerarPlano(usuario, Objetivo.COMPLETAR_10K)).thenReturn(planoTreino);
+        when(planoRepository.save(planoTreino)).thenReturn(planoTreino);
+
+        PlanoTreinoDTO dto = service.criarPlano(usuarioId, new GerarPlanoRequest(Objetivo.COMPLETAR_10K));
+
+        assertThat(dto.id()).isEqualTo(planoTreino.getId());
+        verify(planoPresetService).gerarPlano(usuario, Objetivo.COMPLETAR_10K);
+        verify(planoRepository).save(planoTreino);
+    }
+
+    @Test
+    void criarPlanoEmModoPresetPodeFazerFallbackParaIa() {
+        UUID usuarioId = UUID.randomUUID();
+        Usuario usuario = criarUsuario(usuarioId);
+        PlanoTreino planoTreino = criarPlano(usuario);
+        planoGenerationProperties.setMode(PlanoGenerationProperties.Mode.PRESET);
+        planoGenerationProperties.setFallbackToIa(true);
+
+        when(usuarioRepository.findById(usuarioId)).thenReturn(Optional.of(usuario));
+        when(usuarioRepository.findPerfilCorridaByUsuarioId(usuarioId)).thenReturn(Optional.empty());
+        when(planoRepository.findTop3ByUsuarioIdOrderByDataInicioDesc(usuarioId)).thenReturn(List.of());
+        when(planoPresetService.gerarPlano(usuario, Objetivo.COMPLETAR_10K))
+                .thenThrow(new com.seucorre.shared.exception.BusinessRuleException("sem preset"));
+        when(geradorPlanoIA.gerarPlano(usuario, Objetivo.COMPLETAR_10K, List.of())).thenReturn(planoTreino);
+        when(planoRepository.save(planoTreino)).thenReturn(planoTreino);
+
+        PlanoTreinoDTO dto = service.criarPlano(usuarioId, new GerarPlanoRequest(Objetivo.COMPLETAR_10K));
+
+        assertThat(dto.id()).isEqualTo(planoTreino.getId());
+        verify(planoPresetService).gerarPlano(usuario, Objetivo.COMPLETAR_10K);
+        verify(geradorPlanoIA).gerarPlano(usuario, Objetivo.COMPLETAR_10K, List.of());
     }
 
     @Test

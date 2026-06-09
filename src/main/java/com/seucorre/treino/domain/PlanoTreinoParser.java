@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.seucorre.shared.domain.enums.TipoTreino;
 import com.seucorre.shared.exception.BusinessRuleException;
 import com.seucorre.usuario.domain.Usuario;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -19,6 +21,7 @@ import java.util.Locale;
 public class PlanoTreinoParser {
 
     private static final DateTimeFormatter FORMATTER_BR = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+    private static final Logger LOGGER = LoggerFactory.getLogger(PlanoTreinoParser.class);
 
     private final ObjectMapper objectMapper;
 
@@ -61,13 +64,26 @@ public class PlanoTreinoParser {
 
         String jsonNormalizado = extrairJson(jsonBruto);
         try {
-            JsonNode raiz = objectMapper.readTree(jsonNormalizado);
+            JsonNode raiz = lerJsonComFallback(jsonNormalizado);
             if (raiz == null || raiz.isNull()) {
                 throw new BusinessRuleException("A resposta da IA não contém um JSON válido.");
             }
             return raiz;
         } catch (IOException exception) {
+            LOGGER.warn("Falha ao interpretar JSON da IA. Trecho recebido: {}", resumirTrecho(jsonNormalizado), exception);
             throw new BusinessRuleException("Falha ao interpretar o JSON retornado pela IA.");
+        }
+    }
+
+    private JsonNode lerJsonComFallback(String jsonNormalizado) throws IOException {
+        try {
+            return objectMapper.readTree(jsonNormalizado);
+        } catch (IOException primeiraExcecao) {
+            String jsonReparado = repararJsonTruncado(jsonNormalizado);
+            if (jsonReparado.equals(jsonNormalizado)) {
+                throw primeiraExcecao;
+            }
+            return objectMapper.readTree(jsonReparado);
         }
     }
 
@@ -188,12 +204,17 @@ public class PlanoTreinoParser {
         if (valorNormalizado.contains("INTERVAL")) {
             return TipoTreino.INTERVALADO;
         }
+        if (valorNormalizado.contains("VELOC")) {
+            return TipoTreino.INTERVALADO;
+        }
         if (valorNormalizado.contains("FARTLEK")
                 || valorNormalizado.contains("FARTLAKE")
                 || valorNormalizado.contains("FARTLAK")) {
             return TipoTreino.FARTLAKE;
         }
-        if (valorNormalizado.contains("LONG")) {
+        if (valorNormalizado.contains("LONG")
+                || valorNormalizado.contains("DISTANC")
+                || valorNormalizado.contains("RESIST")) {
             return TipoTreino.LONGO;
         }
         if (valorNormalizado.contains("REGENERAT")
@@ -308,11 +329,123 @@ public class PlanoTreinoParser {
         }
 
         int inicioObjeto = texto.indexOf('{');
-        int fimObjeto = texto.lastIndexOf('}');
-        if (inicioObjeto >= 0 && fimObjeto > inicioObjeto) {
-            return texto.substring(inicioObjeto, fimObjeto + 1);
+        if (inicioObjeto < 0) {
+            return texto;
         }
-        return texto;
+
+        boolean dentroDeString = false;
+        boolean escapeAtivo = false;
+        int profundidade = 0;
+
+        for (int indice = inicioObjeto; indice < texto.length(); indice++) {
+            char caractere = texto.charAt(indice);
+
+            if (escapeAtivo) {
+                escapeAtivo = false;
+                continue;
+            }
+
+            if (caractere == '\\' && dentroDeString) {
+                escapeAtivo = true;
+                continue;
+            }
+
+            if (caractere == '"') {
+                dentroDeString = !dentroDeString;
+                continue;
+            }
+
+            if (dentroDeString) {
+                continue;
+            }
+
+            if (caractere == '{') {
+                profundidade++;
+            } else if (caractere == '}') {
+                profundidade--;
+                if (profundidade == 0) {
+                    return texto.substring(inicioObjeto, indice + 1);
+                }
+            }
+        }
+
+        return texto.substring(inicioObjeto);
+    }
+
+    private String repararJsonTruncado(String texto) {
+        StringBuilder reparado = new StringBuilder(texto == null ? "" : texto.trim());
+        if (reparado.isEmpty()) {
+            return reparado.toString();
+        }
+
+        removerVirgulaFinalPendente(reparado);
+
+        boolean dentroDeString = false;
+        boolean escapeAtivo = false;
+        int chavesAbertas = 0;
+        int colchetesAbertos = 0;
+
+        for (int indice = 0; indice < reparado.length(); indice++) {
+            char caractere = reparado.charAt(indice);
+
+            if (escapeAtivo) {
+                escapeAtivo = false;
+                continue;
+            }
+
+            if (caractere == '\\' && dentroDeString) {
+                escapeAtivo = true;
+                continue;
+            }
+
+            if (caractere == '"') {
+                dentroDeString = !dentroDeString;
+                continue;
+            }
+
+            if (dentroDeString) {
+                continue;
+            }
+
+            if (caractere == '{') {
+                chavesAbertas++;
+            } else if (caractere == '}') {
+                chavesAbertas = Math.max(0, chavesAbertas - 1);
+            } else if (caractere == '[') {
+                colchetesAbertos++;
+            } else if (caractere == ']') {
+                colchetesAbertos = Math.max(0, colchetesAbertos - 1);
+            }
+        }
+
+        if (dentroDeString) {
+            reparado.append('"');
+        }
+        while (colchetesAbertos-- > 0) {
+            reparado.append(']');
+        }
+        while (chavesAbertas-- > 0) {
+            reparado.append('}');
+        }
+        return reparado.toString();
+    }
+
+    private void removerVirgulaFinalPendente(StringBuilder texto) {
+        int indice = texto.length() - 1;
+        while (indice >= 0 && Character.isWhitespace(texto.charAt(indice))) {
+            indice--;
+        }
+        if (indice >= 0 && texto.charAt(indice) == ',') {
+            texto.deleteCharAt(indice);
+        }
+    }
+
+    private String resumirTrecho(String texto) {
+        if (texto == null) {
+            return "";
+        }
+        String normalizado = texto.replaceAll("\\s+", " ").trim();
+        return normalizado.length() <= 220 ? normalizado : normalizado.substring(0, 220) + "...";
     }
 
     private String removerCercasMarkdown(String texto) {

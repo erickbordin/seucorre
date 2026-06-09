@@ -1,10 +1,10 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Calendar, TrendingUp, User, Sparkles } from 'lucide-react';
+import { Home, Calendar, TrendingUp, User, ClipboardList } from 'lucide-react';
 
 const tabs = [
   { path: '/', icon: Home, label: 'Início' },
   { path: '/plano', icon: Calendar, label: 'Plano' },
-  { path: '/ia', icon: Sparkles, label: 'IA Coach' },
+  { path: '/check-in', icon: ClipboardList, label: 'Check-in' },
   { path: '/progresso', icon: TrendingUp, label: 'Progresso' },
   { path: '/perfil', icon: User, label: 'Perfil' },
 ];

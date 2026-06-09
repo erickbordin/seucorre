@@ -37,6 +37,7 @@ class TreinoDtoValidationTest {
                 UUID.randomUUID(),
                 StatusTreino.CONCLUIDO,
                 new BigDecimal("7.50"),
+                48,
                 150,
                 176,
                 320,
@@ -59,6 +60,7 @@ class TreinoDtoValidationTest {
                 null,
                 null,
                 BigDecimal.ZERO,
+                0,
                 0,
                 500,
                 0,
@@ -83,6 +85,7 @@ class TreinoDtoValidationTest {
                 "treinoId",
                 "status",
                 "distanciaRealKm",
+                "duracaoRealMin",
                 "fcMedia",
                 "fcMaxima",
                 "paceMedioReal",
@@ -118,6 +121,7 @@ class TreinoDtoValidationTest {
         registroTreino.setId(UUID.randomUUID());
         registroTreino.setStatus(StatusTreino.CONCLUIDO);
         registroTreino.setDistanciaRealKm(new BigDecimal("8.10"));
+        registroTreino.setDuracaoRealMin(51);
         registroTreino.setFcMedia(148);
         registroTreino.setFcMaxima(172);
         registroTreino.setPaceMedioReal(365);
@@ -138,6 +142,7 @@ class TreinoDtoValidationTest {
         assertThat(planoTreinoDTO.sessoes().get(0).tipo()).isEqualTo(TipoTreino.LONGO);
         assertThat(planoTreinoDTO.sessoes().get(0).registro()).isNotNull();
         assertThat(planoTreinoDTO.sessoes().get(0).registro().status()).isEqualTo(StatusTreino.CONCLUIDO);
+        assertThat(planoTreinoDTO.sessoes().get(0).registro().duracaoRealMin()).isEqualTo(51);
         assertThat(planoTreinoDTO.sessoes().get(0).registro().alertaSaude()).isFalse();
         assertThat(planoTreinoDTO.progressoGeral()).isEqualTo(100.0d);
     }

@@ -34,7 +34,7 @@ async function request(path, options = {}, retry = true) {
   }
 
   const token = tokenStore.getAccessToken();
-  if (token) headers.set('Authorization', `Bearer ${token}`);
+  if (token && !headers.has('Authorization')) headers.set('Authorization', `Bearer ${token}`);
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
@@ -59,31 +59,48 @@ async function request(path, options = {}, retry = true) {
 }
 
 const normalizeStatus = (status) => String(status || '').toLowerCase();
+const TYPE_METADATA = {
+  INTERVALADO: { key: 'intervals', label: 'Intervalado' },
+  FARTLAKE: { key: 'tempo', label: 'Fartlek' },
+  LONGO: { key: 'long_run', label: 'Longão' },
+  REGENERATIVO: { key: 'recovery', label: 'Recuperação' },
+};
+
 const normalizeTipo = (tipo) => {
-  const map = {
-    INTERVALADO: 'intervals',
-    FARTLAKE: 'tempo',
-    LONGO: 'long_run',
-    REGENERATIVO: 'recovery',
-  };
-  return map[tipo] || 'easy_run';
+  return TYPE_METADATA[tipo]?.key || 'easy_run';
+};
+
+const normalizeWorkoutStatus = (session) => {
+  const registroStatus = String(session?.registro?.status || '').toLowerCase();
+  if (registroStatus) {
+    if (registroStatus === 'parcial') return 'parcial';
+    if (registroStatus === 'concluido') return 'concluido';
+    if (registroStatus === 'perdido') return 'perdido';
+  }
+  if (session?.executada) return 'concluido';
+  if (session?.atrasada) return 'perdido';
+  return 'pendente';
 };
 
 export function normalizeSession(session) {
   if (!session) return null;
+  const parsedDate = session.dataPrevista ? new Date(`${session.dataPrevista}T00:00:00`) : null;
+  const readableTipo = TYPE_METADATA[session.tipo]?.label || (session.tipo ? session.tipo.replaceAll('_', ' ') : 'Treino');
   return {
     ...session,
     semana: session.numeroSemana,
-    dia_semana: session.dataPrevista ? new Date(`${session.dataPrevista}T00:00:00`).toLocaleDateString('pt-BR', { weekday: 'short' }).slice(0, 3).toLowerCase().replace('.', '') : null,
+    dia_semana: parsedDate ? parsedDate.toLocaleDateString('pt-BR', { weekday: 'short' }).slice(0, 3).toLowerCase().replace('.', '') : null,
+    dataLabel: parsedDate ? parsedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : null,
     tipo: normalizeTipo(session.tipo),
     tipoOriginal: session.tipo,
-    titulo: session.tipo ? session.tipo.replaceAll('_', ' ') : 'Treino',
+    tipoLabel: readableTipo,
+    titulo: readableTipo,
     duracao_min: session.duracaoMinutos,
     distancia_km: Number(session.distanciaKm || 0),
     pace_alvo_min: session.paceAlvo ? `${session.paceAlvo} min/km` : null,
     pace_alvo_max: null,
     zona_fc: session.zonaFcAlvo,
-    status: session.executada ? 'concluido' : session.atrasada ? 'perdido' : 'pendente',
+    status: normalizeWorkoutStatus(session),
     estrutura: [
       { fase: 'aquecimento', descricao: 'Aqueça progressivamente antes do bloco principal.', duracao: '10 min', tipo_atividade: 'trotar' },
       { fase: 'principal', descricao: session.descricao || 'Siga o treino no ritmo indicado.', duracao: `${session.duracaoMinutos || 0} min`, tipo_atividade: 'correr' },
@@ -96,7 +113,8 @@ export function normalizePlan(plan) {
   if (!plan) return null;
   const sessoes = (plan.sessoes || []).map(normalizeSession);
   const today = new Date();
-  const current = sessoes.find((s) => s?.dataPrevista && new Date(`${s.dataPrevista}T00:00:00`) >= new Date(today.toDateString()));
+  const normalizedToday = new Date(today.toDateString());
+  const current = sessoes.find((s) => s?.dataPrevista && new Date(`${s.dataPrevista}T00:00:00`) >= normalizedToday);
   return {
     ...plan,
     nome: 'Plano de Corrida',
@@ -106,6 +124,14 @@ export function normalizePlan(plan) {
     status: normalizeStatus(plan.status),
     sessoes,
     ia_insights: plan.resumoIA,
+  };
+}
+
+export function normalizeCheckin(item) {
+  if (!item) return null;
+  return {
+    ...item,
+    nivelRiscoLabel: String(item.nivelRisco || '').replaceAll('_', ' '),
   };
 }
 
@@ -153,4 +179,14 @@ export const api = {
     historico: () => request('/api/progresso/historico'),
     visaoGeral: () => request('/api/progresso/visao-geral'),
   },
+  checkins: {
+    historico: () => request('/api/checkins/historico').then((items) => (items || []).map(normalizeCheckin)),
+    enviar: (payload) => request('/api/checkins', { method: 'POST', body: payload }).then(normalizeCheckin),
+  },
+  dispositivos: {
+    listar: () => request('/api/dispositivos'),
+    conectar: (payload) => request('/api/dispositivos', { method: 'POST', body: payload }),
+    sincronizar: (plataforma) => request(`/api/dispositivos/${plataforma}/sincronizar`, { method: 'POST' }),
+  },
+
 };

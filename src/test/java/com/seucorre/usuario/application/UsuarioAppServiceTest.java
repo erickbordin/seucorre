@@ -42,13 +42,19 @@ class UsuarioAppServiceTest {
 
     private UsuarioRepository repository;
     private PasswordEncoder passwordEncoder;
+    private WearableAdapter garminAdapter;
+    private WearableAdapter stravaAdapter;
     private UsuarioAppService service;
 
     @BeforeEach
     void setUp() {
         repository = mock(UsuarioRepository.class);
         passwordEncoder = mock(PasswordEncoder.class);
-        service = new UsuarioAppService(repository, passwordEncoder);
+        garminAdapter = mock(WearableAdapter.class);
+        stravaAdapter = mock(WearableAdapter.class);
+        when(garminAdapter.plataformaSuportada()).thenReturn(PlataformaRelogio.GARMIN);
+        when(stravaAdapter.plataformaSuportada()).thenReturn(PlataformaRelogio.STRAVA);
+        service = new UsuarioAppService(repository, passwordEncoder, new WearablePlatformRegistry(List.of(garminAdapter, stravaAdapter)));
     }
 
     @Test
@@ -74,6 +80,37 @@ class UsuarioAppServiceTest {
     }
 
     @Test
+    void registrarSemOnboardingCriaUsuarioBasicoNaoApto() {
+        when(repository.existsByEmail("ana@email.com")).thenReturn(false);
+        when(passwordEncoder.encode("senha123")).thenReturn("hash-bcrypt");
+        when(repository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        UsuarioCadastroRequest request = new UsuarioCadastroRequest(
+                "Ana Runner",
+                "ana@email.com",
+                "senha123",
+                null,
+                null,
+                null,
+                null,
+                null,
+                null
+        );
+
+        UsuarioResponse response = service.registrar(request);
+
+        ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
+        verify(repository).save(captor.capture());
+        Usuario usuarioSalvo = captor.getValue();
+
+        assertThat(usuarioSalvo.getSenhaHash()).isEqualTo("hash-bcrypt");
+        assertThat(usuarioSalvo.getDadosFisicos()).isNull();
+        assertThat(usuarioSalvo.getPerfilAtleta()).isNull();
+        assertThat(response.aptoParaTreinar()).isFalse();
+        assertThat(response.perfilCorrida()).isNull();
+    }
+
+    @Test
     void registrarRecusaEmailDuplicado() {
         when(repository.existsByEmail("ana@email.com")).thenReturn(true);
 
@@ -90,6 +127,50 @@ class UsuarioAppServiceTest {
         assertThatThrownBy(() -> service.registrar(cadastroValido("SEG,TER,QUA,QUI")))
                 .isInstanceOf(BusinessRuleException.class)
                 .hasMessage("Dias de treino não podem exceder os dias disponíveis na semana.");
+    }
+
+    @Test
+    void registrarRecusaPlataformaSemAdapterConfigurado() {
+        when(repository.existsByEmail("ana@email.com")).thenReturn(false);
+        when(passwordEncoder.encode("senha123")).thenReturn("hash-bcrypt");
+
+        UsuarioCadastroRequest request = new UsuarioCadastroRequest(
+                "Ana Runner",
+                "ana@email.com",
+                "senha123",
+                "11999999999",
+                new DadosFisicosRequest(
+                        new BigDecimal("62.50"),
+                        new BigDecimal("168.00"),
+                        LocalDate.of(1995, 5, 10),
+                        "FEMININO",
+                        62,
+                        190,
+                        7,
+                        false
+                ),
+                new PerfilAtletaRequest(
+                        NivelCondicionamento.INICIANTE,
+                        Objetivo.COMPLETAR_5K,
+                        true,
+                        3,
+                        "SEG,QUA,SEX"
+                ),
+                new PerfilCorridaRequest(
+                        new BigDecimal("6.20"),
+                        null,
+                        null,
+                        null,
+                        38,
+                        List.of(new ZonaFCRequest(1, "Leve", 95, 115, false))
+                ),
+                List.of(new CondicaoSaudeRequest("ALERGIA", "Rinite", true)),
+                List.of(new DispositivoExternoRequest(PlataformaRelogio.POLAR, "token", LocalDateTime.now().plusDays(1)))
+        );
+
+        assertThatThrownBy(() -> service.registrar(request))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessage("A plataforma Polar Flow ainda não está disponível nesta versão. Plataformas disponíveis: Garmin Connect, Strava.");
     }
 
     @Test

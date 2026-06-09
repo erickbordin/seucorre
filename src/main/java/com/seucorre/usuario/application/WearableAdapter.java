@@ -18,6 +18,7 @@ public interface WearableAdapter {
             LocalDate dataRealizacao,
             StatusTreino status,
             BigDecimal distanciaKm,
+            Integer duracaoRealMin,
             Integer fcMedia,
             Integer fcMaxima,
             Integer paceMedio,

@@ -74,6 +74,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.MOCK)
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@org.springframework.test.context.TestPropertySource(properties = "seucorre.treino.geracao.mode=ia")
 @Testcontainers
 class PlanoIntegrationTest {
 

@@ -3,9 +3,9 @@ package com.seucorre.treino.application;
 import com.seucorre.infra.cache.CacheConfig;
 import com.seucorre.infra.events.EventPublisher;
 import com.seucorre.shared.domain.enums.Objetivo;
+import com.seucorre.shared.domain.enums.StatusPlano;
 import com.seucorre.shared.domain.event.PlanoGeradoEvent;
 import com.seucorre.shared.exception.BusinessRuleException;
-import com.seucorre.shared.domain.enums.StatusPlano;
 import com.seucorre.shared.exception.EntityNotFoundException;
 import com.seucorre.treino.application.dto.GerarPlanoRequest;
 import com.seucorre.treino.application.dto.PlanoTreinoDTO;
@@ -32,6 +32,8 @@ public class PlanoAppService {
     private final PlanoRepository planoRepository;
     private final UsuarioRepository usuarioRepository;
     private final GeradorPlanoIA geradorPlanoIA;
+    private final PlanoPresetService planoPresetService;
+    private final PlanoGenerationProperties planoGenerationProperties;
     private final EventPublisher eventPublisher;
 
     @Transactional
@@ -44,7 +46,7 @@ public class PlanoAppService {
         Usuario usuario = carregarPerfilCompleto(usuarioId);
         List<PlanoTreino> historicoPlanos = planoRepository.findTop3ByUsuarioIdOrderByDataInicioDesc(usuarioId);
         Objetivo objetivo = request.objetivo() != null ? request.objetivo() : usuario.getObjetivo();
-        PlanoTreino planoTreino = geradorPlanoIA.gerarPlano(usuario, request.objetivo(), historicoPlanos);
+        PlanoTreino planoTreino = gerarPlanoInicial(usuario, objetivo, historicoPlanos);
         PlanoTreino planoSalvo = planoRepository.save(planoTreino);
         eventPublisher.publish(new PlanoGeradoEvent(usuarioId, planoSalvo.getId(), objetivo, planoSalvo.getTotalSemanas()));
         return PlanoTreinoDTO.from(planoSalvo);
@@ -137,5 +139,19 @@ public class PlanoAppService {
                 });
 
         return usuario;
+    }
+
+    private PlanoTreino gerarPlanoInicial(Usuario usuario, Objetivo objetivo, List<PlanoTreino> historicoPlanos) {
+        if (planoGenerationProperties.usaPreset()) {
+            try {
+                return planoPresetService.gerarPlano(usuario, objetivo);
+            } catch (BusinessRuleException exception) {
+                if (!planoGenerationProperties.isFallbackToIa()) {
+                    throw exception;
+                }
+            }
+        }
+
+        return geradorPlanoIA.gerarPlano(usuario, objetivo, historicoPlanos);
     }
 }
