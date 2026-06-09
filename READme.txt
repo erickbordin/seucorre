@@ -1,161 +1,211 @@
-Criado por Erick Bordin e Sarah Nour
+# SeuCorre
 
-Como Rodar o Projeto
+Guia rapido para subir o projeto localmente.
 
-  ## Pré-requisitos
+## Stack do projeto
 
-  Antes de subir o projeto, instale:
+- Backend: Spring Boot 3.2 + Java 17
+- Frontend: React 18 + Vite
+- Banco: PostgreSQL
+- Cache e rate limiting: Redis
+- Infra local: Docker Compose
+- Geracao de plano no MVP: `preset` por padrao
 
-  - Docker Desktop
-  - Java 17
-  - Node.js 20+ com npm
-  - Git
+## Pre-requisitos
 
-  Confirme no terminal:
+Instale antes de começar:
 
-  java -version
-  node -v
-  npm -v
-  docker -v
+- Java 17
+- Node.js 20+ com npm
+- Docker Desktop
+- Git
+- Ollama apenas se quiser testar fluxos com IA local
 
-  ## 1. Subir a infraestrutura
+Confira no terminal:
 
-  Abra o Docker Desktop.
+```powershell
+java -version
+node -v
+npm -v
+docker -v
+```
 
-  Depois, no PowerShell:
+## 1. Subir a infraestrutura
 
-  cd C:\Users\KABUM\Desktop\seucorre
-  docker start seucorre-db seucorre-redis seucorre-pgadmin
+Na raiz do projeto:
 
-  Se os containers ainda não existirem, crie com:
+```powershell
+cd C:\Users\KABUM\Desktop\seucorre
+docker compose up -d db redis pgadmin
+```
 
-  cd C:\Users\KABUM\Desktop\seucorre
-  docker run --name seucorre-db -e POSTGRES_USER=user -e POSTGRES_PASSWORD=password -e POSTGRES_DB=seucorre_db -p
-  5432:5432 -d postgres:15-alpine
-  docker run --name seucorre-redis -p 6379:6379 -d redis:7-alpine
-  docker run --name seucorre-pgadmin -e PGADMIN_DEFAULT_EMAIL=admin@seucorre.com -e PGADMIN_DEFAULT_PASSWORD=admin -p
-  5050:80 -d dpage/pgadmin4
+Se quiser derrubar depois:
 
-  ## 2. Subir o backend
+```powershell
+docker compose down
+```
 
-  O backend precisa receber as variáveis de conexão com Postgres e Redis.
+Servicos expostos:
 
-  No PowerShell:
+- PostgreSQL: `localhost:5432`
+- Redis: `localhost:6379`
+- pgAdmin: `http://localhost:5050`
 
-  cd C:\Users\KABUM\Desktop\seucorre
+Credenciais do pgAdmin:
 
-  $env:SPRING_PROFILES_ACTIVE="dev"
-  $env:DB_URL="jdbc:postgresql://localhost:5432/seucorre_db"
-  $env:DB_USERNAME="user"
-  $env:DB_PASSWORD="password"
-  $env:REDIS_HOST="localhost"
-  $env:REDIS_PORT="6379"
-  $env:ANTHROPIC_API_KEY="mock-key"
-  $env:IA_PROVIDER="ollama"
-  $env:OLLAMA_BASE_URL="http://localhost:11434/api/generate"
-  $env:OLLAMA_MODEL="llama3.2"
-  $env:JWT_SECRET="seucorre_dev_secret"
+- Email: `admin@seucorre.com`
+- Senha: `admin`
 
-  .\mvnw.cmd spring-boot:run
+## 2. Subir o backend
 
-  Se subir corretamente, o backend ficará disponível em:
+### Windows PowerShell
 
-  http://localhost:8080
+O backend usa o perfil `dev`. Para rodar no Windows, use `localhost` nas conexoes locais:
 
-  ## 3. Subir o frontend
+```powershell
+cd C:\Users\KABUM\Desktop\seucorre
 
-  Abra outro terminal PowerShell e rode:
+$env:SPRING_PROFILES_ACTIVE="dev"
+$env:DB_URL="jdbc:postgresql://localhost:5432/seucorre_db"
+$env:DB_USERNAME="user"
+$env:DB_PASSWORD="password"
+$env:REDIS_HOST="localhost"
+$env:REDIS_PORT="6379"
+$env:JWT_SECRET="seucorre_dev_secret"
+$env:TREINO_GERACAO_MODE="preset"
+$env:TREINO_GERACAO_FALLBACK_TO_IA="false"
 
-  cd C:\Users\KABUM\Desktop\seucorre\src\front
-  npm install
-  npm run dev
+.\mvnw.cmd spring-boot:run
+```
 
-  Se subir corretamente, o frontend ficará disponível em:
+### WSL ou Linux
 
-  http://localhost:5173
+Se rodar o backend dentro de WSL/Linux e o Docker estiver no Windows Desktop, prefira `host.docker.internal`:
 
-  ## 4. Acessos do projeto
+```bash
+cd /desktop/seucorre
 
-  Após subir tudo:
+export SPRING_PROFILES_ACTIVE=dev
+export DB_URL=jdbc:postgresql://host.docker.internal:5432/seucorre_db
+export DB_USERNAME=user
+export DB_PASSWORD=password
+export REDIS_HOST=host.docker.internal
+export REDIS_PORT=6379
+export JWT_SECRET=seucorre_dev_secret
+export TREINO_GERACAO_MODE=preset
+export TREINO_GERACAO_FALLBACK_TO_IA=false
 
-  - Frontend: http://localhost:5173
-  - Backend: http://localhost:8080
-  - pgAdmin: http://localhost:5050
+./mvnw spring-boot:run
+```
 
-  Credenciais do pgAdmin:
+Quando subir corretamente, a API ficara em:
 
-  - Email: admin@seucorre.com
-  - Senha: admin
+- `http://localhost:8080`
 
-  ## 5. Fluxo esperado no sistema
+## 3. Subir o frontend
 
-  Ao abrir o frontend:
+Em outro terminal:
 
-  1. Acesse /entrar
-  2. Se não tiver conta, clique em Criar uma conta
-  3. O cadastro cria apenas a conta
-  4. Depois do login, o sistema direciona para o onboarding
-  5. Só após completar o onboarding o usuário acessa home, plano e geração de treino
+```powershell
+cd C:\Users\KABUM\Desktop\seucorre\src\front
+npm install
+npm run dev
+```
 
-  ## 6. Como parar o projeto
+Frontend em:
 
-  Para parar o backend:
+- `http://localhost:5173`
 
-  - pressione Ctrl + C no terminal do Spring Boot
+## 4. Modo MVP atual
 
-  Para parar o frontend:
+O projeto agora sobe em modo `preset` por padrao para geracao inicial de plano. Isso significa que o MVP nao depende de IA para funcionar logo de cara.
 
-  - pressione Ctrl + C no terminal do Vite
+Hoje o catalogo inicial cobre:
 
-  Para parar os containers:
+- `SAUDE_GERAL`
+- `COMPLETAR_5K`
+- `COMPLETAR_10K`
+- niveis `INICIANTE` e `INTERMEDIARIO`
+- 3 ou 4 dias por semana
+- 8 semanas por plano
 
-  docker stop seucorre-db seucorre-redis seucorre-pgadmin
+Se quiser testar geracao com IA desde o inicio, troque o modo:
 
-  ## 7. Problemas comuns
+```powershell
+$env:TREINO_GERACAO_MODE="ia"
+```
 
-  ### vite is not recognized
+## 5. Se quiser usar IA local com Ollama
 
-  Rode:
+Isso e opcional para o MVP em modo `preset`, mas necessario se voce quiser testar fluxos de IA.
 
-  cd C:\Users\KABUM\Desktop\seucorre\src\front
-  npm install
+No Windows PowerShell:
 
-  ### Frontend sobe, mas não abre no navegador
+```powershell
+ollama list
+ollama pull llama3.2
 
-  Confirme que o terminal mostrou:
+$env:IA_PROVIDER="ollama"
+$env:OLLAMA_BASE_URL="http://localhost:11434/api/generate"
+$env:OLLAMA_MODEL="llama3.2"
+```
 
-  Local: http://localhost:5173/
+Se o backend estiver rodando em WSL/Linux, use:
 
-  ### Backend não conecta no banco
+```bash
+export IA_PROVIDER=ollama
+export OLLAMA_BASE_URL=http://host.docker.internal:11434/api/generate
+export OLLAMA_MODEL=llama3.2
+```
 
-  Confirme se o Postgres está rodando:
+## 6. Fluxo esperado da aplicacao
 
-  docker ps
+Depois de subir tudo:
 
-  E veja se a porta 5432 está exposta.
+1. Acesse `/entrar`
+2. Se nao tiver conta, crie uma conta
+3. Complete o onboarding
+4. Gere o plano inicial
+5. Acesse home, plano, progresso e check-in
 
-  ### Erro de Java
+## 7. Como parar
 
-  Confirme que está usando Java 17:
-  java -version
+Backend:
 
-  ### IA Llama/Ollama não responde
+- pressione `Ctrl + C` no terminal do Spring Boot
 
-  O projeto usa o provider `ollama` no perfil `dev`.
+Frontend:
 
-  Antes de subir o backend, confirme que o Ollama está instalado e em execução no Windows:
+- pressione `Ctrl + C` no terminal do Vite
 
-  ollama list
+Infra:
 
-  Se o comando não existir, você só baixou o instalador e ainda precisa concluir a instalação.
+```powershell
+docker compose down
+```
 
-  Se o modelo llama ainda não existir localmente, rode:
+## 8. Problemas comuns
 
-  ollama pull llama3.2
+### Backend nao conecta no banco
 
-para usar o openclaude
-1- docker attach openclaude-java
-2- docker ps
-3- docker exec -it nomedodocker bash
-4- openclaude
+- confirme que o container `seucorre-db` esta de pe: `docker ps`
+- confira se a porta `5432` esta livre e exposta
+- se estiver em WSL/Linux, use `host.docker.internal` em vez de `localhost`
 
+### Backend nao conecta no Redis
+
+- confirme que o container `seucorre-redis` esta de pe
+- confira a porta `6379`
+- se estiver em WSL/Linux, use `host.docker.internal`
+
+### Frontend nao sobe
+
+- rode `npm install` dentro de `src/front`
+- confirme a versao do Node.js
+
+### IA local nao responde
+
+- confirme que o Ollama esta em execucao
+- teste `ollama list`
+- confira o valor de `OLLAMA_BASE_URL`
+- lembre que no modo `preset` o MVP nao precisa de IA para gerar plano inicial
