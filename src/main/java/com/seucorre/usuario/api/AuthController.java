@@ -1,6 +1,7 @@
 package com.seucorre.usuario.api;
 
 import com.seucorre.infra.security.JwtService;
+import com.seucorre.shared.api.ApiResponse;
 import com.seucorre.usuario.application.dto.LoginRequest;
 import com.seucorre.usuario.application.dto.LoginResponse;
 import com.seucorre.usuario.infrastructure.UsuarioRepository;
@@ -28,10 +29,14 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest data) {
+    public ResponseEntity<?> login(@RequestBody @Valid LoginRequest data) {
         var usuario = repository.findByEmail(data.email()).orElse(null);
-        if (usuario == null || !passwordEncoder.matches(data.senha(), usuario.getSenhaHash())) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if (usuario == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.erro("E-mail incorreto."));
+        }
+
+        if (!passwordEncoder.matches(data.senha(), usuario.getSenhaHash())) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.erro("Senha incorreta."));
         }
 
         return ResponseEntity.ok(new LoginResponse(
