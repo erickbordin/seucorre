@@ -158,6 +158,16 @@ export default function Wearables() {
         )}
       </section>
 
+      <section className="rounded-3xl bg-card border border-border p-5 mb-6">
+        <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-2">Status do MVP</p>
+        <p className="text-sm text-foreground">
+          O vinculo por token e a estrutura de sincronizacao ja existem, mas a importacao automatica de atividades ainda esta em evolucao no backend.
+        </p>
+        <p className="text-xs text-muted-foreground mt-2">
+          Nesta versao, Garmin e Strava servem para validar o fluxo de conexao e preparar a integracao real.
+        </p>
+      </section>
+
       <section className="space-y-3 mb-6">
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Plataformas</h2>
         {PLATFORMS.map((platform) => {
@@ -258,30 +268,37 @@ export default function Wearables() {
         </div>
 
         {!selectedMeta?.available && (
-          <div className="rounded-2xl border border-dashed border-border px-4 py-4 mt-4 text-xs text-muted-foreground">
-            {selectedMeta?.label} ainda não tem integração ativa no backend desta versão.
+          <div className="mt-4 rounded-2xl border border-dashed border-border bg-background px-4 py-3 text-xs text-muted-foreground">
+            Essa plataforma ainda nao esta disponivel nesta versao do produto.
           </div>
         )}
 
-        <Button type="submit" disabled={!canConnect || connectMutation.isPending} className="w-full h-14 rounded-2xl font-semibold text-base mt-5">
-          {connectMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-          {selectedDevice ? 'Atualizar conexão' : 'Conectar dispositivo'}
+        <Button type="submit" className="w-full h-14 rounded-2xl font-semibold text-base mt-5" disabled={!canConnect || connectMutation.isPending}>
+          {connectMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Link2 className="w-4 h-4" />}
+          Conectar wearable
         </Button>
       </form>
 
-      {(feedback || error) && (
-        <div className={`rounded-2xl border p-4 ${feedback?.type === 'error' || error ? 'bg-destructive/5 border-destructive/30' : 'bg-card border-border'}`}>
+      {feedback && (
+        <div className={`rounded-3xl border p-5 ${feedback.type === 'success' ? 'bg-primary/10 border-primary/20' : 'bg-card border-border'}`}>
           <div className="flex items-start gap-3">
-            {feedback?.type === 'error' || error ? (
-              <AlertTriangle className="w-5 h-5 text-destructive mt-0.5" />
-            ) : (
+            {feedback.type === 'success' ? (
               <CheckCircle2 className="w-5 h-5 text-primary mt-0.5" />
+            ) : (
+              <AlertTriangle className="w-5 h-5 text-orange-400 mt-0.5" />
             )}
             <div>
-              <p className="text-sm font-semibold text-foreground mb-1">{feedback?.title || 'Não foi possível carregar os dispositivos'}</p>
-              <p className="text-xs text-muted-foreground">{feedback?.description || error?.message}</p>
+              <p className="text-sm font-semibold text-foreground mb-1">{feedback.title}</p>
+              <p className="text-xs text-muted-foreground">{feedback.description}</p>
             </div>
           </div>
+        </div>
+      )}
+
+      {error && (
+        <div className="mt-6 rounded-3xl border border-border bg-card p-5">
+          <p className="text-sm font-semibold text-foreground mb-1">Nao foi possivel carregar os dispositivos</p>
+          <p className="text-xs text-muted-foreground">{error.message}</p>
         </div>
       )}
     </div>

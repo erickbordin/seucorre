@@ -1,6 +1,7 @@
 package com.seucorre.usuario.api;
 
 import com.seucorre.infra.security.JwtService;
+import com.seucorre.shared.api.ApiResponse;
 import com.seucorre.usuario.application.dto.LoginRequest;
 import com.seucorre.usuario.application.dto.LoginResponse;
 import com.seucorre.usuario.domain.Usuario;
@@ -52,7 +53,7 @@ class AuthControllerTest {
     }
 
     @Test
-    void loginRetornaUnauthorizedQuandoSenhaNaoConfere() {
+    void loginRetornaUnauthorizedComMensagemQuandoSenhaNaoConfere() {
         Usuario usuario = new Usuario();
         usuario.setEmail("ana@email.com");
         usuario.setSenhaHash("hash-bcrypt");
@@ -63,15 +64,17 @@ class AuthControllerTest {
         ResponseEntity<?> response = controller.login(new LoginRequest("ana@email.com", "errada"));
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody()).isEqualTo(ApiResponse.erro("Senha incorreta."));
     }
 
     @Test
-    void loginRetornaUnauthorizedQuandoUsuarioNaoExiste() {
+    void loginRetornaUnauthorizedComMensagemQuandoUsuarioNaoExiste() {
         when(repository.findByEmail("ana@email.com")).thenReturn(Optional.empty());
 
         ResponseEntity<?> response = controller.login(new LoginRequest("ana@email.com", "senha123"));
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody()).isEqualTo(ApiResponse.erro("E-mail incorreto."));
     }
 
     @Test

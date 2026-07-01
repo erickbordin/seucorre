@@ -8,7 +8,7 @@ import { useAuth } from '@/lib/AuthContext';
 const steps = [
   { icon: Brain, label: 'Lendo seu perfil no backend...' },
   { icon: Zap, label: 'Chamando /api/planos/gerar...' },
-  { icon: Sparkles, label: 'Aguardando geração pela IA...' },
+  { icon: Sparkles, label: 'Montando sua rotina inicial...' },
   { icon: CheckCircle2, label: 'Plano criado.' },
 ];
 
@@ -75,7 +75,7 @@ export default function GeneratePlan() {
           <p className="text-sm font-semibold text-foreground mb-2">Não foi possível gerar seu plano agora</p>
           <p className="text-sm text-destructive mb-4">{error}</p>
           <p className="text-xs text-muted-foreground mb-5">
-            Revise os dados do seu perfil ou tente novamente. Se a IA falhar, o objetivo atual continua sendo {user?.objetivo || 'o informado no seu onboarding'}.
+            Revise os dados do seu perfil ou tente novamente. Se a geracao falhar, o objetivo atual continua sendo {user?.objetivo || 'o informado no seu onboarding'}.
           </p>
           <div className="flex flex-col gap-3">
             <button onClick={() => setAttemptKey((value) => value + 1)} className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-semibold inline-flex items-center justify-center gap-2">
