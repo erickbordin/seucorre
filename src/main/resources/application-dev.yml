@@ -2,7 +2,7 @@ spring:
   cache:
     type: none
   datasource:
-    url: ${DB_URL:jdbc:postgresql://host.docker.internal:5432/seucorre_db}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/seucorre_db}
     username: ${DB_USERNAME:user}
     password: ${DB_PASSWORD:password}
   jpa:
@@ -11,7 +11,7 @@ spring:
     show-sql: true
   data:
     redis:
-      host: ${REDIS_HOST:host.docker.internal}
+      host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
   flyway:
     enabled: true
@@ -34,7 +34,7 @@ seucorre:
       max-retries: 3
       initial-backoff-millis: 500
     ollama:
-      base-url: ${OLLAMA_BASE_URL:http://host.docker.internal:11434/api/generate}
+      base-url: ${OLLAMA_BASE_URL:http://localhost:11434/api/generate}
       model: ${OLLAMA_MODEL:llama3.2}
       timeout-seconds: 180
       max-retries: 1
