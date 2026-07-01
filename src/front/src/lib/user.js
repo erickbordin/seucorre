@@ -51,8 +51,10 @@ export function hasCompletedOnboarding(user) {
 }
 
 export function birthDateFromAge(age) {
-  const years = Number(age);
-  if (!Number.isFinite(years) || years <= 0) return '';
+  const normalizedAge = String(age || '').trim();
+  if (!/^\d+$/.test(normalizedAge)) return '';
+  const years = Number(normalizedAge);
+  if (!Number.isInteger(years) || years <= 0) return '';
   const date = new Date();
   date.setFullYear(date.getFullYear() - years);
   return date.toISOString().slice(0, 10);
