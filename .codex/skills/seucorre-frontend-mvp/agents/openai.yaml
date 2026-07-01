@@ -1,0 +1,7 @@
+interface:
+  display_name: "SeuCorre Frontend MVP"
+  short_description: "SeuCorre MVP frontend workflow"
+  default_prompt: "Use $seucorre-frontend-mvp to implement or review React/Vite changes in SeuCorre while preserving auth, onboarding, and API integration flow."
+
+policy:
+  allow_implicit_invocation: true
