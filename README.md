@@ -38,7 +38,9 @@ SeuCorre e um SaaS de treinos de corrida com onboarding, geracao de plano, check
 ```text
 .
 ├── docker-compose.yml
+├── docker-compose.prod.yml
 ├── Dockerfile
+├── DEPLOY.md
 ├── pom.xml
 ├── src/main/java/com/seucorre
 ├── src/main/resources
@@ -164,6 +166,17 @@ Frontend local:
 - erro de conexao no Postgres ou Redis: confirme que os containers estao `Up` e que as portas `5432` e `6379` nao estao ocupadas por outros processos.
 - erro de Flyway ao iniciar o backend: normalmente indica que o banco nao subiu ou que `DB_URL`, `DB_USERNAME` e `DB_PASSWORD` nao batem com o `docker-compose.yml`.
 - frontend sobe mas a API falha: confirme que o backend esta escutando em `http://localhost:8080`.
+
+## Deploy
+
+O runbook de deploy esta em `DEPLOY.md`.
+Ele cobre:
+
+- `.env.production`
+- `docker-compose.prod.yml`
+- build separado de frontend e backend
+- uso de proxy reverso para TLS
+- smoke test e logs
 
 ## Modos de geracao de plano
 
