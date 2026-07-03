@@ -6,3 +6,6 @@ target
 tmp
 README.md
 *.iml
+src/front/node_modules
+src/front/dist
+src/front/.vite
