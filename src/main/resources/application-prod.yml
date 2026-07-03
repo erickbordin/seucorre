@@ -13,12 +13,13 @@ spring:
     baseline-on-migrate: true
   ai:
     anthropic:
-      api-key: ${ANTHROPIC_API_KEY}
+      api-key: ${ANTHROPIC_API_KEY:}
 
 server:
   port: 8080
-  ssl: # Recomendado habilitar em prod via Load Balancer ou direto aqui
-    enabled: true
+  forward-headers-strategy: framework
+  ssl:
+    enabled: ${SERVER_SSL_ENABLED:false}
 
 logging:
   level:
@@ -26,7 +27,7 @@ logging:
 
 seucorre:
   ia:
-    provider: ${IA_PROVIDER:anthropic}
+    provider: ${IA_PROVIDER:manual}
     anthropic:
       model: claude-sonnet-4
       max-tokens: 8192
@@ -42,6 +43,9 @@ seucorre:
       temperature: 0.0
       num-predict: 2600
       keep-alive: 15m
+  security:
+    cors:
+      allowed-origins: "${CORS_ALLOWED_ORIGINS}"
 
 api:
   security:
