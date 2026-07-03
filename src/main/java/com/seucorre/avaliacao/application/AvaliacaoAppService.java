@@ -2,6 +2,7 @@ package com.seucorre.avaliacao.application;
 
 import com.seucorre.infra.cache.CacheConfig;
 import com.seucorre.infra.events.EventPublisher;
+import com.seucorre.infra.ia.IAProperties;
 import com.seucorre.infra.notification.NotificacaoService;
 import com.seucorre.avaliacao.application.dto.AnaliseRiscoDTO;
 import com.seucorre.avaliacao.application.dto.CheckinSemanalRequest;
@@ -43,6 +44,8 @@ public class AvaliacaoAppService {
     private final PlanoRepository planoRepository;
     private final UsuarioRepository usuarioRepository;
     private final GeradorPlanoIA geradorPlanoIA;
+    private final ManualCheckinAnalysisService manualCheckinAnalysisService;
+    private final IAProperties iaProperties;
     private final EventPublisher eventPublisher;
     private final RegistroRepository registroRepository;
     private final NotificacaoService notificacaoService;
@@ -50,16 +53,16 @@ public class AvaliacaoAppService {
     @Transactional
     public AnaliseRiscoDTO processarCheckin(CheckinSemanalRequest request) {
         if (request == null) {
-            throw new IllegalArgumentException("Request de check-in é obrigatória.");
+            throw new IllegalArgumentException("Request de check-in e obrigatoria.");
         }
 
         Usuario usuario = usuarioRepository.findById(request.usuarioId())
-                .orElseThrow(() -> new EntityNotFoundException("Usuário não encontrado."));
+                .orElseThrow(() -> new EntityNotFoundException("Usuario nao encontrado."));
         PlanoTreino planoTreino = planoRepository.findById(request.planoId())
-                .orElseThrow(() -> new EntityNotFoundException("Plano de treino não encontrado."));
+                .orElseThrow(() -> new EntityNotFoundException("Plano de treino nao encontrado."));
 
         if (planoTreino.getUsuario() == null || !usuario.getId().equals(planoTreino.getUsuario().getId())) {
-            throw new BusinessRuleException("O plano informado não pertence ao usuário.");
+            throw new BusinessRuleException("O plano informado nao pertence ao usuario.");
         }
 
         CheckinSemanal checkinSemanal = checkinRepository.findByPlanoIdAndSemana(request.planoId(), request.semana())
@@ -68,12 +71,19 @@ public class AvaliacaoAppService {
         preencherCheckin(checkinSemanal, request, usuario, planoTreino);
 
         ProgressoSemanal progressoSemanal = progressoAppService.buscarProgressoSemana(planoTreino.getId(), request.semana());
-        checkinSemanal.setAnaliseIA(gerarAnaliseIA(checkinSemanal, progressoSemanal));
+        String alertaSemanal = progressoSemanal == null
+                ? null
+                : progressoAppService.gerarAlertaSemanal(planoTreino.getId(), request.semana());
+        checkinSemanal.setAnaliseIA(gerarAnalise(checkinSemanal, progressoSemanal, alertaSemanal));
 
         if (checkinSemanal.precisaReescreverPlano()) {
-            List<ProgressoSemanal> progressosRecentes = progressoAppService.listarUltimosProgressosDoPlano(planoTreino.getId());
-            PlanoTreino planoReescrito = geradorPlanoIA.reescreverPlano(planoTreino, checkinSemanal, progressosRecentes);
-            persistirReescrita(planoTreino, planoReescrito, checkinSemanal);
+            if (iaProperties.usaModoManual()) {
+                checkinSemanal.setPlanoReescrito(false);
+            } else {
+                List<ProgressoSemanal> progressosRecentes = progressoAppService.listarUltimosProgressosDoPlano(planoTreino.getId());
+                PlanoTreino planoReescrito = geradorPlanoIA.reescreverPlano(planoTreino, checkinSemanal, progressosRecentes);
+                persistirReescrita(planoTreino, planoReescrito, checkinSemanal);
+            }
         } else {
             checkinSemanal.setPlanoReescrito(false);
         }
@@ -87,10 +97,10 @@ public class AvaliacaoAppService {
     @CacheEvict(cacheNames = CacheConfig.PLANO_ATIVO_CACHE, key = "#usuarioId")
     public AnaliseRiscoDTO processarCheckin(UUID usuarioId, CheckinSemanalRequest request) {
         if (request == null) {
-            throw new IllegalArgumentException("Request de check-in é obrigatória.");
+            throw new IllegalArgumentException("Request de check-in e obrigatoria.");
         }
         if (!usuarioId.equals(request.usuarioId())) {
-            throw new BusinessRuleException("O usuário informado no corpo da requisição difere do usuário autenticado.");
+            throw new BusinessRuleException("O usuario informado no corpo da requisicao difere do usuario autenticado.");
         }
         return processarCheckin(request);
     }
@@ -202,40 +212,48 @@ public class AvaliacaoAppService {
         checkinSemanal.setAvaliacao(request.avaliacao());
     }
 
-    private String gerarAnaliseIA(CheckinSemanal checkinSemanal, ProgressoSemanal progressoSemanal) {
+    private String gerarAnalise(CheckinSemanal checkinSemanal,
+                                ProgressoSemanal progressoSemanal,
+                                String alertaSemanal) {
+        if (iaProperties.usaModoManual()) {
+            return manualCheckinAnalysisService.gerarAnalise(checkinSemanal, progressoSemanal, alertaSemanal);
+        }
+
         String analiseCheckin = geradorPlanoIA.gerarAnaliseCheckin(checkinSemanal);
         if (progressoSemanal == null) {
-            return analiseCheckin;
+            return combinarAnaliseComAlerta(analiseCheckin, alertaSemanal);
         }
-
-        String alertaSemanal = progressoAppService.gerarAlertaSemanal(
-                checkinSemanal.getPlano() == null ? null : checkinSemanal.getPlano().getId(),
-                checkinSemanal.getSemana()
-        );
 
         String sugestaoProgresso = geradorPlanoIA.sugerirAjuste(progressoSemanal);
-        String analiseComSugestao = analiseCheckin;
-        if (sugestaoProgresso != null && !sugestaoProgresso.isBlank()) {
-            if (analiseComSugestao == null || analiseComSugestao.isBlank()) {
-                analiseComSugestao = sugestaoProgresso;
-            } else {
-                analiseComSugestao = analiseComSugestao + "\nAjuste semanal: " + sugestaoProgresso;
-            }
+        String analiseComSugestao = combinarAnaliseComSugestao(analiseCheckin, sugestaoProgresso);
+        return combinarAnaliseComAlerta(analiseComSugestao, alertaSemanal);
+    }
+
+    private String combinarAnaliseComSugestao(String analiseBase, String sugestaoProgresso) {
+        if (sugestaoProgresso == null || sugestaoProgresso.isBlank()) {
+            return analiseBase;
         }
+        if (analiseBase == null || analiseBase.isBlank()) {
+            return sugestaoProgresso;
+        }
+        return analiseBase + "\nAjuste semanal: " + sugestaoProgresso;
+    }
+
+    private String combinarAnaliseComAlerta(String analiseBase, String alertaSemanal) {
         if (alertaSemanal == null || alertaSemanal.isBlank()) {
-            return analiseComSugestao;
+            return analiseBase;
         }
-        if (analiseComSugestao == null || analiseComSugestao.isBlank()) {
+        if (analiseBase == null || analiseBase.isBlank()) {
             return alertaSemanal;
         }
-        return analiseComSugestao + "\n" + alertaSemanal;
+        return analiseBase + "\n" + alertaSemanal;
     }
 
     private void persistirReescrita(PlanoTreino planoOriginal,
                                     PlanoTreino planoReescrito,
                                     CheckinSemanal checkinSemanal) {
         if (planoReescrito == null) {
-            throw new BusinessRuleException("A IA não retornou um plano reescrito válido.");
+            throw new BusinessRuleException("A IA nao retornou um plano reescrito valido.");
         }
 
         checkinSemanal.setPlanoReescrito(true);

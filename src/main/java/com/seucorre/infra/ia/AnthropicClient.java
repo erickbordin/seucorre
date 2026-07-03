@@ -29,7 +29,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 
 @Service
-@ConditionalOnProperty(name = "seucorre.ia.provider", havingValue = "anthropic", matchIfMissing = true)
+@ConditionalOnProperty(name = "seucorre.ia.provider", havingValue = "anthropic")
 public class AnthropicClient implements IAClient {
 
     private static final String ANTHROPIC_VERSION = "2023-06-01";

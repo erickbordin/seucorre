@@ -7,6 +7,7 @@ import com.seucorre.avaliacao.domain.CheckinSemanal;
 import com.seucorre.avaliacao.domain.ProgressoSemanal;
 import com.seucorre.avaliacao.infrastructure.CheckinRepository;
 import com.seucorre.infra.events.EventPublisher;
+import com.seucorre.infra.ia.IAProperties;
 import com.seucorre.infra.notification.NotificacaoService;
 import com.seucorre.shared.domain.event.CheckinProcessadoEvent;
 import com.seucorre.shared.domain.event.PlanoReescritoEvent;
@@ -31,8 +32,8 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class AvaliacaoAppServiceTest {
@@ -42,6 +43,8 @@ class AvaliacaoAppServiceTest {
     private PlanoRepository planoRepository;
     private UsuarioRepository usuarioRepository;
     private GeradorPlanoIA geradorPlanoIA;
+    private ManualCheckinAnalysisService manualCheckinAnalysisService;
+    private IAProperties iaProperties;
     private EventPublisher eventPublisher;
     private RegistroRepository registroRepository;
     private NotificacaoService notificacaoService;
@@ -54,6 +57,9 @@ class AvaliacaoAppServiceTest {
         planoRepository = mock(PlanoRepository.class);
         usuarioRepository = mock(UsuarioRepository.class);
         geradorPlanoIA = mock(GeradorPlanoIA.class);
+        manualCheckinAnalysisService = mock(ManualCheckinAnalysisService.class);
+        iaProperties = new IAProperties();
+        iaProperties.setProvider(IAProperties.Provider.ANTHROPIC);
         eventPublisher = mock(EventPublisher.class);
         registroRepository = mock(RegistroRepository.class);
         notificacaoService = mock(NotificacaoService.class);
@@ -63,6 +69,8 @@ class AvaliacaoAppServiceTest {
                 planoRepository,
                 usuarioRepository,
                 geradorPlanoIA,
+                manualCheckinAnalysisService,
+                iaProperties,
                 eventPublisher,
                 registroRepository,
                 notificacaoService
@@ -88,7 +96,6 @@ class AvaliacaoAppServiceTest {
         when(planoRepository.findById(planoTreino.getId())).thenReturn(Optional.of(planoTreino));
         when(checkinRepository.findByPlanoIdAndSemana(planoTreino.getId(), 2)).thenReturn(Optional.empty());
         when(progressoAppService.buscarProgressoSemana(planoTreino.getId(), 2)).thenReturn(null);
-        when(progressoAppService.gerarAlertaSemanal(planoTreino.getId(), 2)).thenReturn(null);
         when(geradorPlanoIA.gerarAnaliseCheckin(org.mockito.ArgumentMatchers.any(CheckinSemanal.class)))
                 .thenReturn("Risco baixo, manter plano.");
         when(checkinRepository.save(org.mockito.ArgumentMatchers.any(CheckinSemanal.class)))
@@ -176,6 +183,61 @@ class AvaliacaoAppServiceTest {
                 org.mockito.ArgumentMatchers.eq(List.of(progressoSemanal))
         );
         verify(eventPublisher).publish(org.mockito.ArgumentMatchers.any(PlanoReescritoEvent.class));
+        verify(eventPublisher).publish(org.mockito.ArgumentMatchers.any(CheckinProcessadoEvent.class));
+    }
+
+    @Test
+    void processaCheckinEmModoManualSemUsarIaNemReescreverPlanoAutomaticamente() {
+        iaProperties.setProvider(IAProperties.Provider.MANUAL);
+
+        Usuario usuario = criarUsuario();
+        PlanoTreino planoTreino = criarPlano(usuario);
+        ProgressoSemanal progressoSemanal = new ProgressoSemanal();
+        progressoSemanal.setPlano(planoTreino);
+        progressoSemanal.setNumeroSemana(3);
+
+        CheckinSemanalRequest request = new CheckinSemanalRequest(
+                usuario.getId(),
+                planoTreino.getId(),
+                3,
+                LocalDate.of(2026, 5, 27),
+                9,
+                7,
+                4,
+                "Dor e fadiga altas"
+        );
+
+        when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
+        when(planoRepository.findById(planoTreino.getId())).thenReturn(Optional.of(planoTreino));
+        when(checkinRepository.findByPlanoIdAndSemana(planoTreino.getId(), 3)).thenReturn(Optional.empty());
+        when(progressoAppService.buscarProgressoSemana(planoTreino.getId(), 3)).thenReturn(progressoSemanal);
+        when(progressoAppService.gerarAlertaSemanal(planoTreino.getId(), 3))
+                .thenReturn("Alerta: revisar a carga manualmente.");
+        when(manualCheckinAnalysisService.gerarAnalise(
+                org.mockito.ArgumentMatchers.any(CheckinSemanal.class),
+                org.mockito.ArgumentMatchers.eq(progressoSemanal),
+                org.mockito.ArgumentMatchers.eq("Alerta: revisar a carga manualmente.")
+        )).thenReturn("Analise manual.");
+        when(checkinRepository.save(org.mockito.ArgumentMatchers.any(CheckinSemanal.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        AnaliseRiscoDTO dto = service.processarCheckin(request);
+
+        assertThat(dto.precisaReescreverPlano()).isTrue();
+        assertThat(dto.planoReescrito()).isFalse();
+        assertThat(dto.analiseIA()).isEqualTo("Analise manual.");
+        verify(manualCheckinAnalysisService).gerarAnalise(
+                org.mockito.ArgumentMatchers.any(CheckinSemanal.class),
+                org.mockito.ArgumentMatchers.eq(progressoSemanal),
+                org.mockito.ArgumentMatchers.eq("Alerta: revisar a carga manualmente.")
+        );
+        verify(geradorPlanoIA, never()).gerarAnaliseCheckin(org.mockito.ArgumentMatchers.any(CheckinSemanal.class));
+        verify(geradorPlanoIA, never()).reescreverPlano(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.anyList()
+        );
+        verify(eventPublisher, never()).publish(org.mockito.ArgumentMatchers.any(PlanoReescritoEvent.class));
         verify(eventPublisher).publish(org.mockito.ArgumentMatchers.any(CheckinProcessadoEvent.class));
     }
 
