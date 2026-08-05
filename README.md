@@ -5,26 +5,6 @@ SeuCorre e um SaaS de treinos de corrida com onboarding, geracao de plano, check
 > Status atual: MVP em desenvolvimento.
 > O backend principal esta funcional e coberto por testes. Parte do frontend e de algumas integracoes ainda esta em evolucao.
 
-## O que ja funciona
-
-- cadastro, login e refresh token com JWT
-- gating de onboarding antes da area autenticada
-- geracao de plano por `preset` ou `ia`, controlada por configuracao
-- listagem, pausa e reativacao de planos
-- registro de treinos e historico
-- check-in semanal com analise de risco
-- progresso semanal e consolidacao de sinais de treino
-- estrutura inicial de wearables, notificacoes e paywall
-
-## O que ainda nao esta fechado
-
-- sincronizacao real de wearables: Garmin e Strava ainda usam adapters stubados
-- preferencias de notificacao: tela existe, endpoint/backend ainda nao
-- billing/premium: paywall existe, checkout e backend ainda nao
-- frontend duplicado entre `src/front/src/page` e `src/front/src/page/backend`
-- falta suite oficial de testes do frontend
-- falta versionamento formal de prompts e observabilidade de IA
-
 ## Stack
 
 - Backend: Java 17, Spring Boot 3.2, Spring Security, Spring Data JPA, Flyway, Redis
@@ -32,21 +12,6 @@ SeuCorre e um SaaS de treinos de corrida com onboarding, geracao de plano, check
 - Banco: PostgreSQL
 - IA: provider configuravel com suporte atual a Ollama e Anthropic
 - Testes backend: JUnit, Spring Test, Testcontainers
-
-## Estrutura do repositorio
-
-```text
-.
-├── docker-compose.yml
-├── docker-compose.prod.yml
-├── Dockerfile
-├── DEPLOY.md
-├── pom.xml
-├── src/main/java/com/seucorre
-├── src/main/resources
-├── src/test/java/com/seucorre
-└── src/front
-```
 
 ## Como rodar localmente
 
@@ -222,26 +187,3 @@ CI atual:
 
 - roda `./mvnw -B -ntp verify`
 - valida o build da imagem Docker do backend
-
-## Roadmap tecnico imediato
-
-- implementar sincronizacao real de wearables
-- criar endpoint real de preferencias de notificacao
-- conectar billing/checkout ao premium
-- consolidar a arvore ativa do frontend
-- adicionar testes de frontend para auth, onboarding, plano e check-in
-- versionar prompts e medir qualidade/latencia da IA
-- reduzir bundle inicial do frontend com code splitting
-
-## Antes de publicar no GitHub
-
-- escolher e adicionar uma `LICENSE`
-- adicionar screenshots ou um GIF do fluxo principal
-- revisar a descricao do repositorio e topicos do GitHub
-- opcional: adicionar `CONTRIBUTING.md`, issue templates e `CODE_OF_CONDUCT.md`
-
-## Observacoes
-
-- O backend e a fonte da verdade das regras de negocio.
-- O MVP sobe em `preset` por padrao para nao depender de IA logo no primeiro fluxo.
-- Algumas telas do frontend ja existem para a jornada futura, mas nem todas estao conectadas ao backend final ainda.
