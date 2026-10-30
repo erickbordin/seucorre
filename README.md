@@ -13,6 +13,33 @@ SeuCorre e um SaaS de treinos de corrida com onboarding, geracao de plano, check
 - IA: provider configuravel com suporte atual a Ollama e Anthropic
 - Testes backend: JUnit, Spring Test, Testcontainers
 
+## Como a IA funciona
+
+A IA e um componente do sistema, nao a regra principal: ela sugere, o backend valida e decide o que persiste. Detalhes em [`.claude/AI_GUIDELINES.md`](.claude/AI_GUIDELINES.md) e decisoes em [`.claude/DECISIONS.md`](.claude/DECISIONS.md).
+
+```mermaid
+flowchart LR
+    A[Check-in semanal] --> B{Precisa reescrever o plano?}
+    B -- nao --> Z[Plano atual mantido]
+    B -- sim --> C[PromptBuilder]
+    C --> D[IAClient]
+    D --> E[Claude / Anthropic API]
+    D --> F[Ollama / local]
+    E --> H[Parse do JSON]
+    F --> H
+    H --> I[Regra dos 10% de progressao]
+    I --> J[Plano persistido]
+```
+
+Decisoes de engenharia:
+
+- **Provider trocavel por configuracao** (`IA_PROVIDER`): o dominio depende so da interface `IAClient`. Claude (`AnthropicClient`), Ollama para desenvolvimento local sem custo (`OllamaClient`) ou modo manual sem IA (`ManualOnlyIAClient`).
+- **Guardrail deterministico depois do LLM**: a regra dos 10% (o volume semanal nao sobe mais de 10%) roda em Java sobre toda resposta do modelo em `GeradorPlanoIA`. Regra de seguranca nao fica so no prompt.
+- **Resiliencia na chamada ao modelo**: timeout, retry com backoff exponencial (Resilience4j) e `IAUnavailableException` quando o provider falha.
+- **Funciona sem IA**: o plano inicial vem de presets (IA opcional quando nao ha preset) e, em modo manual, a analise do check-in usa regras deterministicas (`ManualCheckinAnalysisService`).
+
+Proximos passos: eval automatizado da saida do LLM (Claude x Ollama) e saida estruturada com tool calling.
+
 ## Como rodar localmente
 
 ### Pre-requisitos
