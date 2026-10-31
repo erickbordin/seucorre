@@ -36,6 +36,13 @@ const LEVELS = [
   { value: 'AVANCADO', label: 'Avançado', description: 'Treina com consistência e usa zonas/ritmos' },
 ];
 
+const SLEEP_QUALITY = [
+  { value: 'RUIM', label: 'Ruim', description: 'Acordo cansado quase sempre' },
+  { value: 'REGULAR', label: 'Regular', description: 'Durmo bem só em alguns dias' },
+  { value: 'BOA', label: 'Boa', description: 'Acordo descansado na maioria dos dias' },
+  { value: 'OTIMA', label: 'Ótima', description: 'Durmo bem e acordo disposto' },
+];
+
 const RP_DISTANCES = [
   { value: '5', label: '5 km' },
   { value: '10', label: '10 km' },
@@ -54,7 +61,7 @@ const createEmptyForm = () => ({
   jaCorre: null,
   fazAtividade: null,
   atividadeNivel: '',
-  horasSonoMedia: '',
+  qualidadeSono: '',
   diasSemanaTreino: ['seg', 'qua', 'sex'],
   semanasTreino: '10',
   objetivoNaoCorredor: '5K',
@@ -197,7 +204,7 @@ const resolveTrainingWeeksBaseConfig = (form) => {
 const buildTrainingWeeksGuidance = (form) => {
   const baseConfig = resolveTrainingWeeksBaseConfig(form);
   const age = Number(form.idade);
-  const sleepHours = Number(form.horasSonoMedia);
+  const sleepQuality = form.qualidadeSono;
   const trainingDays = form.diasSemanaTreino.length;
   let min = baseConfig.min;
   let max = baseConfig.max;
@@ -228,15 +235,15 @@ const buildTrainingWeeksGuidance = (form) => {
     reasons.push('sua rotina suporta um ciclo um pouco mais enxuto');
   }
 
-  if (sleepHours > 0 && sleepHours < 6) {
+  if (sleepQuality === 'RUIM') {
     min += 1;
     max += 2;
     recommended += 2;
-    reasons.push('menos de 6 horas de sono pedem mais recuperação');
-  } else if (sleepHours >= 6 && sleepHours < 7) {
+    reasons.push('sono ruim pede mais recuperação');
+  } else if (sleepQuality === 'REGULAR') {
     recommended += 1;
     max += 1;
-    reasons.push('menos de 7 horas de sono pedem progressão gradual');
+    reasons.push('sono regular pede progressão gradual');
   }
 
   if (form.fazAtividade === false) {
@@ -249,7 +256,7 @@ const buildTrainingWeeksGuidance = (form) => {
     recommended += 1;
     max += 1;
     reasons.push('sua rotina atual é pouco ativa');
-  } else if (form.atividadeNivel === 'MUITO_ATIVO' && trainingDays >= 4 && sleepHours >= 7) {
+  } else if (form.atividadeNivel === 'MUITO_ATIVO' && trainingDays >= 4 && (sleepQuality === 'BOA' || sleepQuality === 'OTIMA')) {
     recommended -= 1;
   }
 
@@ -336,19 +343,13 @@ const buildFormFromUser = (user) => {
     alturaCm: user?.alturaCm != null ? String(user.alturaCm) : '',
     jaCorre: user?.jaCorre ?? null,
     diasSemanaTreino: days.length > 0 ? days : ['seg', 'qua', 'sex'],
-    horasSonoMedia: user?.horasSonoMedia != null ? String(user.horasSonoMedia) : '',
+    qualidadeSono: user?.qualidadeSono || '',
     nivelCorrida: user?.nivelCondicionamento || '',
     objetivoCorredor: user?.objetivo || 'COMPLETAR_10K',
     objetivoNaoCorredor: user?.objetivo === 'COMPLETAR_10K' ? '10K' : user?.objetivo === 'COMPLETAR_5K' ? '5K' : '5K',
     distanciaRp: storedRacePace.distanciaRp,
     paceRp: storedRacePace.paceRp,
   };
-};
-
-const toOptionalInteger = (value) => {
-  if (value === '' || value == null) return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
 };
 
 const toOptionalDecimal = (value) => {
@@ -407,7 +408,7 @@ const buildProfilePayload = (form) => {
       genero: 'MASCULINO',
       fcRepouso: null,
       fcMaxima: null,
-      horasSonoMedia: toOptionalInteger(form.horasSonoMedia),
+      qualidadeSono: form.qualidadeSono || null,
       sedentario: form.atividadeNivel !== 'MUITO_ATIVO' && nivelCondicionamento === 'INICIANTE',
     },
     perfilAtleta: {
@@ -571,7 +572,7 @@ export default function AuthPage({ mode = 'register' }) {
 
   const physicalMetricErrors = useMemo(() => buildPhysicalMetricErrors(form), [form.alturaCm, form.idade, form.pesoKg]);
   const hasPhysicalMetricErrors = Object.keys(physicalMetricErrors).length > 0;
-  const trainingWeeksGuidance = useMemo(() => buildTrainingWeeksGuidance(form), [form.atividadeNivel, form.diasSemanaTreino, form.distanciaRp, form.fazAtividade, form.horasSonoMedia, form.idade, form.jaCorre, form.nivelCorrida, form.objetivoCorredor, form.objetivoNaoCorredor]);
+  const trainingWeeksGuidance = useMemo(() => buildTrainingWeeksGuidance(form), [form.atividadeNivel, form.diasSemanaTreino, form.distanciaRp, form.fazAtividade, form.idade, form.qualidadeSono, form.jaCorre, form.nivelCorrida, form.objetivoCorredor, form.objetivoNaoCorredor]);
   const trainingErrors = useMemo(() => buildTrainingErrors(form, trainingWeeksGuidance), [form.paceRp, form.semanasTreino, trainingWeeksGuidance]);
 
   const isCurrentProfileStepValid = useMemo(() => {
@@ -590,7 +591,7 @@ export default function AuthPage({ mode = 'register' }) {
     }
 
     if (currentKey === 'base') {
-      return form.fazAtividade !== null && Boolean(form.atividadeNivel && form.horasSonoMedia);
+      return form.fazAtividade !== null && Boolean(form.atividadeNivel && form.qualidadeSono);
     }
 
     if (currentKey === 'objetivo') {
@@ -681,7 +682,7 @@ export default function AuthPage({ mode = 'register' }) {
     if (currentKey === 'base') {
       if (form.fazAtividade === null) missing.push('se faz outras atividades físicas');
       if (!form.atividadeNivel) missing.push('quão ativa é sua rotina');
-      if (!form.horasSonoMedia) missing.push('suas horas de sono por noite');
+      if (!form.qualidadeSono) missing.push('a qualidade do seu sono');
     }
     if (currentKey === 'objetivo' || currentKey === 'performance') {
       if (form.diasSemanaTreino.length === 0) missing.push('pelo menos um dia de treino');
@@ -793,9 +794,14 @@ export default function AuthPage({ mode = 'register' }) {
               <SelectionCard label="Muito ativa" description="Treino outras modalidades com boa consistência" selected={form.atividadeNivel === 'MUITO_ATIVO'} onClick={() => updateForm('atividadeNivel', 'MUITO_ATIVO')} />
             </div>
           </div>
-          <Field label="Horas de sono por noite">
-            <Input type="number" min="3" max="12" placeholder="Ex.: 7" value={form.horasSonoMedia} onChange={(event) => updateForm('horasSonoMedia', event.target.value)} className="h-12 rounded-xl border-border bg-card" />
-          </Field>
+          <div className="space-y-3">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Como é a qualidade do seu sono?</p>
+            <div className="grid grid-cols-2 gap-3">
+              {SLEEP_QUALITY.map((item) => (
+                <SelectionCard key={item.value} label={item.label} description={item.description} selected={form.qualidadeSono === item.value} onClick={() => updateForm('qualidadeSono', item.value)} />
+              ))}
+            </div>
+          </div>
         </section>
       )}
 
