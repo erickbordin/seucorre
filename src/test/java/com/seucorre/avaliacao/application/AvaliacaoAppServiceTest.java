@@ -12,6 +12,7 @@ import com.seucorre.infra.notification.NotificacaoService;
 import com.seucorre.shared.domain.event.CheckinProcessadoEvent;
 import com.seucorre.shared.domain.event.PlanoReescritoEvent;
 import com.seucorre.shared.domain.enums.StatusPlano;
+import com.seucorre.shared.exception.BusinessRuleException;
 import com.seucorre.treino.domain.GeradorPlanoIA;
 import com.seucorre.treino.domain.PlanoTreino;
 import com.seucorre.treino.domain.RegistroTreino;
@@ -31,6 +32,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -113,6 +115,35 @@ class AvaliacaoAppServiceTest {
                 org.mockito.ArgumentMatchers.anyList()
         );
         verify(eventPublisher).publish(org.mockito.ArgumentMatchers.any(CheckinProcessadoEvent.class));
+    }
+
+    @Test
+    void recusaCheckinEmPlanoCanceladoSemChamarAIa() {
+        Usuario usuario = criarUsuario();
+        PlanoTreino planoTreino = criarPlano(usuario);
+        planoTreino.cancelar();
+        CheckinSemanalRequest request = new CheckinSemanalRequest(
+                usuario.getId(),
+                planoTreino.getId(),
+                2,
+                LocalDate.of(2026, 5, 20),
+                8,
+                8,
+                4,
+                "Dor forte"
+        );
+
+        when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
+        when(planoRepository.findById(planoTreino.getId())).thenReturn(Optional.of(planoTreino));
+
+        assertThatThrownBy(() -> service.processarCheckin(request))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessage("O check-in só pode ser feito no plano ativo.");
+        verify(geradorPlanoIA, never()).reescreverPlano(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.anyList()
+        );
     }
 
     @Test
