@@ -14,7 +14,6 @@ import Progress from '@/page/backend/Progress';
 import Profile from '@/page/backend/Profile';
 import CheckIn from '@/page/backend/CheckIn';
 import History from '@/page/backend/History';
-import Wearables from '@/page/backend/Wearables';
 import Notifications from '@/page/backend/Notifications';
 import Paywall from '@/page/Paywall';
 
@@ -94,11 +93,6 @@ const AuthenticatedRoutes = () => {
       <Route path="/historico" element={
         <RequireAuth requireOnboarding>
           <History />
-        </RequireAuth>
-      } />
-      <Route path="/wearables" element={
-        <RequireAuth requireOnboarding>
-          <Wearables />
         </RequireAuth>
       } />
       <Route path="/notificacoes" element={
