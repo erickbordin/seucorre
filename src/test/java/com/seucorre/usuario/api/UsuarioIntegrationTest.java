@@ -4,10 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.seucorre.shared.domain.enums.NivelCondicionamento;
 import com.seucorre.shared.domain.enums.Objetivo;
-import com.seucorre.shared.domain.enums.PlataformaRelogio;
 import com.seucorre.usuario.application.dto.CondicaoSaudeRequest;
 import com.seucorre.usuario.application.dto.DadosFisicosRequest;
-import com.seucorre.usuario.application.dto.DispositivoExternoRequest;
 import com.seucorre.usuario.application.dto.LoginRequest;
 import com.seucorre.usuario.application.dto.LoginResponse;
 import com.seucorre.usuario.application.dto.OnboardingRequest;
@@ -41,7 +39,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -134,7 +131,6 @@ class UsuarioIntegrationTest {
                 .andExpect(jsonPath("$.id").value(cadastroResponse.id().toString()))
                 .andExpect(jsonPath("$.perfilCorrida.vo2Estimado").value(38))
                 .andExpect(jsonPath("$.condicoesSaude[0].tipo").value("ALERGIA"))
-                .andExpect(jsonPath("$.dispositivos[0].plataforma").value("GARMIN"))
                 .andReturn();
 
         UsuarioResponse perfilResponse = fromJson(perfilResult, new TypeReference<>() {
@@ -174,7 +170,6 @@ class UsuarioIntegrationTest {
         assertThat(onboardingResponse.diasDisponiveisSemana()).isEqualTo(4);
         assertThat(onboardingResponse.diasSemanaTreino()).isEqualTo("TER,QUI,SAB");
         assertThat(onboardingResponse.condicoesSaude()).hasSize(2);
-        assertThat(onboardingResponse.dispositivos()).hasSize(1);
 
         Usuario usuarioPersistido = usuarioRepository.findByEmail(cadastro.email()).orElseThrow();
         assertThat(usuarioPersistido.getPesoKg()).isEqualByComparingTo("60.10");
@@ -185,7 +180,6 @@ class UsuarioIntegrationTest {
                 .extracting(perfil -> perfil.getVo2Estimado())
                 .isEqualTo(44);
         assertThat(usuarioRepository.findCondicoesSaudeByUsuarioId(usuarioPersistido.getId())).hasSize(2);
-        assertThat(usuarioRepository.findDispositivosByUsuarioId(usuarioPersistido.getId())).hasSize(1);
     }
 
     @Test
@@ -194,7 +188,6 @@ class UsuarioIntegrationTest {
                 "Conta Básica",
                 "basico.integration@seucorre.dev",
                 "senha123",
-                null,
                 null,
                 null,
                 null,
@@ -331,12 +324,7 @@ class UsuarioIntegrationTest {
                         38,
                         List.of(new ZonaFCRequest(1, "Leve", 95, 115, false))
                 ),
-                List.of(new CondicaoSaudeRequest("ALERGIA", "Rinite", true)),
-                List.of(new DispositivoExternoRequest(
-                        PlataformaRelogio.GARMIN,
-                        "token-garmin",
-                        LocalDateTime.now().plusDays(1)
-                ))
+                List.of(new CondicaoSaudeRequest("ALERGIA", "Rinite", true))
         );
     }
 
@@ -374,12 +362,7 @@ class UsuarioIntegrationTest {
                 List.of(
                         new CondicaoSaudeRequest("ALERGIA", "Rinite", true),
                         new CondicaoSaudeRequest("LESAO_ANTERIOR", "Tornozelo direito", false)
-                ),
-                List.of(new DispositivoExternoRequest(
-                        PlataformaRelogio.STRAVA,
-                        "token-strava",
-                        LocalDateTime.now().plusDays(2)
-                ))
+                )
         );
     }
 }

@@ -5,20 +5,17 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.seucorre.shared.domain.enums.NivelCondicionamento;
 import com.seucorre.shared.domain.enums.Objetivo;
-import com.seucorre.shared.domain.enums.PlataformaRelogio;
 import com.seucorre.shared.domain.enums.StatusPlano;
 import com.seucorre.treino.application.dto.GerarPlanoRequest;
 import com.seucorre.treino.application.dto.PlanoTreinoDTO;
 import com.seucorre.treino.infrastructure.PlanoRepository;
 import com.seucorre.usuario.application.dto.CondicaoSaudeRequest;
 import com.seucorre.usuario.application.dto.DadosFisicosRequest;
-import com.seucorre.usuario.application.dto.DispositivoExternoRequest;
 import com.seucorre.usuario.application.dto.LoginRequest;
 import com.seucorre.usuario.application.dto.LoginResponse;
 import com.seucorre.usuario.application.dto.PerfilAtletaRequest;
 import com.seucorre.usuario.application.dto.PerfilCorridaRequest;
 import com.seucorre.usuario.application.dto.UsuarioCadastroRequest;
-import com.seucorre.usuario.application.dto.UsuarioResponse;
 import com.seucorre.usuario.application.dto.ZonaFCRequest;
 import com.seucorre.usuario.domain.Usuario;
 import com.seucorre.usuario.infrastructure.UsuarioRepository;
@@ -56,10 +53,8 @@ import java.math.BigDecimal;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -301,12 +296,7 @@ class PlanoIntegrationTest {
                         38,
                         List.of(new ZonaFCRequest(1, "Leve", 95, 115, false))
                 ),
-                List.of(new CondicaoSaudeRequest("ALERGIA", "Rinite", true)),
-                List.of(new DispositivoExternoRequest(
-                        PlataformaRelogio.GARMIN,
-                        "token-garmin",
-                        LocalDateTime.now().plusDays(1)
-                ))
+                List.of(new CondicaoSaudeRequest("ALERGIA", "Rinite", true))
         );
     }
 

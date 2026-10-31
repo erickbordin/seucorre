@@ -50,7 +50,7 @@ class UsuarioControllerTest {
     void atualizarMeuOnboardingUsaIdDoUsuarioLogado() {
         Usuario usuarioLogado = new Usuario();
         usuarioLogado.setId(UUID.randomUUID());
-        OnboardingRequest request = new OnboardingRequest(null, null, null, null, null, null);
+        OnboardingRequest request = new OnboardingRequest(null, null, null, null, null);
         UsuarioResponse responseEsperado = usuarioResponse(usuarioLogado.getId());
 
         when(service.atualizarOnboarding(usuarioLogado.getId(), request)).thenReturn(responseEsperado);
@@ -96,7 +96,6 @@ class UsuarioControllerTest {
                 190,
                 true,
                 null,
-                List.of(),
                 List.of(),
                 LocalDate.of(2026, 5, 5)
         );

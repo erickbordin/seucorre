@@ -2,7 +2,6 @@ package com.seucorre.usuario.application.dto;
 
 import com.seucorre.shared.domain.enums.NivelCondicionamento;
 import com.seucorre.shared.domain.enums.Objetivo;
-import com.seucorre.shared.domain.enums.PlataformaRelogio;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
@@ -11,7 +10,6 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -41,7 +39,6 @@ class UsuarioDtoValidationTest {
                 "Ana Runner",
                 "ana@email.com",
                 "senha123",
-                null,
                 null,
                 null,
                 null,
@@ -86,8 +83,7 @@ class UsuarioDtoValidationTest {
                         0,
                         List.of(new ZonaFCRequest(null, "", null, 0, false))
                 ),
-                List.of(new CondicaoSaudeRequest("", null, true)),
-                List.of(new DispositivoExternoRequest(null, "", LocalDateTime.now().minusDays(1)))
+                List.of(new CondicaoSaudeRequest("", null, true))
         );
 
         Set<String> violationPaths = validator.validate(request).stream()
@@ -116,10 +112,7 @@ class UsuarioDtoValidationTest {
                 "perfilCorrida.zonasFc[0].nome",
                 "perfilCorrida.zonasFc[0].fcMin",
                 "perfilCorrida.zonasFc[0].fcMax",
-                "condicoesSaude[0].tipo",
-                "dispositivos[0].plataforma",
-                "dispositivos[0].tokenAcesso",
-                "dispositivos[0].tokenExpiresAt"
+                "condicoesSaude[0].tipo"
         );
     }
 
@@ -137,12 +130,7 @@ class UsuarioDtoValidationTest {
                         null,
                         List.of(new ZonaFCRequest(6, "", -1, -2, false))
                 ),
-                List.of(new CondicaoSaudeRequest("", "asma", true)),
-                List.of(new DispositivoExternoRequest(
-                        PlataformaRelogio.GARMIN,
-                        "",
-                        LocalDateTime.now().minusHours(2)
-                ))
+                List.of(new CondicaoSaudeRequest("", "asma", true))
         );
 
         Set<String> violationPaths = validator.validate(request).stream()
@@ -154,9 +142,7 @@ class UsuarioDtoValidationTest {
                 "perfilCorrida.zonasFc[0].nome",
                 "perfilCorrida.zonasFc[0].fcMin",
                 "perfilCorrida.zonasFc[0].fcMax",
-                "condicoesSaude[0].tipo",
-                "dispositivos[0].tokenAcesso",
-                "dispositivos[0].tokenExpiresAt"
+                "condicoesSaude[0].tipo"
         );
     }
 
@@ -191,12 +177,7 @@ class UsuarioDtoValidationTest {
                         44,
                         List.of(new ZonaFCRequest(2, "Base", 120, 140, false))
                 ),
-                List.of(new CondicaoSaudeRequest("ALERGIA", "Rinite", true)),
-                List.of(new DispositivoExternoRequest(
-                        PlataformaRelogio.GARMIN,
-                        "token-valido",
-                        LocalDateTime.now().plusDays(2)
-                ))
+                List.of(new CondicaoSaudeRequest("ALERGIA", "Rinite", true))
         );
     }
 }

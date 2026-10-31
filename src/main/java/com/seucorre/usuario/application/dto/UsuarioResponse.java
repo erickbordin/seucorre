@@ -2,9 +2,7 @@ package com.seucorre.usuario.application.dto;
 
 import com.seucorre.shared.domain.enums.NivelCondicionamento;
 import com.seucorre.shared.domain.enums.Objetivo;
-import com.seucorre.shared.domain.enums.PlataformaRelogio;
 import com.seucorre.usuario.domain.CondicaoSaude;
-import com.seucorre.usuario.domain.DispositivoExterno;
 import com.seucorre.usuario.domain.PerfilCorrida;
 import com.seucorre.usuario.domain.Usuario;
 import com.seucorre.usuario.domain.ZonaFCPersistida;
@@ -34,7 +32,6 @@ public record UsuarioResponse(
         boolean aptoParaTreinar,
         PerfilCorridaResponse perfilCorrida,
         List<CondicaoSaudeResponse> condicoesSaude,
-        List<DispositivoExternoResponse> dispositivos,
         LocalDate criadoEm
 ) {
 
@@ -59,7 +56,6 @@ public record UsuarioResponse(
                 usuario.estaAptoParaTreinar(),
                 PerfilCorridaResponse.from(usuario.getPerfilAtleta() == null ? null : usuario.getPerfilAtleta().getPerfilCorrida()),
                 usuario.getCondicoesSaude().stream().map(CondicaoSaudeResponse::from).toList(),
-                usuario.getDispositivos().stream().map(DispositivoExternoResponse::from).toList(),
                 usuario.getCriadoEm()
         );
     }
@@ -106,12 +102,6 @@ public record UsuarioResponse(
                     condicaoSaude.getDescricao(),
                     condicaoSaude.getAtiva()
             );
-        }
-    }
-
-    public record DispositivoExternoResponse(PlataformaRelogio plataforma, boolean tokenValido) {
-        static DispositivoExternoResponse from(DispositivoExterno dispositivoExterno) {
-            return new DispositivoExternoResponse(dispositivoExterno.getPlataforma(), dispositivoExterno.tokenValido());
         }
     }
 }

@@ -43,10 +43,6 @@ public class Usuario {
     @EqualsAndHashCode.Exclude
     private List<CondicaoSaude> condicoesSaude = new ArrayList<>();
 
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    private List<DispositivoExterno> dispositivos = new ArrayList<>();
 
     @Column(name = "criado_em", updatable = false)
     private LocalDate criadoEm = LocalDate.now();
@@ -80,19 +76,6 @@ public class Usuario {
     public void adicionarCondicaoSaude(CondicaoSaude condicaoSaude) {
         condicaoSaude.setUsuario(this);
         condicoesSaude.add(condicaoSaude);
-    }
-
-    public void substituirDispositivos(List<DispositivoExterno> novosDispositivos) {
-        dispositivos.clear();
-        if (novosDispositivos == null) {
-            return;
-        }
-        novosDispositivos.forEach(this::vincularDispositivo);
-    }
-
-    public void vincularDispositivo(DispositivoExterno dispositivoExterno) {
-        dispositivoExterno.setUsuario(this);
-        dispositivos.add(dispositivoExterno);
     }
 
     public IMC calcularIMC() {
