@@ -55,9 +55,20 @@ const RequireAuth = ({ children, requireOnboarding = false }) => {
 };
 
 const AuthenticatedRoutes = () => {
-  const { isLoadingAuth, isAuthenticated } = useAuth();
+  const { isLoadingAuth, isAuthenticated, authError, reloadUser } = useAuth();
 
   if (isLoadingAuth) return <Loading />;
+
+  if (authError && authError.status !== 401) {
+    return (
+      <div className="fixed inset-0 flex flex-col items-center justify-center gap-4 bg-background px-8 text-center">
+        <p className="text-sm text-muted-foreground">Não foi possível conectar ao servidor.</p>
+        <button onClick={reloadUser} className="h-11 rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground">
+          Tentar de novo
+        </button>
+      </div>
+    );
+  }
 
   return (
     <Routes>
@@ -118,14 +129,14 @@ const AuthenticatedRoutes = () => {
 
 function App() {
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClient}>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
         <Router>
           <AuthenticatedRoutes />
         </Router>
         <Toaster />
-      </QueryClientProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </QueryClientProvider>
   );
 }
 

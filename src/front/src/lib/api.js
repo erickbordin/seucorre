@@ -26,6 +26,26 @@ async function parseResponse(response) {
   }
 }
 
+const SESSION_EXPIRED_EVENT = 'seucorre:sessao-expirada';
+let refreshInFlight = null;
+
+export function onSessionExpired(listener) {
+  window.addEventListener(SESSION_EXPIRED_EVENT, listener);
+  return () => window.removeEventListener(SESSION_EXPIRED_EVENT, listener);
+}
+
+function refreshSession() {
+  if (!tokenStore.getRefreshToken()) return Promise.resolve(null);
+  if (!refreshInFlight) {
+    refreshInFlight = auth.refresh()
+      .catch(() => null)
+      .finally(() => {
+        refreshInFlight = null;
+      });
+  }
+  return refreshInFlight;
+}
+
 async function request(path, options = {}, retry = true) {
   const headers = new Headers(options.headers || {});
   const hasBody = options.body !== undefined;
@@ -42,9 +62,11 @@ async function request(path, options = {}, retry = true) {
     body: hasBody && typeof options.body !== 'string' ? JSON.stringify(options.body) : options.body,
   });
 
-  if (response.status === 401 && retry && tokenStore.getRefreshToken()) {
-    const refreshed = await auth.refresh().catch(() => null);
+  if (response.status === 401 && retry) {
+    const refreshed = await refreshSession();
     if (refreshed) return request(path, options, false);
+    tokenStore.clear();
+    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
   }
 
   const data = await parseResponse(response);
@@ -58,7 +80,6 @@ async function request(path, options = {}, retry = true) {
   return data;
 }
 
-const WEEKDAY_KEYS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
 const normalizeStatus = (status) => String(status || '').toLowerCase();
 const TYPE_METADATA = {
   INTERVALADO: { key: 'intervals', label: 'Intervalado' },

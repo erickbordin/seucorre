@@ -1,10 +1,12 @@
 import { createContext, useContext, useEffect, useMemo, useState } from 'react';
-import { api, auth, tokenStore } from '@/lib/api';
-import { hasCompletedOnboarding as checkOnboardingCompletion } from '@/lib/user';
+import { useQueryClient } from '@tanstack/react-query';
+import { api, auth, onSessionExpired, tokenStore } from '@/lib/api';
+import { clearOnboardingDraft, hasCompletedOnboarding as checkOnboardingCompletion } from '@/lib/user';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState(null);
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [authError, setAuthError] = useState(null);
@@ -23,7 +25,7 @@ export const AuthProvider = ({ children }) => {
       setAuthError(null);
       return currentUser;
     } catch (error) {
-      tokenStore.clear();
+      if (error.status === 401) tokenStore.clear();
       setUser(null);
       setAuthError(error);
       return null;
@@ -34,6 +36,10 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     loadUser();
+    return onSessionExpired(() => {
+      queryClient.clear();
+      setUser(null);
+    });
   }, []);
 
   const login = async ({ email, senha }) => {
@@ -43,6 +49,8 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     auth.logout();
+    clearOnboardingDraft();
+    queryClient.clear();
     setUser(null);
     setAuthError(null);
   };
