@@ -8,6 +8,7 @@ import { useAuth } from '@/lib/AuthContext';
 import DaySelector from '@/components/onboarding/DaySelector';
 import SelectionCard from '@/components/onboarding/SelectionCard';
 import {
+  GENDER_OPTIONS,
   ageFromBirthDate,
   birthDateFromAge,
   parseTrainingDays,
@@ -58,6 +59,7 @@ const createEmptyForm = () => ({
   idade: '',
   alturaCm: '',
   pesoKg: '',
+  genero: '',
   jaCorre: null,
   fazAtividade: null,
   atividadeNivel: '',
@@ -335,6 +337,7 @@ const buildFormFromUser = (user) => {
     idade: ageFromBirthDate(user?.dataNascimento),
     pesoKg: user?.pesoKg != null ? String(user.pesoKg) : '',
     alturaCm: user?.alturaCm != null ? String(user.alturaCm) : '',
+    genero: user?.genero || '',
     jaCorre: user?.jaCorre ?? null,
     diasSemanaTreino: days.length > 0 ? days : ['seg', 'qua', 'sex'],
     qualidadeSono: user?.qualidadeSono || '',
@@ -399,7 +402,7 @@ const buildProfilePayload = (form) => {
       pesoKg: toOptionalDecimal(form.pesoKg),
       alturaCm: toOptionalDecimal(form.alturaCm),
       dataNascimento: birthDateFromAge(form.idade),
-      genero: 'MASCULINO',
+      genero: form.genero,
       fcRepouso: null,
       fcMaxima: null,
       qualidadeSono: form.qualidadeSono || null,
@@ -573,7 +576,7 @@ export default function AuthPage({ mode = 'register' }) {
     if (!isProfileOnly) return true;
 
     if (currentKey === 'dados') {
-      return !hasPhysicalMetricErrors;
+      return !hasPhysicalMetricErrors && Boolean(form.genero);
     }
 
     if (currentKey === 'historico') {
@@ -667,7 +670,7 @@ export default function AuthPage({ mode = 'register' }) {
   };
 
   const describeMissing = () => {
-    if (currentKey === 'dados') return 'Revise idade, altura e peso para continuar.';
+    if (currentKey === 'dados') return form.genero ? 'Revise idade, altura e peso para continuar.' : 'Escolha seu gênero para continuar.';
     if (currentKey === 'historico') return 'Escolha se você já corre para continuar.';
     if (currentKey === 'nivel') return 'Escolha seu nível na corrida para continuar.';
     if (currentKey === 'corrida') return 'Escolha um objetivo para continuar.';
@@ -751,6 +754,14 @@ export default function AuthPage({ mode = 'register' }) {
           <Field label="Peso (kg)" error={shouldShowPhysicalMetricError('pesoKg') ? physicalMetricErrors.pesoKg : null}>
             <Input type="text" inputMode="decimal" placeholder="Ex.: 72,5" value={form.pesoKg} onChange={(event) => handlePhysicalMetricChange('pesoKg', event.target.value)} onBlur={() => touchPhysicalField('pesoKg')} aria-invalid={shouldShowPhysicalMetricError('pesoKg')} className={getPhysicalMetricInputClassName('pesoKg')} />
           </Field>
+          <div className="space-y-2">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Gênero</p>
+            <div className="grid grid-cols-2 gap-3">
+              {GENDER_OPTIONS.map((item) => (
+                <SelectionCard key={item.value} label={item.label} selected={form.genero === item.value} onClick={() => updateForm('genero', item.value)} />
+              ))}
+            </div>
+          </div>
         </section>
       )}
 
