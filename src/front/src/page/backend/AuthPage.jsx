@@ -15,25 +15,25 @@ import {
 } from '@/lib/user';
 
 const DISTANCE_GOALS = [
-  { value: '3K', label: '3 km', description: 'Comecar leve e ganhar consistencia' },
-  { value: '5K', label: '5 km', description: 'Recomendado para construir base com seguranca', recommended: true },
-  { value: '10K', label: '10 km', description: 'Disponivel para quem esta muito ativo' },
+  { value: '3K', label: '3 km', description: 'Começar leve e ganhar consistência' },
+  { value: '5K', label: '5 km', description: 'Recomendado para construir base com segurança', recommended: true },
+  { value: '10K', label: '10 km', description: 'Disponível para quem está muito ativo' },
 ];
 
 const RUNNER_GOALS = [
-  { value: 'COMPLETAR_5K', label: '5 km', description: 'Completar a distancia com boa base' },
+  { value: 'COMPLETAR_5K', label: '5 km', description: 'Completar a distância com boa base' },
   { value: 'COMPLETAR_10K', label: '10 km', description: 'Evoluir resistencia e ritmo' },
   { value: 'COMPLETAR_15K', label: '15 km', description: 'Subir volume sem perder controle' },
   { value: 'COMPLETAR_MEIA_MARATONA', label: '21 km', description: 'Preparar meia maratona' },
   { value: 'COMPLETAR_MARATONA', label: '42 km', description: 'Preparar maratona' },
-  { value: 'MELHORAR_DISTANCIA', label: 'Melhorar marca', description: 'Baixar tempo em uma distancia' },
-  { value: 'VOLTAR_A_CORRER', label: 'Voltar a correr', description: 'Retomar rotina com progressao' },
+  { value: 'MELHORAR_DISTANCIA', label: 'Melhorar marca', description: 'Baixar tempo em uma distância' },
+  { value: 'VOLTAR_A_CORRER', label: 'Voltar a correr', description: 'Retomar rotina com progressão' },
 ];
 
 const LEVELS = [
-  { value: 'INICIANTE', label: 'Iniciante', description: 'Corre pouco ou esta retomando do zero' },
-  { value: 'INTERMEDIARIO', label: 'Intermediario', description: 'Ja treina com alguma frequencia' },
-  { value: 'AVANCADO', label: 'Avancado', description: 'Treina com consistencia e usa zonas/ritmos' },
+  { value: 'INICIANTE', label: 'Iniciante', description: 'Corre pouco ou está retomando do zero' },
+  { value: 'INTERMEDIARIO', label: 'Intermediário', description: 'Já treina com alguma frequência' },
+  { value: 'AVANCADO', label: 'Avançado', description: 'Treina com consistência e usa zonas/ritmos' },
 ];
 
 const RP_DISTANCES = [
@@ -208,19 +208,19 @@ const buildTrainingWeeksGuidance = (form) => {
     min += 1;
     max += 2;
     recommended += 2;
-    reasons.push('voce ainda esta construindo base');
+    reasons.push('você ainda está construindo base');
   }
 
   if (trainingDays <= 2) {
     min += 2;
     max += 4;
     recommended += 3;
-    reasons.push('voce tem ate 2 dias de treino por semana');
+    reasons.push('você tem até 2 dias de treino por semana');
   } else if (trainingDays === 3) {
     min += 1;
     max += 2;
     recommended += 1;
-    reasons.push('voce tem 3 dias de treino por semana');
+    reasons.push('você tem 3 dias de treino por semana');
   } else if (trainingDays >= 5 && form.jaCorre && form.nivelCorrida === 'AVANCADO') {
     min -= 1;
     max -= 1;
@@ -232,23 +232,23 @@ const buildTrainingWeeksGuidance = (form) => {
     min += 1;
     max += 2;
     recommended += 2;
-    reasons.push('menos de 6 horas de sono pedem mais recuperacao');
+    reasons.push('menos de 6 horas de sono pedem mais recuperação');
   } else if (sleepHours >= 6 && sleepHours < 7) {
     recommended += 1;
     max += 1;
-    reasons.push('menos de 7 horas de sono pedem progressao gradual');
+    reasons.push('menos de 7 horas de sono pedem progressão gradual');
   }
 
   if (form.fazAtividade === false) {
     recommended += 1;
     max += 1;
-    reasons.push('voce relatou pouca base complementar');
+    reasons.push('você relatou pouca base complementar');
   }
 
   if (form.atividadeNivel === 'POUCO_ATIVO') {
     recommended += 1;
     max += 1;
-    reasons.push('sua rotina atual e pouco ativa');
+    reasons.push('sua rotina atual é pouco ativa');
   } else if (form.atividadeNivel === 'MUITO_ATIVO' && trainingDays >= 4 && sleepHours >= 7) {
     recommended -= 1;
   }
@@ -257,11 +257,11 @@ const buildTrainingWeeksGuidance = (form) => {
     min += 1;
     max += 2;
     recommended += 2;
-    reasons.push('vale deixar mais margem para recuperacao');
+    reasons.push('vale deixar mais margem para recuperação');
   } else if (Number.isFinite(age) && age >= 45) {
     recommended += 1;
     max += 1;
-    reasons.push('uma margem extra ajuda na recuperacao');
+    reasons.push('uma margem extra ajuda na recuperação');
   }
 
   min = clamp(min, 6, 30);
@@ -269,8 +269,8 @@ const buildTrainingWeeksGuidance = (form) => {
   recommended = clamp(recommended, min, max);
 
   const summary = reasons.length > 0
-    ? 'Recomendacao ajustada porque ' + reasons.slice(0, 2).join(' e ') + '.'
-    : 'Recomendacao baseada no seu objetivo e no volume atual de treino.';
+    ? 'Recomendação ajustada porque ' + reasons.slice(0, 2).join(' e ') + '.'
+    : 'Recomendação baseada no seu objetivo e no volume atual de treino.';
 
   return {
     ...baseConfig,
@@ -618,7 +618,7 @@ export default function AuthPage({ mode = 'register' }) {
       await reloadUser();
       navigate(isProfileOnly ? nextRouteAfterProfileSave : '/onboarding');
     } catch (err) {
-      setError(err.message || 'Nao foi possivel concluir a operacao.');
+      setError(err.message || 'Não foi possível concluir a operação.');
     } finally {
       setLoading(false);
     }
@@ -633,18 +633,18 @@ export default function AuthPage({ mode = 'register' }) {
 
     if (currentKey === 'objetivo' && !isCurrentProfileStepValid) {
       setTouchedTrainingFields((current) => ({ ...current, semanasTreino: true }));
-      setError(trainingErrors.semanasTreino || 'Preencha os dados obrigatorios desta etapa para continuar.');
+      setError(trainingErrors.semanasTreino || 'Preencha os dados obrigatórios desta etapa para continuar.');
       return;
     }
 
     if (currentKey === 'performance' && !isCurrentProfileStepValid) {
       setTouchedTrainingFields((current) => ({ ...current, paceRp: true, semanasTreino: true }));
-      setError(trainingErrors.paceRp || trainingErrors.semanasTreino || 'Preencha os dados obrigatorios desta etapa para continuar.');
+      setError(trainingErrors.paceRp || trainingErrors.semanasTreino || 'Preencha os dados obrigatórios desta etapa para continuar.');
       return;
     }
 
     if (!isCurrentProfileStepValid) {
-      setError('Preencha os dados obrigatorios desta etapa para continuar.');
+      setError('Preencha os dados obrigatórios desta etapa para continuar.');
       return;
     }
 
@@ -678,7 +678,7 @@ export default function AuthPage({ mode = 'register' }) {
         <section className="space-y-5">
           <div>
             <h2 className="text-2xl font-bold text-foreground">Dados do atleta</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Comece com o basico para calibrar volume e seguranca.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Comece com o básico para calibrar volume e segurança.</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
@@ -701,10 +701,10 @@ export default function AuthPage({ mode = 'register' }) {
         <section className="space-y-5">
           <div>
             <h2 className="text-2xl font-bold text-foreground">Você já corre?</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Isso define se o plano comeca pela base ou pela performance.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Isso define se o plano começa pela base ou pela performance.</p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <SelectionCard label="Não corro" description="Quero comecar com progressão segura" selected={form.jaCorre === false} onClick={() => updateForm('jaCorre', false)} />
+            <SelectionCard label="Não corro" description="Quero começar com progressão segura" selected={form.jaCorre === false} onClick={() => updateForm('jaCorre', false)} />
             <SelectionCard label="Já corro" description="Tenho alguma experiência com corrida" selected={form.jaCorre === true} onClick={() => updateForm('jaCorre', true)} />
           </div>
         </section>
@@ -717,18 +717,18 @@ export default function AuthPage({ mode = 'register' }) {
             <p className="mt-2 text-sm text-muted-foreground">Essas respostas ajudam a evitar uma carga agressiva demais.</p>
           </div>
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">Faz outras atividades fisicas?</p>
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Faz outras atividades físicas?</p>
             <div className="grid grid-cols-2 gap-3">
               <SelectionCard label="Sim" selected={form.fazAtividade === true} onClick={() => updateForm('fazAtividade', true)} />
-              <SelectionCard label="Nao" selected={form.fazAtividade === false} onClick={() => updateForm('fazAtividade', false)} />
+              <SelectionCard label="Não" selected={form.fazAtividade === false} onClick={() => updateForm('fazAtividade', false)} />
             </div>
           </div>
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">Quao ativa e sua rotina?</p>
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Quão ativa é sua rotina?</p>
             <div className="space-y-2">
               <SelectionCard label="Pouco ativa" description="Passo boa parte do dia sentado" selected={form.atividadeNivel === 'POUCO_ATIVO'} onClick={() => updateForm('atividadeNivel', 'POUCO_ATIVO')} />
-              <SelectionCard label="Ativa" description="Caminho, treino ou me movimento com frequencia" selected={form.atividadeNivel === 'ATIVO'} onClick={() => updateForm('atividadeNivel', 'ATIVO')} />
-              <SelectionCard label="Muito ativa" description="Treino outras modalidades com boa consistencia" selected={form.atividadeNivel === 'MUITO_ATIVO'} onClick={() => updateForm('atividadeNivel', 'MUITO_ATIVO')} />
+              <SelectionCard label="Ativa" description="Caminho, treino ou me movimento com frequência" selected={form.atividadeNivel === 'ATIVO'} onClick={() => updateForm('atividadeNivel', 'ATIVO')} />
+              <SelectionCard label="Muito ativa" description="Treino outras modalidades com boa consistência" selected={form.atividadeNivel === 'MUITO_ATIVO'} onClick={() => updateForm('atividadeNivel', 'MUITO_ATIVO')} />
             </div>
           </div>
           <Input type="number" min="3" max="12" placeholder="Horas de sono por noite" value={form.horasSonoMedia} onChange={(event) => updateForm('horasSonoMedia', event.target.value)} className="h-12 rounded-xl border-border bg-card" />
@@ -739,10 +739,10 @@ export default function AuthPage({ mode = 'register' }) {
         <section className="space-y-6">
           <div>
             <h2 className="text-2xl font-bold text-foreground">Seu primeiro objetivo</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Escolha a distancia e o tempo de preparacao.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Escolha a distância e o tempo de preparação.</p>
           </div>
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">Dias disponiveis por semana</p>
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Dias disponíveis por semana</p>
             <DaySelector selected={form.diasSemanaTreino} onChange={(dias) => updateForm('diasSemanaTreino', dias)} />
           </div>
           <div className="space-y-2">
@@ -771,11 +771,11 @@ export default function AuthPage({ mode = 'register' }) {
       {currentKey === 'nivel' && (
         <section className="space-y-6">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Seu nivel na corrida</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Escolha o nivel que melhor descreve seu momento atual para ajustar o resto do fluxo.</p>
+            <h2 className="text-2xl font-bold text-foreground">Seu nível na corrida</h2>
+            <p className="mt-2 text-sm text-muted-foreground">Escolha o nível que melhor descreve seu momento atual para ajustar o resto do fluxo.</p>
           </div>
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">Nivel na corrida</p>
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Nível na corrida</p>
             {LEVELS.map((item) => (
               <SelectionCard key={item.value} label={item.label} description={item.description} selected={form.nivelCorrida === item.value} onClick={() => updateForm('nivelCorrida', item.value)} />
             ))}
@@ -800,8 +800,8 @@ export default function AuthPage({ mode = 'register' }) {
       {currentKey === 'performance' && (
         <section className="space-y-6">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">{isIntermediate ? 'Seu melhor ritmo' : 'Dados avancados'}</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Use uma referencia real para a IA estimar treinos mais precisos.</p>
+            <h2 className="text-2xl font-bold text-foreground">{isIntermediate ? 'Seu melhor ritmo' : 'Dados avançados'}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">Use uma referência real para a IA estimar treinos mais precisos.</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {RP_DISTANCES.map((item) => (
@@ -810,15 +810,15 @@ export default function AuthPage({ mode = 'register' }) {
           </div>
           <div className="space-y-2">
             <Input placeholder="Pace do RP (ex.: 5:30 min/km)" value={form.paceRp} onChange={(event) => handlePaceChange(event.target.value)} onBlur={handlePaceBlur} aria-invalid={shouldShowTrainingFieldError('paceRp')} className={getTrainingFieldInputClassName('paceRp')} />
-            <p className="text-xs text-muted-foreground">Use o melhor pace real da distancia escolhida, sempre no formato m:ss.</p>
+            <p className="text-xs text-muted-foreground">Use o melhor pace real da distância escolhida, sempre no formato m:ss.</p>
             {shouldShowTrainingFieldError('paceRp') ? <p className="text-xs text-destructive">{trainingErrors.paceRp}</p> : null}
           </div>
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">Dias disponiveis para treinar</p>
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Dias disponíveis para treinar</p>
             <DaySelector selected={form.diasSemanaTreino} onChange={(dias) => updateForm('diasSemanaTreino', dias)} />
           </div>
           <div className="space-y-2">
-            <Input type="text" inputMode="numeric" min={trainingWeeksGuidance.min} max={trainingWeeksGuidance.max} placeholder={'Semanas ate o objetivo (' + trainingWeeksGuidance.min + ' a ' + trainingWeeksGuidance.max + ')'} value={form.semanasTreino} onChange={(event) => handleWeeksChange(event.target.value)} onBlur={() => touchTrainingField('semanasTreino')} aria-invalid={shouldShowTrainingFieldError('semanasTreino')} className={getTrainingFieldInputClassName('semanasTreino')} />
+            <Input type="text" inputMode="numeric" min={trainingWeeksGuidance.min} max={trainingWeeksGuidance.max} placeholder={'Semanas até o objetivo (' + trainingWeeksGuidance.min + ' a ' + trainingWeeksGuidance.max + ')'} value={form.semanasTreino} onChange={(event) => handleWeeksChange(event.target.value)} onBlur={() => touchTrainingField('semanasTreino')} aria-invalid={shouldShowTrainingFieldError('semanasTreino')} className={getTrainingFieldInputClassName('semanasTreino')} />
             <p className="text-xs text-muted-foreground">Faixa segura para seu perfil: {trainingWeeksGuidance.min} a {trainingWeeksGuidance.max} semanas. Recomendado agora: {trainingWeeksGuidance.recommended} semanas.</p>
             <p className="text-xs text-muted-foreground">{trainingWeeksGuidance.summary}</p>
             {shouldShowTrainingFieldError('semanasTreino') ? <p className="text-xs text-destructive">{trainingErrors.semanasTreino}</p> : null}
@@ -827,7 +827,7 @@ export default function AuthPage({ mode = 'register' }) {
             <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
               <div>
                 <p className="text-xs font-semibold uppercase text-muted-foreground">Paces por zona</p>
-                <p className="mt-1 text-xs text-muted-foreground">Preencha Z1 ate Z5 no formato min/km.</p>
+                <p className="mt-1 text-xs text-muted-foreground">Preencha Z1 até Z5 no formato min/km.</p>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {['z1', 'z2', 'z3', 'z4', 'z5'].map((zone) => (
@@ -860,7 +860,7 @@ export default function AuthPage({ mode = 'register' }) {
               {isLogin
                 ? 'Entre com email e senha ou continue pelo Google.'
                 : isProfileOnly
-                  ? 'Responda o necessario para o SeuCorre montar um plano coerente com seu momento.'
+                  ? 'Responda o necessário para o SeuCorre montar um plano coerente com seu momento.'
                   : 'Crie sua conta com email e senha ou continue pelo Google.'}
             </p>
           </div>
@@ -896,7 +896,7 @@ export default function AuthPage({ mode = 'register' }) {
           {isProfileOnly && renderProfileStep()}
 
           {!isLogin && !isProfileOnly && (
-            <Link to="/entrar" className="block text-center text-sm font-medium text-primary">Ja tenho conta</Link>
+            <Link to="/entrar" className="block text-center text-sm font-medium text-primary">Já tenho conta</Link>
           )}
 
           {error && <p className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
