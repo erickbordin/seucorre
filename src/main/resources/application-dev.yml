@@ -49,4 +49,4 @@ seucorre:
 api:
   security:
     token:
-      secret: ${JWT_SECRET:seucorre_dev_secret}
+      secret: ${JWT_SECRET}

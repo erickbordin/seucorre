@@ -8,6 +8,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class JwtServiceTest {
 
@@ -16,9 +17,16 @@ class JwtServiceTest {
     @BeforeEach
     void setUp() {
         jwtService = new JwtService();
-        ReflectionTestUtils.setField(jwtService, "secret", "seucorre_super_secreto_123");
+        ReflectionTestUtils.setField(jwtService, "secret", "seucorre_super_secreto_de_teste_123");
         ReflectionTestUtils.setField(jwtService, "accessTokenExpirationHours", 2L);
         ReflectionTestUtils.setField(jwtService, "refreshTokenExpirationDays", 7L);
+    }
+
+    @Test
+    void segredoComMenosDe32CaracteresImpedeASubida() {
+        ReflectionTestUtils.setField(jwtService, "secret", "seucorre_dev_secret");
+
+        assertThatThrownBy(jwtService::validarSegredo).isInstanceOf(IllegalStateException.class);
     }
 
     @Test

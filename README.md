@@ -100,7 +100,7 @@ export DB_USERNAME=user
 export DB_PASSWORD=password
 export REDIS_HOST=localhost
 export REDIS_PORT=6379
-export JWT_SECRET=seucorre_dev_secret
+export JWT_SECRET=$(openssl rand -base64 48)
 export TREINO_GERACAO_MODE=preset
 export TREINO_GERACAO_FALLBACK_TO_IA=false
 ./mvnw spring-boot:run
@@ -115,7 +115,7 @@ $env:DB_USERNAME="user"
 $env:DB_PASSWORD="password"
 $env:REDIS_HOST="localhost"
 $env:REDIS_PORT="6379"
-$env:JWT_SECRET="seucorre_dev_secret"
+$env:JWT_SECRET=[Convert]::ToBase64String([byte[]](1..48 | ForEach-Object { Get-Random -Maximum 256 }))
 $env:TREINO_GERACAO_MODE="preset"
 $env:TREINO_GERACAO_FALLBACK_TO_IA="false"
 .\mvnw.cmd spring-boot:run
