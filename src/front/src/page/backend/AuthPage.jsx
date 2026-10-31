@@ -640,7 +640,7 @@ export default function AuthPage({ mode = 'register' }) {
         <section className="space-y-6">
           <div>
             <h2 className="text-2xl font-bold text-foreground">Seu primeiro objetivo</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Escolha a distância e o tempo de preparação.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Escolha seus dias de treino e a distância.</p>
           </div>
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase text-muted-foreground">Dias disponíveis por semana (3 ou 4)</p>
@@ -796,11 +796,11 @@ export default function AuthPage({ mode = 'register' }) {
                   Voltar
                 </Button>
                 {isLastProfileStep ? (
-                  <Button type="submit" disabled={loading} className="h-14 flex-1 rounded-2xl bg-primary text-base font-semibold text-primary-foreground">
+                  <Button key="finalizar" type="submit" disabled={loading} className="h-14 flex-1 rounded-2xl bg-primary text-base font-semibold text-primary-foreground">
                     {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <span className="flex items-center gap-2"><Sparkles className="h-5 w-5" />Finalizar<ArrowRight className="h-5 w-5" /></span>}
                   </Button>
                 ) : (
-                  <Button type="button" onClick={goToNextProfileStep} className="h-14 flex-1 rounded-2xl bg-primary text-base font-semibold text-primary-foreground">
+                  <Button key="continuar" type="button" onClick={goToNextProfileStep} className="h-14 flex-1 rounded-2xl bg-primary text-base font-semibold text-primary-foreground">
                     Continuar
                     <ArrowRight className="h-5 w-5" />
                   </Button>
