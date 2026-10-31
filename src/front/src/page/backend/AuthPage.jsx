@@ -520,6 +520,7 @@ export default function AuthPage({ mode = 'register' }) {
 
   const updateForm = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
+    setError('');
   };
 
   const touchPhysicalField = (field) => {
