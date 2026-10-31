@@ -26,7 +26,7 @@ export default function LandingPage() {
 
         <section className="mt-auto pb-5">
           <p className="max-w-sm text-lg font-semibold leading-tight text-white">
-            Planos de corrida adaptados ao seu momento, da primeira semana ao proximo recorde.
+            Planos de corrida adaptados ao seu momento, da primeira semana ao próximo recorde.
           </p>
           <div className="mt-8 space-y-3">
             <Button asChild className="h-14 w-full rounded-2xl bg-primary text-base font-semibold text-primary-foreground">
