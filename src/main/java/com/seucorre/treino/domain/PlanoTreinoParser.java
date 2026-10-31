@@ -131,7 +131,8 @@ public class PlanoTreinoParser {
         sessaoTreino.setDuracaoMinutos(inteiroOuNulo(sessaoNode, "duracaoMinutos", "duracao_min", "duracao"));
         sessaoTreino.setIntensidade(textoOuNulo(sessaoNode, "intensidade"));
         sessaoTreino.setZonaFcAlvo(textoOuNulo(sessaoNode, "zonaFcAlvo", "zona_fc_alvo", "zonaFc", "zona_fc"));
-        sessaoTreino.setPaceAlvo(decimalOuNulo(sessaoNode, "paceAlvo", "pace_alvo", "pace"));
+        BigDecimal paceAlvo = decimalOuNulo(sessaoNode, "paceAlvo", "pace_alvo", "pace");
+        sessaoTreino.setPaceAlvo(paceAlvo == null || paceAlvo.signum() <= 0 ? null : paceAlvo);
         sessaoTreino.setDescricao(textoOuNulo(sessaoNode, "descricao", "descrição"));
 
         return sessaoTreino;
