@@ -1,5 +1,6 @@
 package com.seucorre.usuario.application.dto;
 
+import com.seucorre.shared.domain.enums.QualidadeSono;
 import com.seucorre.shared.domain.enums.NivelCondicionamento;
 import com.seucorre.shared.domain.enums.Objetivo;
 import com.seucorre.usuario.domain.CondicaoSaude;
@@ -24,7 +25,7 @@ public record UsuarioResponse(
         Objetivo objetivo,
         Boolean jaCorre,
         Boolean sedentario,
-        Integer horasSonoMedia,
+        QualidadeSono qualidadeSono,
         Integer diasDisponiveisSemana,
         String diasSemanaTreino,
         Integer fcRepouso,
@@ -48,7 +49,7 @@ public record UsuarioResponse(
                 usuario.getObjetivo(),
                 usuario.getJaCorre(),
                 usuario.getSedentario(),
-                usuario.getHorasSonoMedia(),
+                usuario.getQualidadeSono(),
                 usuario.getDiasDisponiveisSemana(),
                 usuario.getDiasSemanaTreino(),
                 usuario.getFcRepouso(),

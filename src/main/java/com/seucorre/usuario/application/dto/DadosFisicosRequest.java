@@ -1,5 +1,6 @@
 package com.seucorre.usuario.application.dto;
 
+import com.seucorre.shared.domain.enums.QualidadeSono;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
@@ -17,6 +18,6 @@ public record DadosFisicosRequest(
         @NotBlank String genero,
         @Min(20) @Max(240) Integer fcRepouso,
         @Min(80) @Max(240) Integer fcMaxima,
-        @Min(0) @Max(24) Integer horasSonoMedia,
+        QualidadeSono qualidadeSono,
         Boolean sedentario
 ) {}

@@ -137,7 +137,7 @@ public class UsuarioAppService {
         dadosFisicos.setGenero(request.genero());
         dadosFisicos.setFcRepouso(request.fcRepouso());
         dadosFisicos.setFcMaxima(request.fcMaxima());
-        dadosFisicos.setHorasSonoMedia(request.horasSonoMedia());
+        dadosFisicos.setQualidadeSono(request.qualidadeSono());
         dadosFisicos.setSedentario(request.sedentario());
         return dadosFisicos;
     }

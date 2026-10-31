@@ -1,5 +1,6 @@
 package com.seucorre.usuario.application.dto;
 
+import com.seucorre.shared.domain.enums.QualidadeSono;
 import com.seucorre.shared.domain.enums.NivelCondicionamento;
 import com.seucorre.shared.domain.enums.Objetivo;
 import jakarta.validation.ConstraintViolation;
@@ -65,7 +66,7 @@ class UsuarioDtoValidationTest {
                         "",
                         10,
                         300,
-                        30,
+                        null,
                         null
                 ),
                 new PerfilAtletaRequest(
@@ -100,7 +101,6 @@ class UsuarioDtoValidationTest {
                 "dadosFisicos.genero",
                 "dadosFisicos.fcRepouso",
                 "dadosFisicos.fcMaxima",
-                "dadosFisicos.horasSonoMedia",
                 "perfilAtleta.nivelCondicionamento",
                 "perfilAtleta.objetivo",
                 "perfilAtleta.jaCorre",
@@ -159,7 +159,7 @@ class UsuarioDtoValidationTest {
                         "FEMININO",
                         58,
                         190,
-                        7,
+                        QualidadeSono.BOA,
                         false
                 ),
                 new PerfilAtletaRequest(

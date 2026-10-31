@@ -2,6 +2,7 @@ package com.seucorre.usuario.api;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.seucorre.shared.domain.enums.QualidadeSono;
 import com.seucorre.shared.domain.enums.NivelCondicionamento;
 import com.seucorre.shared.domain.enums.Objetivo;
 import com.seucorre.usuario.application.dto.CondicaoSaudeRequest;
@@ -306,7 +307,7 @@ class UsuarioIntegrationTest {
                         "FEMININO",
                         62,
                         190,
-                        7,
+                        QualidadeSono.BOA,
                         false
                 ),
                 new PerfilAtletaRequest(
@@ -338,7 +339,7 @@ class UsuarioIntegrationTest {
                         "FEMININO",
                         58,
                         188,
-                        8,
+                        QualidadeSono.BOA,
                         false
                 ),
                 new PerfilAtletaRequest(

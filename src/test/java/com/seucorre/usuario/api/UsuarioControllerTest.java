@@ -1,5 +1,6 @@
 package com.seucorre.usuario.api;
 
+import com.seucorre.shared.domain.enums.QualidadeSono;
 import com.seucorre.shared.domain.valueobjects.IMC;
 import com.seucorre.shared.domain.enums.NivelCondicionamento;
 import com.seucorre.shared.domain.enums.Objetivo;
@@ -89,7 +90,7 @@ class UsuarioControllerTest {
                 Objetivo.COMPLETAR_10K,
                 true,
                 false,
-                7,
+                QualidadeSono.BOA,
                 4,
                 "SEG,QUA,SEX,SAB",
                 58,

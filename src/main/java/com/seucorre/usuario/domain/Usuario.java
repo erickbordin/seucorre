@@ -1,6 +1,7 @@
 package com.seucorre.usuario.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.seucorre.shared.domain.enums.QualidadeSono;
 import com.seucorre.shared.domain.enums.NivelCondicionamento;
 import com.seucorre.shared.domain.enums.Objetivo;
 import com.seucorre.shared.domain.valueobjects.IMC;
@@ -151,12 +152,12 @@ public class Usuario {
         obterOuCriarDadosFisicos().setSedentario(sedentario);
     }
 
-    public Integer getHorasSonoMedia() {
-        return dadosFisicos == null ? null : dadosFisicos.getHorasSonoMedia();
+    public QualidadeSono getQualidadeSono() {
+        return dadosFisicos == null ? null : dadosFisicos.getQualidadeSono();
     }
 
-    public void setHorasSonoMedia(Integer horasSonoMedia) {
-        obterOuCriarDadosFisicos().setHorasSonoMedia(horasSonoMedia);
+    public void setQualidadeSono(QualidadeSono qualidadeSono) {
+        obterOuCriarDadosFisicos().setQualidadeSono(qualidadeSono);
     }
 
     public Integer getFcRepouso() {
