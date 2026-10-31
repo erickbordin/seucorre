@@ -79,14 +79,6 @@ public class UsuarioAppService {
     }
 
     @Transactional(readOnly = true)
-    public List<UsuarioResponse> listarTodos() {
-        return repository.findAll().stream()
-                .peek(usuario -> anexarPerfilCorrida(usuario, buscarPerfilCorrida(usuario)))
-                .map(UsuarioResponse::from)
-                .toList();
-    }
-
-    @Transactional(readOnly = true)
     public UsuarioResponse buscarPorId(UUID usuarioId) {
         Usuario usuario = buscarUsuarioPorId(usuarioId);
         anexarPerfilCorrida(usuario, buscarPerfilCorrida(usuario));
