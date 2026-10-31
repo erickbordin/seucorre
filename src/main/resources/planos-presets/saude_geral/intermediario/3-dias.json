@@ -1,7 +1,7 @@
 {
   "totalSemanas": 8,
-  "resumoIA": "Plano preset de 8 semanas para saude geral, 3 dias por semana e nivel intermediario.",
-  "guiaTiposTreino": "REGENERATIVO = rodagem leve; INTERVALADO = blocos controlados; FARTLEK = variacao de ritmo; LONGO = sessao de resistencia.",
+  "resumoIA": "Plano preset de 8 semanas para saúde geral, 3 dias por semana e nível intermediario.",
+  "guiaTiposTreino": "REGENERATIVO = rodagem leve; INTERVALADO = blocos controlados; FARTLEK = variação de ritmo; LONGO = sessão de resistência.",
   "semanas": [
     {
       "numeroSemana": 1,
@@ -13,16 +13,16 @@
           "duracaoMinutos": 23,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 1 da semana 1 de rodagem leve para sustentar o plano."
+          "descricao": "Sessão 1 da semana 1 de rodagem leve para sustentar o plano."
         },
         {
           "numeroSemana": 1,
           "tipo": "FARTLEK",
           "distanciaKm": 2.86,
           "duracaoMinutos": 20,
-          "intensidade": "moderada com variacoes curtas",
+          "intensidade": "moderada com variações curtas",
           "zonaFcAlvo": "Z2-Z3",
-          "descricao": "Sessao 2 da semana 1 com variacoes leves de ritmo para manter consistencia e bem-estar."
+          "descricao": "Sessão 2 da semana 1 com variações leves de ritmo para manter consistência e bem-estar."
         },
         {
           "numeroSemana": 1,
@@ -31,7 +31,7 @@
           "duracaoMinutos": 28,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 3 da semana 1 focada em resistencia aerobia e regularidade."
+          "descricao": "Sessão 3 da semana 1 focada em resistência aeróbia e regularidade."
         }
       ]
     },
@@ -45,16 +45,16 @@
           "duracaoMinutos": 25,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 1 da semana 2 de rodagem leve para sustentar o plano."
+          "descricao": "Sessão 1 da semana 2 de rodagem leve para sustentar o plano."
         },
         {
           "numeroSemana": 2,
           "tipo": "FARTLEK",
           "distanciaKm": 3.09,
           "duracaoMinutos": 20,
-          "intensidade": "moderada com variacoes curtas",
+          "intensidade": "moderada com variações curtas",
           "zonaFcAlvo": "Z2-Z3",
-          "descricao": "Sessao 2 da semana 2 com variacoes leves de ritmo para manter consistencia e bem-estar."
+          "descricao": "Sessão 2 da semana 2 com variações leves de ritmo para manter consistência e bem-estar."
         },
         {
           "numeroSemana": 2,
@@ -63,7 +63,7 @@
           "duracaoMinutos": 30,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 3 da semana 2 focada em resistencia aerobia e regularidade."
+          "descricao": "Sessão 3 da semana 2 focada em resistência aeróbia e regularidade."
         }
       ]
     },
@@ -77,16 +77,16 @@
           "duracaoMinutos": 27,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 1 da semana 3 de rodagem leve para sustentar o plano."
+          "descricao": "Sessão 1 da semana 3 de rodagem leve para sustentar o plano."
         },
         {
           "numeroSemana": 3,
           "tipo": "FARTLEK",
           "distanciaKm": 3.34,
           "duracaoMinutos": 20,
-          "intensidade": "moderada com variacoes curtas",
+          "intensidade": "moderada com variações curtas",
           "zonaFcAlvo": "Z2-Z3",
-          "descricao": "Sessao 2 da semana 3 com variacoes leves de ritmo para manter consistencia e bem-estar."
+          "descricao": "Sessão 2 da semana 3 com variações leves de ritmo para manter consistência e bem-estar."
         },
         {
           "numeroSemana": 3,
@@ -95,7 +95,7 @@
           "duracaoMinutos": 33,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 3 da semana 3 focada em resistencia aerobia e regularidade."
+          "descricao": "Sessão 3 da semana 3 focada em resistência aeróbia e regularidade."
         }
       ]
     },
@@ -109,16 +109,16 @@
           "duracaoMinutos": 25,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 1 da semana 4 de rodagem leve para sustentar o plano."
+          "descricao": "Sessão 1 da semana 4 de rodagem leve para sustentar o plano."
         },
         {
           "numeroSemana": 4,
           "tipo": "FARTLEK",
           "distanciaKm": 3.1,
           "duracaoMinutos": 20,
-          "intensidade": "moderada com variacoes curtas",
+          "intensidade": "moderada com variações curtas",
           "zonaFcAlvo": "Z2-Z3",
-          "descricao": "Sessao 2 da semana 4 com variacoes leves de ritmo para manter consistencia e bem-estar."
+          "descricao": "Sessão 2 da semana 4 com variações leves de ritmo para manter consistência e bem-estar."
         },
         {
           "numeroSemana": 4,
@@ -127,7 +127,7 @@
           "duracaoMinutos": 31,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 3 da semana 4 focada em resistencia aerobia e regularidade."
+          "descricao": "Sessão 3 da semana 4 focada em resistência aeróbia e regularidade."
         }
       ]
     },
@@ -141,16 +141,16 @@
           "duracaoMinutos": 27,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 1 da semana 5 de rodagem leve para sustentar o plano."
+          "descricao": "Sessão 1 da semana 5 de rodagem leve para sustentar o plano."
         },
         {
           "numeroSemana": 5,
           "tipo": "FARTLEK",
           "distanciaKm": 3.35,
           "duracaoMinutos": 20,
-          "intensidade": "moderada com variacoes curtas",
+          "intensidade": "moderada com variações curtas",
           "zonaFcAlvo": "Z2-Z3",
-          "descricao": "Sessao 2 da semana 5 com variacoes leves de ritmo para manter consistencia e bem-estar."
+          "descricao": "Sessão 2 da semana 5 com variações leves de ritmo para manter consistência e bem-estar."
         },
         {
           "numeroSemana": 5,
@@ -159,7 +159,7 @@
           "duracaoMinutos": 33,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 3 da semana 5 focada em resistencia aerobia e regularidade."
+          "descricao": "Sessão 3 da semana 5 focada em resistência aeróbia e regularidade."
         }
       ]
     },
@@ -173,16 +173,16 @@
           "duracaoMinutos": 29,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 1 da semana 6 de rodagem leve para sustentar o plano."
+          "descricao": "Sessão 1 da semana 6 de rodagem leve para sustentar o plano."
         },
         {
           "numeroSemana": 6,
           "tipo": "FARTLEK",
           "distanciaKm": 3.62,
           "duracaoMinutos": 21,
-          "intensidade": "moderada com variacoes curtas",
+          "intensidade": "moderada com variações curtas",
           "zonaFcAlvo": "Z2-Z3",
-          "descricao": "Sessao 2 da semana 6 com variacoes leves de ritmo para manter consistencia e bem-estar."
+          "descricao": "Sessão 2 da semana 6 com variações leves de ritmo para manter consistência e bem-estar."
         },
         {
           "numeroSemana": 6,
@@ -191,7 +191,7 @@
           "duracaoMinutos": 36,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 3 da semana 6 focada em resistencia aerobia e regularidade."
+          "descricao": "Sessão 3 da semana 6 focada em resistência aeróbia e regularidade."
         }
       ]
     },
@@ -205,16 +205,16 @@
           "duracaoMinutos": 32,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 1 da semana 7 de rodagem leve para sustentar o plano."
+          "descricao": "Sessão 1 da semana 7 de rodagem leve para sustentar o plano."
         },
         {
           "numeroSemana": 7,
           "tipo": "FARTLEK",
           "distanciaKm": 3.91,
           "duracaoMinutos": 23,
-          "intensidade": "moderada com variacoes curtas",
+          "intensidade": "moderada com variações curtas",
           "zonaFcAlvo": "Z2-Z3",
-          "descricao": "Sessao 2 da semana 7 com variacoes leves de ritmo para manter consistencia e bem-estar."
+          "descricao": "Sessão 2 da semana 7 com variações leves de ritmo para manter consistência e bem-estar."
         },
         {
           "numeroSemana": 7,
@@ -223,7 +223,7 @@
           "duracaoMinutos": 38,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 3 da semana 7 focada em resistencia aerobia e regularidade."
+          "descricao": "Sessão 3 da semana 7 focada em resistência aeróbia e regularidade."
         }
       ]
     },
@@ -237,16 +237,16 @@
           "duracaoMinutos": 29,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 1 da semana 8 de rodagem leve para sustentar o plano."
+          "descricao": "Sessão 1 da semana 8 de rodagem leve para sustentar o plano."
         },
         {
           "numeroSemana": 8,
           "tipo": "FARTLEK",
           "distanciaKm": 3.59,
           "duracaoMinutos": 21,
-          "intensidade": "moderada com variacoes curtas",
+          "intensidade": "moderada com variações curtas",
           "zonaFcAlvo": "Z2-Z3",
-          "descricao": "Sessao 2 da semana 8 com variacoes leves de ritmo para manter consistencia e bem-estar."
+          "descricao": "Sessão 2 da semana 8 com variações leves de ritmo para manter consistência e bem-estar."
         },
         {
           "numeroSemana": 8,
@@ -255,7 +255,7 @@
           "duracaoMinutos": 35,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 3 da semana 8 focada em resistencia aerobia e regularidade."
+          "descricao": "Sessão 3 da semana 8 focada em resistência aeróbia e regularidade."
         }
       ]
     }
