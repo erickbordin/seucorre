@@ -423,6 +423,33 @@ const buildProfilePayload = (form) => {
   };
 };
 
+const DRAFT_KEY = 'seucorre:onboarding-rascunho';
+
+const readDraft = (email) => {
+  try {
+    const draft = JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null');
+    return draft && draft.email === email ? draft : null;
+  } catch {
+    return null;
+  }
+};
+
+const saveDraft = (draft) => {
+  try {
+    localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+  } catch {
+    return;
+  }
+};
+
+const clearDraft = () => {
+  try {
+    localStorage.removeItem(DRAFT_KEY);
+  } catch {
+    return;
+  }
+};
+
 const Field = ({ label, error, children }) => (
   <label className="block space-y-2">
     <span className="text-xs font-semibold text-muted-foreground">{label}</span>
@@ -467,10 +494,13 @@ export default function AuthPage({ mode = 'register' }) {
     return ['dados', 'historico', 'nivel', 'corrida', 'performance'];
   }, [form.jaCorre, isBeginnerRunnerFlow, isNoRunnerFlow]);
 
+  const keepsDraft = isProfileOnly && !hasCompletedOnboarding;
+
   useEffect(() => {
     if (isProfileOnly) {
-      setForm(buildFormFromUser(user));
-      setProfileStep(0);
+      const draft = keepsDraft ? readDraft(user?.email) : null;
+      setForm(draft ? { ...buildFormFromUser(user), ...draft.form } : buildFormFromUser(user));
+      setProfileStep(draft ? draft.step : 0);
       setTouchedPhysicalFields({});
       setTouchedTrainingFields({});
       return;
@@ -478,7 +508,11 @@ export default function AuthPage({ mode = 'register' }) {
     setForm(createEmptyForm());
     setTouchedPhysicalFields({});
     setTouchedTrainingFields({});
-  }, [isProfileOnly, user]);
+  }, [isProfileOnly, keepsDraft, user]);
+
+  useEffect(() => {
+    if (keepsDraft && user?.email) saveDraft({ email: user.email, step: profileStep, form: { ...form, senha: '' } });
+  }, [form, keepsDraft, profileStep, user?.email]);
 
   const totalSteps = isProfileOnly ? profileSteps.length : 1;
   const currentKey = profileSteps[Math.min(profileStep, profileSteps.length - 1)];
@@ -618,6 +652,7 @@ export default function AuthPage({ mode = 'register' }) {
 
       if (isProfileOnly) {
         await api.usuarios.atualizarOnboarding(buildProfilePayload(form));
+        clearDraft();
       } else {
         await api.usuarios.registrar({
           nome: form.email.split('@')[0],
