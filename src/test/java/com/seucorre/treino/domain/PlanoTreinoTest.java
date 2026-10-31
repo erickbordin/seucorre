@@ -14,23 +14,14 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 class PlanoTreinoTest {
 
     @Test
-    void calculaCargaSemanalESegueRegraDosDezPorCento() {
+    void calculaVolumeSemanalEmKm() {
         PlanoTreino planoTreino = new PlanoTreino();
         planoTreino.adicionarSessao(criarSessao(1, "10.00", TipoTreino.LONGO));
+        planoTreino.adicionarSessao(criarSessao(1, "4.50", TipoTreino.REGENERATIVO));
         planoTreino.adicionarSessao(criarSessao(2, "11.00", TipoTreino.LONGO));
 
-        assertThat(planoTreino.calcularCargaSemanal(1)).isEqualTo(70.0d);
-        assertThat(planoTreino.calcularCargaSemanal(2)).isEqualTo(77.0d);
-        assertThat(planoTreino.verificarRegra10Porcento(2)).isTrue();
-    }
-
-    @Test
-    void identificaQuebraDaRegraDosDezPorCento() {
-        PlanoTreino planoTreino = new PlanoTreino();
-        planoTreino.adicionarSessao(criarSessao(1, "10.00", TipoTreino.LONGO));
-        planoTreino.adicionarSessao(criarSessao(2, "12.00", TipoTreino.LONGO));
-
-        assertThat(planoTreino.verificarRegra10Porcento(2)).isFalse();
+        assertThat(planoTreino.calcularVolumeSemanal(1)).isEqualByComparingTo("14.50");
+        assertThat(planoTreino.calcularVolumeSemanal(2)).isEqualByComparingTo("11.00");
     }
 
     @Test

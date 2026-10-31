@@ -23,6 +23,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 @Entity
@@ -66,10 +67,11 @@ public class PlanoTreino {
     @EqualsAndHashCode.Exclude
     private List<SessaoTreino> sessoes = new ArrayList<>();
 
-    public double calcularCargaSemanal(Integer semana) {
+    public BigDecimal calcularVolumeSemanal(Integer semana) {
         return obterSessoesDaSemana(semana).stream()
-                .mapToDouble(SessaoTreino::calcularCarga)
-                .sum();
+                .map(SessaoTreino::getDistanciaKm)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     public double calcularProgressoGeral() {
@@ -93,18 +95,6 @@ public class PlanoTreino {
 
     public boolean estaNoPrazo() {
         return dataFim == null || !dataFim.isBefore(LocalDate.now());
-    }
-
-    public boolean verificarRegra10Porcento(Integer semana) {
-        if (semana == null || semana <= 1) {
-            return true;
-        }
-        double cargaSemanaAtual = calcularCargaSemanal(semana);
-        double cargaSemanaAnterior = calcularCargaSemanal(semana - 1);
-        if (cargaSemanaAnterior <= 0) {
-            return true;
-        }
-        return cargaSemanaAtual <= cargaSemanaAnterior * 1.10d;
     }
 
     public void pausar() {

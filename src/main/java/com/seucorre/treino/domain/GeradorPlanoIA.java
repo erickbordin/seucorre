@@ -2,6 +2,7 @@ package com.seucorre.treino.domain;
 
 import com.seucorre.avaliacao.domain.CheckinSemanal;
 import com.seucorre.avaliacao.domain.ProgressoSemanal;
+import com.seucorre.shared.domain.RegraDezPorCento;
 import com.seucorre.shared.domain.enums.Objetivo;
 import com.seucorre.shared.exception.BusinessRuleException;
 import com.seucorre.usuario.domain.Usuario;
@@ -18,7 +19,6 @@ import java.util.TreeSet;
 @Service
 public class GeradorPlanoIA {
 
-    private static final BigDecimal LIMITE_REGRA_DEZ_POR_CENTO = BigDecimal.valueOf(1.10d);
     private static final int SCALE_DISTANCIA = 2;
 
     private final IAClient iaClient;
@@ -159,13 +159,10 @@ public class GeradorPlanoIA {
                 continue;
             }
 
-            BigDecimal volumeAnterior = calcularVolumeSemanal(planoTreino, semanaAnterior);
-            BigDecimal volumeAtual = calcularVolumeSemanal(planoTreino, semanaAtual);
-            if (volumeAnterior.signum() > 0) {
-                BigDecimal limiteAceito = volumeAnterior.multiply(LIMITE_REGRA_DEZ_POR_CENTO);
-                if (volumeAtual.compareTo(limiteAceito) > 0) {
-                    ajustarVolumeSemanal(planoTreino, semanaAtual, limiteAceito, volumeAtual);
-                }
+            BigDecimal volumeAnterior = planoTreino.calcularVolumeSemanal(semanaAnterior);
+            BigDecimal volumeAtual = planoTreino.calcularVolumeSemanal(semanaAtual);
+            if (RegraDezPorCento.excede(volumeAnterior, volumeAtual)) {
+                ajustarVolumeSemanal(planoTreino, semanaAtual, RegraDezPorCento.limite(volumeAnterior), volumeAtual);
             }
             semanaAnterior = semanaAtual;
         }
@@ -173,13 +170,6 @@ public class GeradorPlanoIA {
         recalcularKmTotais(planoTreino);
         ordenarSessoes(planoTreino);
         preencherDatasDerivadas(planoTreino);
-    }
-
-    private BigDecimal calcularVolumeSemanal(PlanoTreino planoTreino, Integer semana) {
-        return planoTreino.obterSessoesDaSemana(semana).stream()
-                .map(SessaoTreino::getDistanciaKm)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private void ajustarVolumeSemanal(PlanoTreino planoTreino,

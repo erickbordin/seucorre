@@ -1,5 +1,6 @@
 package com.seucorre.treino.application;
 
+import com.seucorre.shared.domain.RegraDezPorCento;
 import com.seucorre.shared.domain.enums.NivelCondicionamento;
 import com.seucorre.shared.domain.enums.Objetivo;
 import com.seucorre.shared.exception.BusinessRuleException;
@@ -38,7 +39,10 @@ class PlanoPresetServiceTest {
         assertThat(planoTreino.getKmTotais()).isNotNull();
         assertThat(planoTreino.getKmTotais()).isGreaterThan(BigDecimal.ZERO);
         for (int semana = 2; semana <= planoTreino.getTotalSemanas(); semana++) {
-            assertThat(planoTreino.verificarRegra10Porcento(semana)).isTrue();
+            assertThat(RegraDezPorCento.excede(
+                    planoTreino.calcularVolumeSemanal(semana - 1),
+                    planoTreino.calcularVolumeSemanal(semana)
+            )).isFalse();
         }
         assertThat(planoTreino.getResumoIA()).contains("preset");
     }
