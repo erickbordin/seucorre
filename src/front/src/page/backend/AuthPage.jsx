@@ -599,7 +599,11 @@ export default function AuthPage({ mode = 'register' }) {
 
   const submit = async (event) => {
     event.preventDefault();
-    if (!valid || loading) return;
+    if (loading) return;
+    if (!valid) {
+      if (isProfileOnly) showMissing();
+      return;
+    }
 
     setLoading(true);
     setError('');
@@ -632,27 +636,43 @@ export default function AuthPage({ mode = 'register' }) {
     }
   };
 
+  const describeMissing = () => {
+    if (currentKey === 'dados') return 'Revise idade, altura e peso para continuar.';
+    if (currentKey === 'historico') return 'Escolha se você já corre para continuar.';
+    if (currentKey === 'nivel') return 'Escolha seu nível na corrida para continuar.';
+    if (currentKey === 'corrida') return 'Escolha um objetivo para continuar.';
+
+    const missing = [];
+    if (currentKey === 'base') {
+      if (form.fazAtividade === null) missing.push('se faz outras atividades físicas');
+      if (!form.atividadeNivel) missing.push('quão ativa é sua rotina');
+      if (!form.horasSonoMedia) missing.push('suas horas de sono por noite');
+    }
+    if (currentKey === 'objetivo' || currentKey === 'performance') {
+      if (form.diasSemanaTreino.length === 0) missing.push('pelo menos um dia de treino');
+      if (trainingErrors.semanasTreino) return trainingErrors.semanasTreino;
+    }
+    if (currentKey === 'performance') {
+      if (trainingErrors.paceRp) return trainingErrors.paceRp;
+      if (isAdvanced && !Object.values(form.zonasPace).every(Boolean)) missing.push('os paces de Z1 a Z5');
+    }
+    if (currentKey === 'objetivo' && form.objetivoNaoCorredor === '10K' && form.atividadeNivel !== 'MUITO_ATIVO') {
+      return '10 km só fica liberado para quem marcou rotina muito ativa. Escolha 3 ou 5 km.';
+    }
+    return missing.length > 0 ? 'Falta informar ' + missing.join(', ') + '.' : 'Revise as respostas desta etapa para continuar.';
+  };
+
+  const showMissing = () => {
+    if (currentKey === 'dados') setTouchedPhysicalFields({ idade: true, alturaCm: true, pesoKg: true });
+    if (currentKey === 'objetivo' || currentKey === 'performance') {
+      setTouchedTrainingFields((current) => ({ ...current, paceRp: currentKey === 'performance', semanasTreino: true }));
+    }
+    setError(describeMissing());
+  };
+
   const goToNextProfileStep = () => {
-    if (currentKey === 'dados' && !isCurrentProfileStepValid) {
-      setTouchedPhysicalFields({ idade: true, alturaCm: true, pesoKg: true });
-      setError('Revise idade, altura e peso para continuar.');
-      return;
-    }
-
-    if (currentKey === 'objetivo' && !isCurrentProfileStepValid) {
-      setTouchedTrainingFields((current) => ({ ...current, semanasTreino: true }));
-      setError(trainingErrors.semanasTreino || 'Preencha os dados obrigatórios desta etapa para continuar.');
-      return;
-    }
-
-    if (currentKey === 'performance' && !isCurrentProfileStepValid) {
-      setTouchedTrainingFields((current) => ({ ...current, paceRp: true, semanasTreino: true }));
-      setError(trainingErrors.paceRp || trainingErrors.semanasTreino || 'Preencha os dados obrigatórios desta etapa para continuar.');
-      return;
-    }
-
     if (!isCurrentProfileStepValid) {
-      setError('Preencha os dados obrigatórios desta etapa para continuar.');
+      showMissing();
       return;
     }
 
@@ -926,7 +946,7 @@ export default function AuthPage({ mode = 'register' }) {
                   Voltar
                 </Button>
                 {isLastProfileStep ? (
-                  <Button type="submit" disabled={!valid || loading} className="h-14 flex-1 rounded-2xl bg-primary text-base font-semibold text-primary-foreground">
+                  <Button type="submit" disabled={loading} className="h-14 flex-1 rounded-2xl bg-primary text-base font-semibold text-primary-foreground">
                     {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <span className="flex items-center gap-2"><Sparkles className="h-5 w-5" />Finalizar<ArrowRight className="h-5 w-5" /></span>}
                   </Button>
                 ) : (
