@@ -423,6 +423,14 @@ const buildProfilePayload = (form) => {
   };
 };
 
+const Field = ({ label, error, children }) => (
+  <label className="block space-y-2">
+    <span className="text-xs font-semibold text-muted-foreground">{label}</span>
+    {children}
+    {error ? <span className="block text-xs text-destructive">{error}</span> : null}
+  </label>
+);
+
 const GoogleButton = ({ label, onClick }) => (
   <Button
     type="button"
@@ -681,19 +689,16 @@ export default function AuthPage({ mode = 'register' }) {
             <p className="mt-2 text-sm text-muted-foreground">Comece com o básico para calibrar volume e segurança.</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Input type="text" inputMode="numeric" placeholder="Idade" value={form.idade} onChange={(event) => handlePhysicalMetricChange('idade', event.target.value)} onBlur={() => touchPhysicalField('idade')} aria-invalid={shouldShowPhysicalMetricError('idade')} className={getPhysicalMetricInputClassName('idade')} />
-              {shouldShowPhysicalMetricError('idade') ? <p className="text-xs text-destructive">{physicalMetricErrors.idade}</p> : null}
-            </div>
-            <div className="space-y-2">
-              <Input type="text" inputMode="numeric" placeholder="Altura cm" value={form.alturaCm} onChange={(event) => handlePhysicalMetricChange('alturaCm', event.target.value)} onBlur={() => touchPhysicalField('alturaCm')} aria-invalid={shouldShowPhysicalMetricError('alturaCm')} className={getPhysicalMetricInputClassName('alturaCm')} />
-              {shouldShowPhysicalMetricError('alturaCm') ? <p className="text-xs text-destructive">{physicalMetricErrors.alturaCm}</p> : null}
-            </div>
+            <Field label="Idade (anos)" error={shouldShowPhysicalMetricError('idade') ? physicalMetricErrors.idade : null}>
+              <Input type="text" inputMode="numeric" placeholder="Ex.: 28" value={form.idade} onChange={(event) => handlePhysicalMetricChange('idade', event.target.value)} onBlur={() => touchPhysicalField('idade')} aria-invalid={shouldShowPhysicalMetricError('idade')} className={getPhysicalMetricInputClassName('idade')} />
+            </Field>
+            <Field label="Altura (cm)" error={shouldShowPhysicalMetricError('alturaCm') ? physicalMetricErrors.alturaCm : null}>
+              <Input type="text" inputMode="numeric" placeholder="Ex.: 175" value={form.alturaCm} onChange={(event) => handlePhysicalMetricChange('alturaCm', event.target.value)} onBlur={() => touchPhysicalField('alturaCm')} aria-invalid={shouldShowPhysicalMetricError('alturaCm')} className={getPhysicalMetricInputClassName('alturaCm')} />
+            </Field>
           </div>
-          <div className="space-y-2">
-            <Input type="text" inputMode="decimal" placeholder="Peso kg" value={form.pesoKg} onChange={(event) => handlePhysicalMetricChange('pesoKg', event.target.value)} onBlur={() => touchPhysicalField('pesoKg')} aria-invalid={shouldShowPhysicalMetricError('pesoKg')} className={getPhysicalMetricInputClassName('pesoKg')} />
-            {shouldShowPhysicalMetricError('pesoKg') ? <p className="text-xs text-destructive">{physicalMetricErrors.pesoKg}</p> : null}
-          </div>
+          <Field label="Peso (kg)" error={shouldShowPhysicalMetricError('pesoKg') ? physicalMetricErrors.pesoKg : null}>
+            <Input type="text" inputMode="decimal" placeholder="Ex.: 72,5" value={form.pesoKg} onChange={(event) => handlePhysicalMetricChange('pesoKg', event.target.value)} onBlur={() => touchPhysicalField('pesoKg')} aria-invalid={shouldShowPhysicalMetricError('pesoKg')} className={getPhysicalMetricInputClassName('pesoKg')} />
+          </Field>
         </section>
       )}
 
@@ -731,7 +736,9 @@ export default function AuthPage({ mode = 'register' }) {
               <SelectionCard label="Muito ativa" description="Treino outras modalidades com boa consistência" selected={form.atividadeNivel === 'MUITO_ATIVO'} onClick={() => updateForm('atividadeNivel', 'MUITO_ATIVO')} />
             </div>
           </div>
-          <Input type="number" min="3" max="12" placeholder="Horas de sono por noite" value={form.horasSonoMedia} onChange={(event) => updateForm('horasSonoMedia', event.target.value)} className="h-12 rounded-xl border-border bg-card" />
+          <Field label="Horas de sono por noite">
+            <Input type="number" min="3" max="12" placeholder="Ex.: 7" value={form.horasSonoMedia} onChange={(event) => updateForm('horasSonoMedia', event.target.value)} className="h-12 rounded-xl border-border bg-card" />
+          </Field>
         </section>
       )}
 
@@ -745,12 +752,11 @@ export default function AuthPage({ mode = 'register' }) {
             <p className="text-xs font-semibold uppercase text-muted-foreground">Dias disponíveis por semana</p>
             <DaySelector selected={form.diasSemanaTreino} onChange={(dias) => updateForm('diasSemanaTreino', dias)} />
           </div>
-          <div className="space-y-2">
-            <Input type="text" inputMode="numeric" min={trainingWeeksGuidance.min} max={trainingWeeksGuidance.max} placeholder={'Semanas de treinamento (' + trainingWeeksGuidance.min + ' a ' + trainingWeeksGuidance.max + ')'} value={form.semanasTreino} onChange={(event) => handleWeeksChange(event.target.value)} onBlur={() => touchTrainingField('semanasTreino')} aria-invalid={shouldShowTrainingFieldError('semanasTreino')} className={getTrainingFieldInputClassName('semanasTreino')} />
-            <p className="text-xs text-muted-foreground">Faixa segura para seu perfil: {trainingWeeksGuidance.min} a {trainingWeeksGuidance.max} semanas. Recomendado agora: {trainingWeeksGuidance.recommended} semanas.</p>
-            <p className="text-xs text-muted-foreground">{trainingWeeksGuidance.summary}</p>
-            {shouldShowTrainingFieldError('semanasTreino') ? <p className="text-xs text-destructive">{trainingErrors.semanasTreino}</p> : null}
-          </div>
+          <Field label={'Semanas de treinamento (' + trainingWeeksGuidance.min + ' a ' + trainingWeeksGuidance.max + ')'} error={shouldShowTrainingFieldError('semanasTreino') ? trainingErrors.semanasTreino : null}>
+            <Input type="text" inputMode="numeric" min={trainingWeeksGuidance.min} max={trainingWeeksGuidance.max} placeholder={'Recomendado: ' + trainingWeeksGuidance.recommended} value={form.semanasTreino} onChange={(event) => handleWeeksChange(event.target.value)} onBlur={() => touchTrainingField('semanasTreino')} aria-invalid={shouldShowTrainingFieldError('semanasTreino')} className={getTrainingFieldInputClassName('semanasTreino')} />
+            <span className="block text-xs text-muted-foreground">Faixa segura para seu perfil: {trainingWeeksGuidance.min} a {trainingWeeksGuidance.max} semanas. Recomendado agora: {trainingWeeksGuidance.recommended} semanas.</span>
+            <span className="block text-xs text-muted-foreground">{trainingWeeksGuidance.summary}</span>
+          </Field>
           <div className="space-y-2">
             {DISTANCE_GOALS.map((item) => {
               const disabled = item.value === '10K' && form.atividadeNivel !== 'MUITO_ATIVO';
@@ -808,21 +814,19 @@ export default function AuthPage({ mode = 'register' }) {
               <SelectionCard key={item.value} label={item.label} selected={form.distanciaRp === item.value} onClick={() => updateForm('distanciaRp', item.value)} />
             ))}
           </div>
-          <div className="space-y-2">
-            <Input placeholder="Pace do RP (ex.: 5:30 min/km)" value={form.paceRp} onChange={(event) => handlePaceChange(event.target.value)} onBlur={handlePaceBlur} aria-invalid={shouldShowTrainingFieldError('paceRp')} className={getTrainingFieldInputClassName('paceRp')} />
-            <p className="text-xs text-muted-foreground">Use o melhor pace real da distância escolhida, sempre no formato m:ss.</p>
-            {shouldShowTrainingFieldError('paceRp') ? <p className="text-xs text-destructive">{trainingErrors.paceRp}</p> : null}
-          </div>
+          <Field label="Pace do seu melhor tempo (min/km)" error={shouldShowTrainingFieldError('paceRp') ? trainingErrors.paceRp : null}>
+            <Input placeholder="Ex.: 5:30" value={form.paceRp} onChange={(event) => handlePaceChange(event.target.value)} onBlur={handlePaceBlur} aria-invalid={shouldShowTrainingFieldError('paceRp')} className={getTrainingFieldInputClassName('paceRp')} />
+            <span className="block text-xs text-muted-foreground">Use o melhor pace real da distância escolhida, sempre no formato m:ss.</span>
+          </Field>
           <div className="space-y-3">
             <p className="text-xs font-semibold uppercase text-muted-foreground">Dias disponíveis para treinar</p>
             <DaySelector selected={form.diasSemanaTreino} onChange={(dias) => updateForm('diasSemanaTreino', dias)} />
           </div>
-          <div className="space-y-2">
-            <Input type="text" inputMode="numeric" min={trainingWeeksGuidance.min} max={trainingWeeksGuidance.max} placeholder={'Semanas até o objetivo (' + trainingWeeksGuidance.min + ' a ' + trainingWeeksGuidance.max + ')'} value={form.semanasTreino} onChange={(event) => handleWeeksChange(event.target.value)} onBlur={() => touchTrainingField('semanasTreino')} aria-invalid={shouldShowTrainingFieldError('semanasTreino')} className={getTrainingFieldInputClassName('semanasTreino')} />
-            <p className="text-xs text-muted-foreground">Faixa segura para seu perfil: {trainingWeeksGuidance.min} a {trainingWeeksGuidance.max} semanas. Recomendado agora: {trainingWeeksGuidance.recommended} semanas.</p>
-            <p className="text-xs text-muted-foreground">{trainingWeeksGuidance.summary}</p>
-            {shouldShowTrainingFieldError('semanasTreino') ? <p className="text-xs text-destructive">{trainingErrors.semanasTreino}</p> : null}
-          </div>
+          <Field label={'Semanas até o objetivo (' + trainingWeeksGuidance.min + ' a ' + trainingWeeksGuidance.max + ')'} error={shouldShowTrainingFieldError('semanasTreino') ? trainingErrors.semanasTreino : null}>
+            <Input type="text" inputMode="numeric" min={trainingWeeksGuidance.min} max={trainingWeeksGuidance.max} placeholder={'Recomendado: ' + trainingWeeksGuidance.recommended} value={form.semanasTreino} onChange={(event) => handleWeeksChange(event.target.value)} onBlur={() => touchTrainingField('semanasTreino')} aria-invalid={shouldShowTrainingFieldError('semanasTreino')} className={getTrainingFieldInputClassName('semanasTreino')} />
+            <span className="block text-xs text-muted-foreground">Faixa segura para seu perfil: {trainingWeeksGuidance.min} a {trainingWeeksGuidance.max} semanas. Recomendado agora: {trainingWeeksGuidance.recommended} semanas.</span>
+            <span className="block text-xs text-muted-foreground">{trainingWeeksGuidance.summary}</span>
+          </Field>
           {isAdvanced && (
             <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
               <div>
@@ -831,7 +835,9 @@ export default function AuthPage({ mode = 'register' }) {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {['z1', 'z2', 'z3', 'z4', 'z5'].map((zone) => (
-                  <Input key={zone} placeholder={zone.toUpperCase()} value={form.zonasPace[zone]} onChange={(event) => updateZone(zone, event.target.value)} className="h-11 rounded-xl border-border bg-background" />
+                  <Field key={zone} label={zone.toUpperCase()}>
+                    <Input placeholder="m:ss" value={form.zonasPace[zone]} onChange={(event) => updateZone(zone, event.target.value)} className="h-11 rounded-xl border-border bg-background" />
+                  </Field>
                 ))}
               </div>
             </div>
