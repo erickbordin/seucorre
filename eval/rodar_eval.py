@@ -143,6 +143,9 @@ def main():
         if caso["id"] in feitos:
             continue
         linha = avaliar(caso, definicao["planoBase"]["semanaAtual"])
+        if linha["status"] == 503:
+            print(f"{caso['id']}: IA indisponível (cota do dia ou instabilidade). Parei; rode de novo depois para continuar.")
+            break
         with saida.open("a") as arquivo:
             arquivo.write(json.dumps(linha, ensure_ascii=False) + "\n")
         marcas = " ".join(f"{n}={'ok' if v else ('-' if v is None else 'FALHOU')}" for n, v in linha["resultados"].items())
