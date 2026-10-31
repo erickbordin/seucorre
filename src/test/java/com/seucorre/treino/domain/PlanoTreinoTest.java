@@ -3,11 +3,13 @@ package com.seucorre.treino.domain;
 import com.seucorre.shared.domain.enums.StatusPlano;
 import com.seucorre.shared.domain.enums.StatusTreino;
 import com.seucorre.shared.domain.enums.TipoTreino;
+import com.seucorre.shared.exception.BusinessRuleException;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PlanoTreinoTest {
 
@@ -62,6 +64,16 @@ class PlanoTreinoTest {
 
         planoTreino.concluir();
         assertThat(planoTreino.getStatus()).isEqualTo(StatusPlano.CONCLUIDO);
+    }
+
+    @Test
+    void naoReativaPlanoCanceladoNemPausaPlanoQueNaoEstaAtivo() {
+        PlanoTreino planoTreino = new PlanoTreino();
+        planoTreino.cancelar();
+
+        assertThatThrownBy(planoTreino::reativar).isInstanceOf(BusinessRuleException.class);
+        assertThatThrownBy(planoTreino::pausar).isInstanceOf(BusinessRuleException.class);
+        assertThat(planoTreino.getStatus()).isEqualTo(StatusPlano.CANCELADO);
     }
 
     private SessaoTreino criarSessao(int semana, String distanciaKm, TipoTreino tipoTreino) {

@@ -1,6 +1,7 @@
 package com.seucorre.treino.domain;
 
 import com.seucorre.shared.domain.enums.StatusPlano;
+import com.seucorre.shared.exception.BusinessRuleException;
 import com.seucorre.usuario.domain.Usuario;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -107,11 +108,25 @@ public class PlanoTreino {
     }
 
     public void pausar() {
+        if (status != StatusPlano.ATIVO) {
+            throw new BusinessRuleException("Só é possível pausar um plano ativo.");
+        }
         status = StatusPlano.PAUSADO;
     }
 
     public void reativar() {
+        if (status != StatusPlano.PAUSADO) {
+            throw new BusinessRuleException("Só é possível reativar um plano pausado.");
+        }
         status = StatusPlano.ATIVO;
+    }
+
+    public void cancelar() {
+        status = StatusPlano.CANCELADO;
+    }
+
+    public boolean emAndamento() {
+        return status == StatusPlano.ATIVO || status == StatusPlano.PAUSADO;
     }
 
     public void concluir() {
