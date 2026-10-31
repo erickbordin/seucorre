@@ -8,6 +8,7 @@ import com.seucorre.shared.exception.BusinessRuleException;
 import com.seucorre.shared.exception.EntityNotFoundException;
 import com.seucorre.usuario.application.dto.CondicaoSaudeRequest;
 import com.seucorre.usuario.application.dto.DadosFisicosRequest;
+import com.seucorre.usuario.application.dto.OnboardingRequest;
 import com.seucorre.usuario.application.dto.PerfilAtletaRequest;
 import com.seucorre.usuario.application.dto.PerfilCorridaRequest;
 import com.seucorre.usuario.application.dto.UsuarioCadastroRequest;
@@ -119,6 +120,25 @@ class UsuarioAppServiceTest {
                 .hasMessage("Dias de treino não podem exceder os dias disponíveis na semana.");
     }
 
+
+    @Test
+    void atualizarOnboardingSemCondicoesSaudeMantemAsCondicoesExistentes() {
+        when(repository.existsByEmail("ana@email.com")).thenReturn(false);
+        when(passwordEncoder.encode("senha123")).thenReturn("hash-bcrypt");
+        when(repository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(repository.savePerfilCorrida(any(PerfilCorrida.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        service.registrar(cadastroValido("SEG,QUA,SEX"));
+
+        ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
+        verify(repository).save(captor.capture());
+        Usuario usuario = captor.getValue();
+        usuario.setId(UUID.randomUUID());
+        when(repository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
+
+        service.atualizarOnboarding(usuario.getId(), new OnboardingRequest(null, null, null, null, null));
+
+        assertThat(usuario.getCondicoesSaude()).hasSize(1);
+    }
 
     @Test
     void buscarPorIdRetornaPerfilCompletoComPerfilCorrida() {

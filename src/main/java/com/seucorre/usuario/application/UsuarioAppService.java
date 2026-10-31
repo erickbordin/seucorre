@@ -102,7 +102,9 @@ public class UsuarioAppService {
 
         aplicarDadosFisicos(usuario, request.dadosFisicos());
         aplicarPerfilAtleta(usuario, request.perfilAtleta());
-        usuario.substituirCondicoesSaude(toCondicoesSaude(request.condicoesSaude()));
+        if (request.condicoesSaude() != null) {
+            usuario.substituirCondicoesSaude(toCondicoesSaude(request.condicoesSaude()));
+        }
         anexarPerfilCorrida(usuario, perfilCorrida);
         validarOnboarding(usuario, perfilCorrida);
     }
