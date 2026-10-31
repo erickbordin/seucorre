@@ -33,7 +33,7 @@ flowchart LR
 
 Decisoes de engenharia:
 
-- **Provider trocavel por configuracao** (`IA_PROVIDER`): o dominio depende so da interface `IAClient`. Claude (`AnthropicClient`), Ollama para desenvolvimento local sem custo (`OllamaClient`) ou modo manual sem IA (`ManualOnlyIAClient`).
+- **Provider trocavel por configuracao** (`IA_PROVIDER`): o dominio depende so da interface `IAClient`. Claude (`AnthropicClient`), Gemini (`GeminiClient`), Ollama para desenvolvimento local sem custo (`OllamaClient`) ou modo manual sem IA (`ManualOnlyIAClient`).
 - **Guardrail deterministico depois do LLM**: a regra dos 10% (o volume semanal nao sobe mais de 10%) roda em Java sobre toda resposta do modelo em `GeradorPlanoIA`. Regra de seguranca nao fica so no prompt.
 - **Resiliencia na chamada ao modelo**: timeout, retry com backoff exponencial (Resilience4j) e `IAUnavailableException` quando o provider falha.
 - **Funciona sem IA**: o plano inicial vem de presets (IA opcional quando nao ha preset) e, em modo manual, a analise do check-in usa regras deterministicas (`ManualCheckinAnalysisService`).
@@ -187,10 +187,11 @@ Modo opcional para gerar o plano via provider configurado.
 
 Variaveis relevantes:
 
-- `IA_PROVIDER=ollama` ou `anthropic`
+- `IA_PROVIDER=ollama`, `anthropic` ou `gemini`
 - `OLLAMA_BASE_URL`
 - `OLLAMA_MODEL`
 - `ANTHROPIC_API_KEY`
+- `GEMINI_API_KEY` e `GEMINI_MODEL` (padrão `gemini-3.6-flash`). No plano gratuito o Google pode usar o conteúdo enviado para melhorar seus produtos: use só dados de teste.
 
 ## Testes e validacao
 

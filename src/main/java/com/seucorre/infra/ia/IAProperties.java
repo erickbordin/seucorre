@@ -18,6 +18,6 @@ public class IAProperties {
     }
 
     public enum Provider {
-        MANUAL, OLLAMA, ANTHROPIC
+        MANUAL, OLLAMA, ANTHROPIC, GEMINI
     }
 }

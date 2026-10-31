@@ -7,6 +7,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.time.Clock;
+import java.time.ZoneId;
 
 @SpringBootApplication
 @EnableAsync
@@ -15,7 +16,7 @@ public class SeuCorreApplication {
 
     @Bean
     Clock applicationClock() {
-        return Clock.systemUTC();
+        return Clock.system(ZoneId.of("America/Sao_Paulo"));
     }
 
     public static void main(String[] args) {
