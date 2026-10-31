@@ -1,6 +1,7 @@
 package com.seucorre.treino.domain;
 
 import com.seucorre.avaliacao.domain.CheckinSemanal;
+import com.seucorre.shared.domain.RegraDezPorCento;
 import com.seucorre.shared.domain.enums.NivelCondicionamento;
 import com.seucorre.shared.domain.enums.Objetivo;
 import com.seucorre.shared.domain.enums.TipoTreino;
@@ -9,10 +10,16 @@ import com.seucorre.usuario.domain.Usuario;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 class GeradorPlanoIATest {
+
+    private static final Clock RELOGIO = Clock.fixed(Instant.parse("2026-10-31T15:00:00Z"), ZoneOffset.UTC);
 
     private static final String PLANO_DA_IA = """
             {"totalSemanas": 3, "sessoes": [
@@ -24,7 +31,7 @@ class GeradorPlanoIATest {
 
     @Test
     void limitaCadaSemanaA110PorCentoDaAnteriorMesmoQuandoAIaExagera() {
-        GeradorPlanoIA gerador = new GeradorPlanoIA(prompt -> PLANO_DA_IA, new PromptBuilder());
+        GeradorPlanoIA gerador = new GeradorPlanoIA(prompt -> PLANO_DA_IA, new PromptBuilder(), RELOGIO);
 
         PlanoTreino plano = gerador.gerarPlano(criarUsuario(), Objetivo.COMPLETAR_10K);
 
@@ -34,8 +41,43 @@ class GeradorPlanoIATest {
     }
 
     @Test
+    void ignoraAsDatasDaIaEAgendaAPartirDeHojeNosDiasEscolhidos() {
+        String planoComDataNoPassado = """
+                {"totalSemanas": 1, "sessoes": [
+                  {"numeroSemana": 1, "dataPrevista": "2026-04-06", "tipo": "longo", "distanciaKm": 5, "paceAlvo": 0},
+                  {"numeroSemana": 1, "dataPrevista": "2026-04-08", "tipo": "regenerativo", "distanciaKm": 3}
+                ]}
+                """;
+        GeradorPlanoIA gerador = new GeradorPlanoIA(prompt -> planoComDataNoPassado, new PromptBuilder(), RELOGIO);
+
+        PlanoTreino plano = gerador.gerarPlano(criarUsuario(), Objetivo.COMPLETAR_10K);
+
+        assertThat(plano.getSessoes()).extracting(SessaoTreino::getDataPrevista)
+                .containsExactly(LocalDate.of(2026, 11, 2), LocalDate.of(2026, 11, 4));
+        assertThat(plano.getDataInicio()).isEqualTo(LocalDate.of(2026, 11, 2));
+        assertThat(plano.getSessoes().get(0).getPaceAlvo()).isNull();
+    }
+
+    @Test
+    void oArredondamentoDepoisDoCorteNaoPassaDoLimite() {
+        String planoQueArredondaParaCima = """
+                {"totalSemanas": 2, "sessoes": [
+                  {"numeroSemana": 1, "tipo": "longo", "distanciaKm": 7.85},
+                  {"numeroSemana": 2, "tipo": "longo", "distanciaKm": 3},
+                  {"numeroSemana": 2, "tipo": "regenerativo", "distanciaKm": 3},
+                  {"numeroSemana": 2, "tipo": "intervalado", "distanciaKm": 3}
+                ]}
+                """;
+        GeradorPlanoIA gerador = new GeradorPlanoIA(prompt -> planoQueArredondaParaCima, new PromptBuilder(), RELOGIO);
+
+        PlanoTreino plano = gerador.gerarPlano(criarUsuario(), Objetivo.COMPLETAR_10K);
+
+        assertThat(RegraDezPorCento.excede(plano.calcularVolumeSemanal(1), plano.calcularVolumeSemanal(2))).isFalse();
+    }
+
+    @Test
     void naReescritaASemanaUmNaoPassaDe110PorCentoDaSemanaAtualDoPlanoAntigo() {
-        GeradorPlanoIA gerador = new GeradorPlanoIA(prompt -> PLANO_DA_IA, new PromptBuilder());
+        GeradorPlanoIA gerador = new GeradorPlanoIA(prompt -> PLANO_DA_IA, new PromptBuilder(), RELOGIO);
         PlanoTreino planoAntigo = new PlanoTreino();
         planoAntigo.setUsuario(criarUsuario());
         planoAntigo.adicionarSessao(sessao(3, "5.00"));

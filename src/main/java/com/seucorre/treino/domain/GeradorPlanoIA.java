@@ -10,8 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
-import java.util.Comparator;
+import java.time.Clock;
 import java.util.List;
 import java.util.Objects;
 import java.util.TreeSet;
@@ -23,8 +22,9 @@ public class GeradorPlanoIA {
 
     private final IAClient iaClient;
     private final PromptBuilder promptBuilder;
+    private final AgendaDeTreino agendaDeTreino;
 
-    public GeradorPlanoIA(IAClient iaClient, PromptBuilder promptBuilder) {
+    public GeradorPlanoIA(IAClient iaClient, PromptBuilder promptBuilder, Clock clock) {
         if (iaClient == null) {
             throw new IllegalArgumentException("IAClient é obrigatório.");
         }
@@ -33,6 +33,7 @@ public class GeradorPlanoIA {
         }
         this.iaClient = iaClient;
         this.promptBuilder = promptBuilder;
+        this.agendaDeTreino = new AgendaDeTreino(clock);
     }
 
     public PlanoTreino gerarPlano(Usuario usuario, Objetivo objetivo) {
@@ -48,6 +49,7 @@ public class GeradorPlanoIA {
 
         PlanoTreino planoTreino = parsearResposta(resposta, usuario);
         aplicarRegraDosDezPorCento(planoTreino, null);
+        agendaDeTreino.agendar(planoTreino, usuario.getDiasSemanaTreino());
         return planoTreino;
     }
 
@@ -75,6 +77,7 @@ public class GeradorPlanoIA {
         PlanoTreino planoReescrito = parsearResposta(resposta, plano.getUsuario());
         herdarMetadadosBasicos(plano, planoReescrito);
         aplicarRegraDosDezPorCento(planoReescrito, plano.calcularVolumeSemanal(checkin.getSemana()));
+        agendaDeTreino.agendar(planoReescrito, planoReescrito.getUsuario().getDiasSemanaTreino());
         checkin.setPlanoReescrito(true);
         return planoReescrito;
     }
@@ -160,10 +163,6 @@ public class GeradorPlanoIA {
             }
             volumeAnterior = planoTreino.calcularVolumeSemanal(semanaAtual);
         }
-
-        recalcularKmTotais(planoTreino);
-        ordenarSessoes(planoTreino);
-        preencherDatasDerivadas(planoTreino);
     }
 
     private void ajustarVolumeSemanal(PlanoTreino planoTreino,
@@ -174,44 +173,14 @@ public class GeradorPlanoIA {
             return;
         }
 
-        BigDecimal fatorReducao = limiteAceito.divide(volumeAtual, 8, RoundingMode.HALF_UP);
         for (SessaoTreino sessaoTreino : planoTreino.obterSessoesDaSemana(semana)) {
             if (sessaoTreino.getDistanciaKm() == null) {
                 continue;
             }
             BigDecimal distanciaAjustada = sessaoTreino.getDistanciaKm()
-                    .multiply(fatorReducao)
-                    .setScale(SCALE_DISTANCIA, RoundingMode.HALF_UP);
+                    .multiply(limiteAceito)
+                    .divide(volumeAtual, SCALE_DISTANCIA, RoundingMode.DOWN);
             sessaoTreino.setDistanciaKm(distanciaAjustada);
-        }
-    }
-
-    private void recalcularKmTotais(PlanoTreino planoTreino) {
-        BigDecimal kmTotais = planoTreino.getSessoes().stream()
-                .map(SessaoTreino::getDistanciaKm)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        planoTreino.setKmTotais(kmTotais);
-    }
-
-    private void ordenarSessoes(PlanoTreino planoTreino) {
-        planoTreino.getSessoes().sort(Comparator
-                .comparing(SessaoTreino::getNumeroSemana, Comparator.nullsLast(Comparator.naturalOrder()))
-                .thenComparing(SessaoTreino::getDataPrevista, Comparator.nullsLast(Comparator.naturalOrder())));
-    }
-
-    private void preencherDatasDerivadas(PlanoTreino planoTreino) {
-        List<LocalDate> datas = planoTreino.getSessoes().stream()
-                .map(SessaoTreino::getDataPrevista)
-                .filter(Objects::nonNull)
-                .sorted()
-                .toList();
-
-        if (planoTreino.getDataInicio() == null && !datas.isEmpty()) {
-            planoTreino.setDataInicio(datas.get(0));
-        }
-        if (planoTreino.getDataFim() == null && !datas.isEmpty()) {
-            planoTreino.setDataFim(datas.get(datas.size() - 1));
         }
     }
 
