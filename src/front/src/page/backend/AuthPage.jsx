@@ -111,6 +111,10 @@ const IMPROVEMENT_WEEKS_CONFIG = {
   '42': { label: 'melhorar 42 km', min: 16, max: 28, recommended: 20 },
 };
 
+const TRAINING_DAYS = { min: 3, max: 4 };
+
+const hasValidTrainingDays = (days) => days.length >= TRAINING_DAYS.min && days.length <= TRAINING_DAYS.max;
+
 const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
 const sanitizeIntegerMetric = (value) => String(value ?? '').replace(/\D/g, '');
@@ -597,7 +601,7 @@ export default function AuthPage({ mode = 'register' }) {
     if (currentKey === 'objetivo') {
       const wants10k = form.objetivoNaoCorredor === '10K';
       return Boolean(
-        form.diasSemanaTreino.length > 0 &&
+        hasValidTrainingDays(form.diasSemanaTreino) &&
         form.objetivoNaoCorredor &&
         !trainingErrors.semanasTreino &&
         (!wants10k || form.atividadeNivel === 'MUITO_ATIVO')
@@ -609,7 +613,7 @@ export default function AuthPage({ mode = 'register' }) {
     }
 
     if (currentKey === 'performance') {
-      const hasBase = Boolean(form.distanciaRp && form.diasSemanaTreino.length > 0 && !trainingErrors.paceRp && !trainingErrors.semanasTreino);
+      const hasBase = Boolean(form.distanciaRp && hasValidTrainingDays(form.diasSemanaTreino) && !trainingErrors.paceRp && !trainingErrors.semanasTreino);
       const hasZones = !isAdvanced || Object.values(form.zonasPace).every(Boolean);
       return hasBase && hasZones;
     }
@@ -685,7 +689,7 @@ export default function AuthPage({ mode = 'register' }) {
       if (!form.qualidadeSono) missing.push('a qualidade do seu sono');
     }
     if (currentKey === 'objetivo' || currentKey === 'performance') {
-      if (form.diasSemanaTreino.length === 0) missing.push('pelo menos um dia de treino');
+      if (!hasValidTrainingDays(form.diasSemanaTreino)) missing.push('3 ou 4 dias de treino');
       if (trainingErrors.semanasTreino) return trainingErrors.semanasTreino;
     }
     if (currentKey === 'performance') {
@@ -812,8 +816,8 @@ export default function AuthPage({ mode = 'register' }) {
             <p className="mt-2 text-sm text-muted-foreground">Escolha a distância e o tempo de preparação.</p>
           </div>
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">Dias disponíveis por semana</p>
-            <DaySelector selected={form.diasSemanaTreino} onChange={(dias) => updateForm('diasSemanaTreino', dias)} />
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Dias disponíveis por semana (3 ou 4)</p>
+            <DaySelector selected={form.diasSemanaTreino} max={TRAINING_DAYS.max} onChange={(dias) => updateForm('diasSemanaTreino', dias)} />
           </div>
           <Field label={'Semanas de treinamento (' + trainingWeeksGuidance.min + ' a ' + trainingWeeksGuidance.max + ')'} error={shouldShowTrainingFieldError('semanasTreino') ? trainingErrors.semanasTreino : null}>
             <Input type="text" inputMode="numeric" min={trainingWeeksGuidance.min} max={trainingWeeksGuidance.max} placeholder={'Recomendado: ' + trainingWeeksGuidance.recommended} value={form.semanasTreino} onChange={(event) => handleWeeksChange(event.target.value)} onBlur={() => touchTrainingField('semanasTreino')} aria-invalid={shouldShowTrainingFieldError('semanasTreino')} className={getTrainingFieldInputClassName('semanasTreino')} />
@@ -882,8 +886,8 @@ export default function AuthPage({ mode = 'register' }) {
             <span className="block text-xs text-muted-foreground">Use o melhor pace real da distância escolhida, sempre no formato m:ss.</span>
           </Field>
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">Dias disponíveis para treinar</p>
-            <DaySelector selected={form.diasSemanaTreino} onChange={(dias) => updateForm('diasSemanaTreino', dias)} />
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Dias disponíveis para treinar (3 ou 4)</p>
+            <DaySelector selected={form.diasSemanaTreino} max={TRAINING_DAYS.max} onChange={(dias) => updateForm('diasSemanaTreino', dias)} />
           </div>
           <Field label={'Semanas até o objetivo (' + trainingWeeksGuidance.min + ' a ' + trainingWeeksGuidance.max + ')'} error={shouldShowTrainingFieldError('semanasTreino') ? trainingErrors.semanasTreino : null}>
             <Input type="text" inputMode="numeric" min={trainingWeeksGuidance.min} max={trainingWeeksGuidance.max} placeholder={'Recomendado: ' + trainingWeeksGuidance.recommended} value={form.semanasTreino} onChange={(event) => handleWeeksChange(event.target.value)} onBlur={() => touchTrainingField('semanasTreino')} aria-invalid={shouldShowTrainingFieldError('semanasTreino')} className={getTrainingFieldInputClassName('semanasTreino')} />
