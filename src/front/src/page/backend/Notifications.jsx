@@ -93,7 +93,7 @@ export default function Notifications() {
       {saved && (
         <div className="rounded-2xl bg-card border border-border p-4">
           <p className="text-sm font-semibold text-foreground mb-1">Preferências simuladas no frontend</p>
-          <p className="text-xs text-muted-foreground">Esse estado ainda nao e persistido: falta o endpoint de configuracoes de notificacoes no backend.</p>
+          <p className="text-xs text-muted-foreground">Esse estado ainda não é persistido: falta o endpoint de configurações de notificações no backend.</p>
         </div>
       )}
     </div>
