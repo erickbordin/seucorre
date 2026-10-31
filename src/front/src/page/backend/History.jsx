@@ -18,11 +18,19 @@ const formatPace = (seconds) => {
   return `${minutes}:${String(remainder).padStart(2, '0')} min/km`;
 };
 
+const isBeforeToday = (isoDate) => {
+  if (!isoDate) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  return new Date(`${isoDate}T00:00:00`) < today;
+};
+
 export default function History() {
   const { data: sessions = [], isLoading } = useQuery({
     queryKey: ['historico-treinos'],
     queryFn: api.treinos.listarHistorico,
   });
+  const pastSessions = sessions.filter((session) => session.status !== 'pendente' || isBeforeToday(session.dataPrevista));
 
   return (
     <div className="px-5 pt-14 pb-28">
@@ -39,14 +47,14 @@ export default function History() {
 
       {isLoading ? (
         <div className="rounded-2xl bg-card border border-border p-6 text-sm text-muted-foreground">Carregando histórico...</div>
-      ) : sessions.length === 0 ? (
+      ) : pastSessions.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border p-6 text-center">
           <p className="text-sm font-semibold text-foreground mb-1">Ainda não há treinos registrados</p>
           <p className="text-xs text-muted-foreground">Quando você concluir, perder ou registrar parcialmente uma sessão, ela aparece aqui.</p>
         </div>
       ) : (
         <div className="space-y-3">
-          {sessions.map((session, index) => {
+          {pastSessions.map((session, index) => {
             const meta = STATUS_META[session.status] || STATUS_META.pendente;
             const Icon = meta.icon;
             const healthAlert = Boolean(session.registro?.alertaSaude);
