@@ -419,7 +419,6 @@ const buildProfilePayload = (form) => {
     },
     perfilCorrida: useNoRunnerFlow ? null : buildPerfilCorrida(form),
     condicoesSaude: [],
-    dispositivos: [],
   };
 };
 
