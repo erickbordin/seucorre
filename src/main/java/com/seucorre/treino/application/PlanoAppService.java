@@ -1,6 +1,5 @@
 package com.seucorre.treino.application;
 
-import com.seucorre.infra.cache.CacheConfig;
 import com.seucorre.infra.events.EventPublisher;
 import com.seucorre.shared.domain.enums.Objetivo;
 import com.seucorre.shared.domain.enums.StatusPlano;
@@ -16,9 +15,6 @@ import com.seucorre.treino.infrastructure.PlanoRepository;
 import com.seucorre.usuario.domain.Usuario;
 import com.seucorre.usuario.infrastructure.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.CachePut;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,7 +33,6 @@ public class PlanoAppService {
     private final EventPublisher eventPublisher;
 
     @Transactional
-    @CachePut(cacheNames = CacheConfig.PLANO_ATIVO_CACHE, key = "#usuarioId")
     public PlanoTreinoDTO criarPlano(UUID usuarioId, GerarPlanoRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("Request de geração de plano é obrigatório.");
@@ -47,13 +42,16 @@ public class PlanoAppService {
         List<PlanoTreino> historicoPlanos = planoRepository.findTop3ByUsuarioIdOrderByDataInicioDesc(usuarioId);
         Objetivo objetivo = request.objetivo() != null ? request.objetivo() : usuario.getObjetivo();
         PlanoTreino planoTreino = gerarPlanoInicial(usuario, objetivo, historicoPlanos);
+        planoRepository.findByUsuarioId(usuarioId).stream()
+                .filter(PlanoTreino::emAndamento)
+                .forEach(PlanoTreino::cancelar);
+        planoRepository.flush();
         PlanoTreino planoSalvo = planoRepository.save(planoTreino);
         eventPublisher.publish(new PlanoGeradoEvent(usuarioId, planoSalvo.getId(), objetivo, planoSalvo.getTotalSemanas()));
         return PlanoTreinoDTO.from(planoSalvo);
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(cacheNames = CacheConfig.PLANO_ATIVO_CACHE, key = "#usuarioId")
     public PlanoTreinoDTO buscarPlanoAtivo(UUID usuarioId) {
         PlanoTreino planoTreino = planoRepository.findFirstByUsuarioIdAndStatusOrderByDataInicioDesc(usuarioId, StatusPlano.ATIVO)
                 .orElseThrow(() -> new EntityNotFoundException("Plano de treino ativo não encontrado."));
@@ -92,7 +90,6 @@ public class PlanoAppService {
     }
 
     @Transactional
-    @CacheEvict(cacheNames = CacheConfig.PLANO_ATIVO_CACHE, key = "#usuarioId")
     public PlanoTreinoDTO pausarPlano(UUID usuarioId, UUID planoId) {
         PlanoTreino planoTreino = buscarPlanoDoUsuarioOuFalhar(usuarioId, planoId);
         planoTreino.pausar();
@@ -107,7 +104,6 @@ public class PlanoAppService {
     }
 
     @Transactional
-    @CachePut(cacheNames = CacheConfig.PLANO_ATIVO_CACHE, key = "#usuarioId")
     public PlanoTreinoDTO reativarPlano(UUID usuarioId, UUID planoId) {
         PlanoTreino planoTreino = buscarPlanoDoUsuarioOuFalhar(usuarioId, planoId);
         planoTreino.reativar();

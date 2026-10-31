@@ -6,6 +6,7 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SecurityException;
 import com.seucorre.usuario.domain.Usuario;
+import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -26,9 +27,17 @@ public class JwtService {
     private static final String TOKEN_TYPE_CLAIM = "token_type";
     private static final String ACCESS_TOKEN_TYPE = "access";
     private static final String REFRESH_TOKEN_TYPE = "refresh";
+    private static final int TAMANHO_MINIMO_SEGREDO = 32;
 
     @Value("${api.security.token.secret}")
     private String secret;
+
+    @PostConstruct
+    void validarSegredo() {
+        if (secret == null || secret.length() < TAMANHO_MINIMO_SEGREDO) {
+            throw new IllegalStateException("JWT_SECRET precisa ter pelo menos " + TAMANHO_MINIMO_SEGREDO + " caracteres.");
+        }
+    }
 
     @Value("${api.security.token.expiration-hours:2}")
     private long accessTokenExpirationHours;
@@ -128,10 +137,6 @@ public class JwtService {
     }
 
     private SecretKey chaveAssinatura() {
-        if (secret == null || secret.isBlank()) {
-            throw new IllegalStateException("Segredo JWT não configurado.");
-        }
-
         try {
             byte[] keyBytes = MessageDigest.getInstance("SHA-256")
                     .digest(secret.getBytes(StandardCharsets.UTF_8));

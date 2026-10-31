@@ -1,7 +1,7 @@
 {
   "totalSemanas": 8,
-  "resumoIA": "Plano preset de 8 semanas para completar 10 km, 3 dias por semana e nivel intermediario.",
-  "guiaTiposTreino": "REGENERATIVO = rodagem leve; INTERVALADO = blocos controlados; FARTLEK = variacao de ritmo; LONGO = sessao de resistencia.",
+  "resumoIA": "Plano preset de 8 semanas para completar 10 km, 3 dias por semana e nível intermediario.",
+  "guiaTiposTreino": "REGENERATIVO = rodagem leve; INTERVALADO = blocos controlados; FARTLEK = variação de ritmo; LONGO = sessão de resistência.",
   "semanas": [
     {
       "numeroSemana": 1,
@@ -13,7 +13,7 @@
           "duracaoMinutos": 33,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 1 da semana 1 de rodagem leve para sustentar o plano."
+          "descricao": "Sessão 1 da semana 1 de rodagem leve para sustentar o plano."
         },
         {
           "numeroSemana": 1,
@@ -22,7 +22,7 @@
           "duracaoMinutos": 25,
           "intensidade": "moderada a forte",
           "zonaFcAlvo": "Z3-Z4",
-          "descricao": "Sessao 2 da semana 1 com blocos controlados para evoluir base para 10 km."
+          "descricao": "Sessão 2 da semana 1 com blocos controlados para evoluir base para 10 km."
         },
         {
           "numeroSemana": 1,
@@ -31,7 +31,7 @@
           "duracaoMinutos": 52,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 3 da semana 1 focada em resistencia aerobia e regularidade."
+          "descricao": "Sessão 3 da semana 1 focada em resistência aeróbia e regularidade."
         }
       ]
     },
@@ -45,7 +45,7 @@
           "duracaoMinutos": 36,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 1 da semana 2 de rodagem leve para sustentar o plano."
+          "descricao": "Sessão 1 da semana 2 de rodagem leve para sustentar o plano."
         },
         {
           "numeroSemana": 2,
@@ -54,7 +54,7 @@
           "duracaoMinutos": 27,
           "intensidade": "moderada a forte",
           "zonaFcAlvo": "Z3-Z4",
-          "descricao": "Sessao 2 da semana 2 com blocos controlados para evoluir base para 10 km."
+          "descricao": "Sessão 2 da semana 2 com blocos controlados para evoluir base para 10 km."
         },
         {
           "numeroSemana": 2,
@@ -63,7 +63,7 @@
           "duracaoMinutos": 56,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 3 da semana 2 focada em resistencia aerobia e regularidade."
+          "descricao": "Sessão 3 da semana 2 focada em resistência aeróbia e regularidade."
         }
       ]
     },
@@ -77,7 +77,7 @@
           "duracaoMinutos": 39,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 1 da semana 3 de rodagem leve para sustentar o plano."
+          "descricao": "Sessão 1 da semana 3 de rodagem leve para sustentar o plano."
         },
         {
           "numeroSemana": 3,
@@ -86,7 +86,7 @@
           "duracaoMinutos": 29,
           "intensidade": "moderada a forte",
           "zonaFcAlvo": "Z3-Z4",
-          "descricao": "Sessao 2 da semana 3 com blocos controlados para evoluir base para 10 km."
+          "descricao": "Sessão 2 da semana 3 com blocos controlados para evoluir base para 10 km."
         },
         {
           "numeroSemana": 3,
@@ -95,7 +95,7 @@
           "duracaoMinutos": 60,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 3 da semana 3 focada em resistencia aerobia e regularidade."
+          "descricao": "Sessão 3 da semana 3 focada em resistência aeróbia e regularidade."
         }
       ]
     },
@@ -109,7 +109,7 @@
           "duracaoMinutos": 36,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 1 da semana 4 de rodagem leve para sustentar o plano."
+          "descricao": "Sessão 1 da semana 4 de rodagem leve para sustentar o plano."
         },
         {
           "numeroSemana": 4,
@@ -118,7 +118,7 @@
           "duracaoMinutos": 27,
           "intensidade": "moderada a forte",
           "zonaFcAlvo": "Z3-Z4",
-          "descricao": "Sessao 2 da semana 4 com blocos controlados para evoluir base para 10 km."
+          "descricao": "Sessão 2 da semana 4 com blocos controlados para evoluir base para 10 km."
         },
         {
           "numeroSemana": 4,
@@ -127,7 +127,7 @@
           "duracaoMinutos": 56,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 3 da semana 4 focada em resistencia aerobia e regularidade."
+          "descricao": "Sessão 3 da semana 4 focada em resistência aeróbia e regularidade."
         }
       ]
     },
@@ -141,7 +141,7 @@
           "duracaoMinutos": 39,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 1 da semana 5 de rodagem leve para sustentar o plano."
+          "descricao": "Sessão 1 da semana 5 de rodagem leve para sustentar o plano."
         },
         {
           "numeroSemana": 5,
@@ -150,7 +150,7 @@
           "duracaoMinutos": 29,
           "intensidade": "moderada a forte",
           "zonaFcAlvo": "Z3-Z4",
-          "descricao": "Sessao 2 da semana 5 com blocos controlados para evoluir base para 10 km."
+          "descricao": "Sessão 2 da semana 5 com blocos controlados para evoluir base para 10 km."
         },
         {
           "numeroSemana": 5,
@@ -159,7 +159,7 @@
           "duracaoMinutos": 61,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 3 da semana 5 focada em resistencia aerobia e regularidade."
+          "descricao": "Sessão 3 da semana 5 focada em resistência aeróbia e regularidade."
         }
       ]
     },
@@ -173,7 +173,7 @@
           "duracaoMinutos": 42,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 1 da semana 6 de rodagem leve para sustentar o plano."
+          "descricao": "Sessão 1 da semana 6 de rodagem leve para sustentar o plano."
         },
         {
           "numeroSemana": 6,
@@ -182,7 +182,7 @@
           "duracaoMinutos": 31,
           "intensidade": "moderada a forte",
           "zonaFcAlvo": "Z3-Z4",
-          "descricao": "Sessao 2 da semana 6 com blocos controlados para evoluir base para 10 km."
+          "descricao": "Sessão 2 da semana 6 com blocos controlados para evoluir base para 10 km."
         },
         {
           "numeroSemana": 6,
@@ -191,7 +191,7 @@
           "duracaoMinutos": 66,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 3 da semana 6 focada em resistencia aerobia e regularidade."
+          "descricao": "Sessão 3 da semana 6 focada em resistência aeróbia e regularidade."
         }
       ]
     },
@@ -205,7 +205,7 @@
           "duracaoMinutos": 46,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 1 da semana 7 de rodagem leve para sustentar o plano."
+          "descricao": "Sessão 1 da semana 7 de rodagem leve para sustentar o plano."
         },
         {
           "numeroSemana": 7,
@@ -214,7 +214,7 @@
           "duracaoMinutos": 34,
           "intensidade": "moderada a forte",
           "zonaFcAlvo": "Z3-Z4",
-          "descricao": "Sessao 2 da semana 7 com blocos controlados para evoluir base para 10 km."
+          "descricao": "Sessão 2 da semana 7 com blocos controlados para evoluir base para 10 km."
         },
         {
           "numeroSemana": 7,
@@ -223,7 +223,7 @@
           "duracaoMinutos": 71,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 3 da semana 7 focada em resistencia aerobia e regularidade."
+          "descricao": "Sessão 3 da semana 7 focada em resistência aeróbia e regularidade."
         }
       ]
     },
@@ -237,7 +237,7 @@
           "duracaoMinutos": 42,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 1 da semana 8 de rodagem leve para sustentar o plano."
+          "descricao": "Sessão 1 da semana 8 de rodagem leve para sustentar o plano."
         },
         {
           "numeroSemana": 8,
@@ -246,7 +246,7 @@
           "duracaoMinutos": 31,
           "intensidade": "moderada a forte",
           "zonaFcAlvo": "Z3-Z4",
-          "descricao": "Sessao 2 da semana 8 com blocos controlados para evoluir base para 10 km."
+          "descricao": "Sessão 2 da semana 8 com blocos controlados para evoluir base para 10 km."
         },
         {
           "numeroSemana": 8,
@@ -255,7 +255,7 @@
           "duracaoMinutos": 65,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessao 3 da semana 8 focada em resistencia aerobia e regularidade."
+          "descricao": "Sessão 3 da semana 8 focada em resistência aeróbia e regularidade."
         }
       ]
     }

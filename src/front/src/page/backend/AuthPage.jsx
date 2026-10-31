@@ -8,32 +8,41 @@ import { useAuth } from '@/lib/AuthContext';
 import DaySelector from '@/components/onboarding/DaySelector';
 import SelectionCard from '@/components/onboarding/SelectionCard';
 import {
+  GENDER_OPTIONS,
   ageFromBirthDate,
   birthDateFromAge,
+  clearOnboardingDraft,
   parseTrainingDays,
+  readOnboardingDraft,
+  saveOnboardingDraft,
   serializeTrainingDays,
 } from '@/lib/user';
 
 const DISTANCE_GOALS = [
-  { value: '3K', label: '3 km', description: 'Comecar leve e ganhar consistencia' },
-  { value: '5K', label: '5 km', description: 'Recomendado para construir base com seguranca', recommended: true },
-  { value: '10K', label: '10 km', description: 'Disponivel para quem esta muito ativo' },
+  { value: '5K', label: '5 km', description: 'Recomendado para construir base com segurança', recommended: true },
+  { value: '10K', label: '10 km', description: 'Disponível para quem está muito ativo' },
 ];
 
 const RUNNER_GOALS = [
-  { value: 'COMPLETAR_5K', label: '5 km', description: 'Completar a distancia com boa base' },
+  { value: 'COMPLETAR_5K', label: '5 km', description: 'Completar a distância com boa base' },
   { value: 'COMPLETAR_10K', label: '10 km', description: 'Evoluir resistencia e ritmo' },
-  { value: 'COMPLETAR_15K', label: '15 km', description: 'Subir volume sem perder controle' },
   { value: 'COMPLETAR_MEIA_MARATONA', label: '21 km', description: 'Preparar meia maratona' },
   { value: 'COMPLETAR_MARATONA', label: '42 km', description: 'Preparar maratona' },
-  { value: 'MELHORAR_DISTANCIA', label: 'Melhorar marca', description: 'Baixar tempo em uma distancia' },
-  { value: 'VOLTAR_A_CORRER', label: 'Voltar a correr', description: 'Retomar rotina com progressao' },
+  { value: 'MELHORAR_DISTANCIA', label: 'Melhorar marca', description: 'Baixar tempo em uma distância' },
+  { value: 'VOLTAR_A_CORRER', label: 'Voltar a correr', description: 'Retomar rotina com progressão' },
 ];
 
 const LEVELS = [
-  { value: 'INICIANTE', label: 'Iniciante', description: 'Corre pouco ou esta retomando do zero' },
-  { value: 'INTERMEDIARIO', label: 'Intermediario', description: 'Ja treina com alguma frequencia' },
-  { value: 'AVANCADO', label: 'Avancado', description: 'Treina com consistencia e usa zonas/ritmos' },
+  { value: 'INICIANTE', label: 'Iniciante', description: 'Corre pouco ou está retomando do zero' },
+  { value: 'INTERMEDIARIO', label: 'Intermediário', description: 'Já treina com alguma frequência' },
+  { value: 'AVANCADO', label: 'Avançado', description: 'Treina com consistência e usa zonas/ritmos' },
+];
+
+const SLEEP_QUALITY = [
+  { value: 'RUIM', label: 'Ruim', description: 'Acordo cansado quase sempre' },
+  { value: 'REGULAR', label: 'Regular', description: 'Durmo bem só em alguns dias' },
+  { value: 'BOA', label: 'Boa', description: 'Acordo descansado na maioria dos dias' },
+  { value: 'OTIMA', label: 'Ótima', description: 'Durmo bem e acordo disposto' },
 ];
 
 const RP_DISTANCES = [
@@ -51,24 +60,17 @@ const createEmptyForm = () => ({
   idade: '',
   alturaCm: '',
   pesoKg: '',
+  genero: '',
   jaCorre: null,
   fazAtividade: null,
   atividadeNivel: '',
-  horasSonoMedia: '',
+  qualidadeSono: '',
   diasSemanaTreino: ['seg', 'qua', 'sex'],
-  semanasTreino: '10',
   objetivoNaoCorredor: '5K',
   objetivoCorredor: 'COMPLETAR_10K',
   nivelCorrida: '',
   distanciaRp: '5',
   paceRp: '',
-  zonasPace: {
-    z1: '',
-    z2: '',
-    z3: '',
-    z4: '',
-    z5: '',
-  },
 });
 
 const PHYSICAL_METRIC_LIMITS = {
@@ -82,29 +84,9 @@ const PACE_LIMITS = {
   maxSeconds: 720,
 };
 
-const NO_RUNNER_WEEKS_CONFIG = {
-  '3K': { label: '3 km', min: 6, max: 14, recommended: 8 },
-  '5K': { label: '5 km', min: 8, max: 18, recommended: 10 },
-  '10K': { label: '10 km', min: 12, max: 24, recommended: 16 },
-};
+const TRAINING_DAYS = { min: 3, max: 4 };
 
-const RUNNER_WEEKS_CONFIG = {
-  COMPLETAR_5K: { label: '5 km', min: 6, max: 12, recommended: 8 },
-  COMPLETAR_10K: { label: '10 km', min: 8, max: 16, recommended: 10 },
-  COMPLETAR_15K: { label: '15 km', min: 10, max: 18, recommended: 12 },
-  COMPLETAR_MEIA_MARATONA: { label: '21 km', min: 12, max: 20, recommended: 14 },
-  COMPLETAR_MARATONA: { label: '42 km', min: 16, max: 28, recommended: 20 },
-  VOLTAR_A_CORRER: { label: 'voltar a correr', min: 8, max: 16, recommended: 10 },
-};
-
-const IMPROVEMENT_WEEKS_CONFIG = {
-  '5': { label: 'melhorar 5 km', min: 8, max: 14, recommended: 10 },
-  '10': { label: 'melhorar 10 km', min: 10, max: 16, recommended: 12 },
-  '21': { label: 'melhorar 21 km', min: 12, max: 20, recommended: 14 },
-  '42': { label: 'melhorar 42 km', min: 16, max: 28, recommended: 20 },
-};
-
-const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
+const hasValidTrainingDays = (days) => days.length >= TRAINING_DAYS.min && days.length <= TRAINING_DAYS.max;
 
 const sanitizeIntegerMetric = (value) => String(value ?? '').replace(/\D/g, '');
 
@@ -180,115 +162,9 @@ const getStoredRacePace = (perfilCorrida) => {
   return { distanciaRp: '5', paceRp: '' };
 };
 
-const resolveTrainingWeeksBaseConfig = (form) => {
-  const isBeginnerBaseFlow = form.jaCorre === false || form.nivelCorrida === 'INICIANTE';
-
-  if (isBeginnerBaseFlow) {
-    return NO_RUNNER_WEEKS_CONFIG[form.objetivoNaoCorredor || '5K'] || NO_RUNNER_WEEKS_CONFIG['5K'];
-  }
-
-  if (form.objetivoCorredor === 'MELHORAR_DISTANCIA') {
-    return IMPROVEMENT_WEEKS_CONFIG[form.distanciaRp || '5'] || IMPROVEMENT_WEEKS_CONFIG['5'];
-  }
-
-  return RUNNER_WEEKS_CONFIG[form.objetivoCorredor || 'COMPLETAR_10K'] || RUNNER_WEEKS_CONFIG.COMPLETAR_10K;
-};
-
-const buildTrainingWeeksGuidance = (form) => {
-  const baseConfig = resolveTrainingWeeksBaseConfig(form);
-  const age = Number(form.idade);
-  const sleepHours = Number(form.horasSonoMedia);
-  const trainingDays = form.diasSemanaTreino.length;
-  let min = baseConfig.min;
-  let max = baseConfig.max;
-  let recommended = baseConfig.recommended;
-  const reasons = [];
-
-  if (form.jaCorre === false || form.nivelCorrida === 'INICIANTE') {
-    min += 1;
-    max += 2;
-    recommended += 2;
-    reasons.push('voce ainda esta construindo base');
-  }
-
-  if (trainingDays <= 2) {
-    min += 2;
-    max += 4;
-    recommended += 3;
-    reasons.push('voce tem ate 2 dias de treino por semana');
-  } else if (trainingDays === 3) {
-    min += 1;
-    max += 2;
-    recommended += 1;
-    reasons.push('voce tem 3 dias de treino por semana');
-  } else if (trainingDays >= 5 && form.jaCorre && form.nivelCorrida === 'AVANCADO') {
-    min -= 1;
-    max -= 1;
-    recommended -= 1;
-    reasons.push('sua rotina suporta um ciclo um pouco mais enxuto');
-  }
-
-  if (sleepHours > 0 && sleepHours < 6) {
-    min += 1;
-    max += 2;
-    recommended += 2;
-    reasons.push('menos de 6 horas de sono pedem mais recuperacao');
-  } else if (sleepHours >= 6 && sleepHours < 7) {
-    recommended += 1;
-    max += 1;
-    reasons.push('menos de 7 horas de sono pedem progressao gradual');
-  }
-
-  if (form.fazAtividade === false) {
-    recommended += 1;
-    max += 1;
-    reasons.push('voce relatou pouca base complementar');
-  }
-
-  if (form.atividadeNivel === 'POUCO_ATIVO') {
-    recommended += 1;
-    max += 1;
-    reasons.push('sua rotina atual e pouco ativa');
-  } else if (form.atividadeNivel === 'MUITO_ATIVO' && trainingDays >= 4 && sleepHours >= 7) {
-    recommended -= 1;
-  }
-
-  if (Number.isFinite(age) && age >= 60) {
-    min += 1;
-    max += 2;
-    recommended += 2;
-    reasons.push('vale deixar mais margem para recuperacao');
-  } else if (Number.isFinite(age) && age >= 45) {
-    recommended += 1;
-    max += 1;
-    reasons.push('uma margem extra ajuda na recuperacao');
-  }
-
-  min = clamp(min, 6, 30);
-  max = clamp(max, min + 2, 32);
-  recommended = clamp(recommended, min, max);
-
-  const summary = reasons.length > 0
-    ? 'Recomendacao ajustada porque ' + reasons.slice(0, 2).join(' e ') + '.'
-    : 'Recomendacao baseada no seu objetivo e no volume atual de treino.';
-
-  return {
-    ...baseConfig,
-    min,
-    max,
-    recommended,
-    summary,
-  };
-};
-
-const buildTrainingErrors = (form, guidance) => {
+const buildTrainingErrors = (form) => {
   const errors = {};
-  const weeks = Number(form.semanasTreino);
   const paceSeconds = parsePaceToSeconds(form.paceRp);
-
-  if (!form.semanasTreino || !Number.isInteger(weeks) || weeks < guidance.min || weeks > guidance.max) {
-    errors.semanasTreino = 'Para ' + guidance.label + ', use entre ' + guidance.min + ' e ' + guidance.max + ' semanas.';
-  }
 
   if (!form.paceRp) {
     errors.paceRp = 'Informe o pace do RP no formato m:ss.';
@@ -334,21 +210,16 @@ const buildFormFromUser = (user) => {
     idade: ageFromBirthDate(user?.dataNascimento),
     pesoKg: user?.pesoKg != null ? String(user.pesoKg) : '',
     alturaCm: user?.alturaCm != null ? String(user.alturaCm) : '',
+    genero: user?.genero || '',
     jaCorre: user?.jaCorre ?? null,
     diasSemanaTreino: days.length > 0 ? days : ['seg', 'qua', 'sex'],
-    horasSonoMedia: user?.horasSonoMedia != null ? String(user.horasSonoMedia) : '',
+    qualidadeSono: user?.qualidadeSono || '',
     nivelCorrida: user?.nivelCondicionamento || '',
     objetivoCorredor: user?.objetivo || 'COMPLETAR_10K',
     objetivoNaoCorredor: user?.objetivo === 'COMPLETAR_10K' ? '10K' : user?.objetivo === 'COMPLETAR_5K' ? '5K' : '5K',
     distanciaRp: storedRacePace.distanciaRp,
     paceRp: storedRacePace.paceRp,
   };
-};
-
-const toOptionalInteger = (value) => {
-  if (value === '' || value == null) return null;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
 };
 
 const toOptionalDecimal = (value) => {
@@ -372,7 +243,6 @@ const getRunnerGoal = (form) => {
   }
 
   if (form.objetivoCorredor === 'VOLTAR_A_CORRER') return 'SAUDE_GERAL';
-  if (form.objetivoCorredor === 'COMPLETAR_15K') return 'COMPLETAR_10K';
   return form.objetivoCorredor;
 };
 
@@ -404,10 +274,10 @@ const buildProfilePayload = (form) => {
       pesoKg: toOptionalDecimal(form.pesoKg),
       alturaCm: toOptionalDecimal(form.alturaCm),
       dataNascimento: birthDateFromAge(form.idade),
-      genero: 'MASCULINO',
+      genero: form.genero,
       fcRepouso: null,
       fcMaxima: null,
-      horasSonoMedia: toOptionalInteger(form.horasSonoMedia),
+      qualidadeSono: form.qualidadeSono || null,
       sedentario: form.atividadeNivel !== 'MUITO_ATIVO' && nivelCondicionamento === 'INICIANTE',
     },
     perfilAtleta: {
@@ -419,9 +289,16 @@ const buildProfilePayload = (form) => {
     },
     perfilCorrida: useNoRunnerFlow ? null : buildPerfilCorrida(form),
     condicoesSaude: [],
-    dispositivos: [],
   };
 };
+
+const Field = ({ label, error, children }) => (
+  <label className="block space-y-2">
+    <span className="text-xs font-semibold text-muted-foreground">{label}</span>
+    {children}
+    {error ? <span className="block text-xs text-destructive">{error}</span> : null}
+  </label>
+);
 
 const GoogleButton = ({ label, onClick }) => (
   <Button
@@ -450,19 +327,21 @@ export default function AuthPage({ mode = 'register' }) {
   const isNoRunnerFlow = form.jaCorre === false;
   const isBeginnerRunnerFlow = form.jaCorre === true && form.nivelCorrida === 'INICIANTE';
   const isIntermediate = form.jaCorre && form.nivelCorrida === 'INTERMEDIARIO';
-  const isAdvanced = form.jaCorre && form.nivelCorrida === 'AVANCADO';
 
   const profileSteps = useMemo(() => {
-    if (form.jaCorre === null || profileStep < 2) return ['dados', 'historico', 'nivel'];
+    if (form.jaCorre === null) return ['dados', 'historico', 'nivel'];
     if (isNoRunnerFlow) return ['dados', 'historico', 'base', 'objetivo'];
     if (isBeginnerRunnerFlow) return ['dados', 'historico', 'nivel', 'base', 'objetivo'];
     return ['dados', 'historico', 'nivel', 'corrida', 'performance'];
-  }, [form.jaCorre, isBeginnerRunnerFlow, isNoRunnerFlow, profileStep]);
+  }, [form.jaCorre, isBeginnerRunnerFlow, isNoRunnerFlow]);
+
+  const keepsDraft = isProfileOnly && !hasCompletedOnboarding;
 
   useEffect(() => {
     if (isProfileOnly) {
-      setForm(buildFormFromUser(user));
-      setProfileStep(0);
+      const draft = keepsDraft ? readOnboardingDraft(user?.email) : null;
+      setForm(draft ? { ...buildFormFromUser(user), ...draft.form } : buildFormFromUser(user));
+      setProfileStep(draft ? draft.step : 0);
       setTouchedPhysicalFields({});
       setTouchedTrainingFields({});
       return;
@@ -470,7 +349,11 @@ export default function AuthPage({ mode = 'register' }) {
     setForm(createEmptyForm());
     setTouchedPhysicalFields({});
     setTouchedTrainingFields({});
-  }, [isProfileOnly, user]);
+  }, [isProfileOnly, keepsDraft, user]);
+
+  useEffect(() => {
+    if (keepsDraft && user?.email) saveOnboardingDraft({ email: user.email, step: profileStep, form: { ...form, senha: '' } });
+  }, [form, keepsDraft, profileStep, user?.email]);
 
   const totalSteps = isProfileOnly ? profileSteps.length : 1;
   const currentKey = profileSteps[Math.min(profileStep, profileSteps.length - 1)];
@@ -478,6 +361,7 @@ export default function AuthPage({ mode = 'register' }) {
 
   const updateForm = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
+    setError('');
   };
 
   const touchPhysicalField = (field) => {
@@ -502,11 +386,6 @@ export default function AuthPage({ mode = 'register' }) {
 
   const getTrainingFieldInputClassName = (field) => 'h-12 rounded-xl bg-card ' + (shouldShowTrainingFieldError(field) ? 'border-destructive' : 'border-border');
 
-  const handleWeeksChange = (value) => {
-    updateForm('semanasTreino', sanitizeIntegerMetric(value));
-    if (error) setError('');
-  };
-
   const handlePaceChange = (value) => {
     updateForm('paceRp', sanitizePaceInput(value));
     if (error) setError('');
@@ -520,23 +399,15 @@ export default function AuthPage({ mode = 'register' }) {
     }
   };
 
-  const updateZone = (field, value) => {
-    setForm((current) => ({
-      ...current,
-      zonasPace: { ...current.zonasPace, [field]: value },
-    }));
-  };
-
   const physicalMetricErrors = useMemo(() => buildPhysicalMetricErrors(form), [form.alturaCm, form.idade, form.pesoKg]);
   const hasPhysicalMetricErrors = Object.keys(physicalMetricErrors).length > 0;
-  const trainingWeeksGuidance = useMemo(() => buildTrainingWeeksGuidance(form), [form.atividadeNivel, form.diasSemanaTreino, form.distanciaRp, form.fazAtividade, form.horasSonoMedia, form.idade, form.jaCorre, form.nivelCorrida, form.objetivoCorredor, form.objetivoNaoCorredor]);
-  const trainingErrors = useMemo(() => buildTrainingErrors(form, trainingWeeksGuidance), [form.paceRp, form.semanasTreino, trainingWeeksGuidance]);
+  const trainingErrors = useMemo(() => buildTrainingErrors(form), [form.paceRp]);
 
   const isCurrentProfileStepValid = useMemo(() => {
     if (!isProfileOnly) return true;
 
     if (currentKey === 'dados') {
-      return !hasPhysicalMetricErrors;
+      return !hasPhysicalMetricErrors && Boolean(form.genero);
     }
 
     if (currentKey === 'historico') {
@@ -548,15 +419,14 @@ export default function AuthPage({ mode = 'register' }) {
     }
 
     if (currentKey === 'base') {
-      return form.fazAtividade !== null && Boolean(form.atividadeNivel && form.horasSonoMedia);
+      return form.fazAtividade !== null && Boolean(form.atividadeNivel && form.qualidadeSono);
     }
 
     if (currentKey === 'objetivo') {
       const wants10k = form.objetivoNaoCorredor === '10K';
       return Boolean(
-        form.diasSemanaTreino.length > 0 &&
+        hasValidTrainingDays(form.diasSemanaTreino) &&
         form.objetivoNaoCorredor &&
-        !trainingErrors.semanasTreino &&
         (!wants10k || form.atividadeNivel === 'MUITO_ATIVO')
       );
     }
@@ -566,13 +436,11 @@ export default function AuthPage({ mode = 'register' }) {
     }
 
     if (currentKey === 'performance') {
-      const hasBase = Boolean(form.distanciaRp && form.diasSemanaTreino.length > 0 && !trainingErrors.paceRp && !trainingErrors.semanasTreino);
-      const hasZones = !isAdvanced || Object.values(form.zonasPace).every(Boolean);
-      return hasBase && hasZones;
+      return Boolean(form.distanciaRp && hasValidTrainingDays(form.diasSemanaTreino) && !trainingErrors.paceRp);
     }
 
     return true;
-  }, [currentKey, form, hasPhysicalMetricErrors, isAdvanced, isProfileOnly, trainingErrors]);
+  }, [currentKey, form, hasPhysicalMetricErrors, isProfileOnly, trainingErrors]);
 
   const valid = useMemo(() => {
     if (isLogin) return Boolean(form.email && form.senha);
@@ -591,7 +459,11 @@ export default function AuthPage({ mode = 'register' }) {
 
   const submit = async (event) => {
     event.preventDefault();
-    if (!valid || loading) return;
+    if (loading) return;
+    if (!valid) {
+      if (isProfileOnly) showMissing();
+      return;
+    }
 
     setLoading(true);
     setError('');
@@ -606,6 +478,7 @@ export default function AuthPage({ mode = 'register' }) {
 
       if (isProfileOnly) {
         await api.usuarios.atualizarOnboarding(buildProfilePayload(form));
+        clearOnboardingDraft();
       } else {
         await api.usuarios.registrar({
           nome: form.email.split('@')[0],
@@ -618,33 +491,47 @@ export default function AuthPage({ mode = 'register' }) {
       await reloadUser();
       navigate(isProfileOnly ? nextRouteAfterProfileSave : '/onboarding');
     } catch (err) {
-      setError(err.message || 'Nao foi possivel concluir a operacao.');
+      setError(err.message || 'Não foi possível concluir a operação.');
     } finally {
       setLoading(false);
     }
   };
 
+  const describeMissing = () => {
+    if (currentKey === 'dados') return form.genero ? 'Revise idade, altura e peso para continuar.' : 'Escolha seu gênero para continuar.';
+    if (currentKey === 'historico') return 'Escolha se você já corre para continuar.';
+    if (currentKey === 'nivel') return 'Escolha seu nível na corrida para continuar.';
+    if (currentKey === 'corrida') return 'Escolha um objetivo para continuar.';
+
+    const missing = [];
+    if (currentKey === 'base') {
+      if (form.fazAtividade === null) missing.push('se faz outras atividades físicas');
+      if (!form.atividadeNivel) missing.push('quão ativa é sua rotina');
+      if (!form.qualidadeSono) missing.push('a qualidade do seu sono');
+    }
+    if (currentKey === 'objetivo' || currentKey === 'performance') {
+      if (!hasValidTrainingDays(form.diasSemanaTreino)) missing.push('3 ou 4 dias de treino');
+    }
+    if (currentKey === 'performance') {
+      if (trainingErrors.paceRp) return trainingErrors.paceRp;
+    }
+    if (currentKey === 'objetivo' && form.objetivoNaoCorredor === '10K' && form.atividadeNivel !== 'MUITO_ATIVO') {
+      return '10 km só fica liberado para quem marcou rotina muito ativa. Escolha 5 km.';
+    }
+    return missing.length > 0 ? 'Falta informar ' + missing.join(', ') + '.' : 'Revise as respostas desta etapa para continuar.';
+  };
+
+  const showMissing = () => {
+    if (currentKey === 'dados') setTouchedPhysicalFields({ idade: true, alturaCm: true, pesoKg: true });
+    if (currentKey === 'performance') {
+      setTouchedTrainingFields((current) => ({ ...current, paceRp: true }));
+    }
+    setError(describeMissing());
+  };
+
   const goToNextProfileStep = () => {
-    if (currentKey === 'dados' && !isCurrentProfileStepValid) {
-      setTouchedPhysicalFields({ idade: true, alturaCm: true, pesoKg: true });
-      setError('Revise idade, altura e peso para continuar.');
-      return;
-    }
-
-    if (currentKey === 'objetivo' && !isCurrentProfileStepValid) {
-      setTouchedTrainingFields((current) => ({ ...current, semanasTreino: true }));
-      setError(trainingErrors.semanasTreino || 'Preencha os dados obrigatorios desta etapa para continuar.');
-      return;
-    }
-
-    if (currentKey === 'performance' && !isCurrentProfileStepValid) {
-      setTouchedTrainingFields((current) => ({ ...current, paceRp: true, semanasTreino: true }));
-      setError(trainingErrors.paceRp || trainingErrors.semanasTreino || 'Preencha os dados obrigatorios desta etapa para continuar.');
-      return;
-    }
-
     if (!isCurrentProfileStepValid) {
-      setError('Preencha os dados obrigatorios desta etapa para continuar.');
+      showMissing();
       return;
     }
 
@@ -666,7 +553,9 @@ export default function AuthPage({ mode = 'register' }) {
           />
         ))}
       </div>
-      <p className="mb-2 text-xs font-semibold text-primary">Etapa {profileStep + 1} de {totalSteps}</p>
+      <p className="mb-2 text-xs font-semibold text-primary">
+        {form.jaCorre === null ? `Etapa ${profileStep + 1}` : `Etapa ${profileStep + 1} de ${totalSteps}`}
+      </p>
     </div>
   );
 
@@ -678,21 +567,26 @@ export default function AuthPage({ mode = 'register' }) {
         <section className="space-y-5">
           <div>
             <h2 className="text-2xl font-bold text-foreground">Dados do atleta</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Comece com o basico para calibrar volume e seguranca.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Comece com o básico para calibrar volume e segurança.</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-2">
-              <Input type="text" inputMode="numeric" placeholder="Idade" value={form.idade} onChange={(event) => handlePhysicalMetricChange('idade', event.target.value)} onBlur={() => touchPhysicalField('idade')} aria-invalid={shouldShowPhysicalMetricError('idade')} className={getPhysicalMetricInputClassName('idade')} />
-              {shouldShowPhysicalMetricError('idade') ? <p className="text-xs text-destructive">{physicalMetricErrors.idade}</p> : null}
-            </div>
-            <div className="space-y-2">
-              <Input type="text" inputMode="numeric" placeholder="Altura cm" value={form.alturaCm} onChange={(event) => handlePhysicalMetricChange('alturaCm', event.target.value)} onBlur={() => touchPhysicalField('alturaCm')} aria-invalid={shouldShowPhysicalMetricError('alturaCm')} className={getPhysicalMetricInputClassName('alturaCm')} />
-              {shouldShowPhysicalMetricError('alturaCm') ? <p className="text-xs text-destructive">{physicalMetricErrors.alturaCm}</p> : null}
-            </div>
+            <Field label="Idade (anos)" error={shouldShowPhysicalMetricError('idade') ? physicalMetricErrors.idade : null}>
+              <Input type="text" inputMode="numeric" placeholder="Ex.: 28" value={form.idade} onChange={(event) => handlePhysicalMetricChange('idade', event.target.value)} onBlur={() => touchPhysicalField('idade')} aria-invalid={shouldShowPhysicalMetricError('idade')} className={getPhysicalMetricInputClassName('idade')} />
+            </Field>
+            <Field label="Altura (cm)" error={shouldShowPhysicalMetricError('alturaCm') ? physicalMetricErrors.alturaCm : null}>
+              <Input type="text" inputMode="numeric" placeholder="Ex.: 175" value={form.alturaCm} onChange={(event) => handlePhysicalMetricChange('alturaCm', event.target.value)} onBlur={() => touchPhysicalField('alturaCm')} aria-invalid={shouldShowPhysicalMetricError('alturaCm')} className={getPhysicalMetricInputClassName('alturaCm')} />
+            </Field>
           </div>
+          <Field label="Peso (kg)" error={shouldShowPhysicalMetricError('pesoKg') ? physicalMetricErrors.pesoKg : null}>
+            <Input type="text" inputMode="decimal" placeholder="Ex.: 72,5" value={form.pesoKg} onChange={(event) => handlePhysicalMetricChange('pesoKg', event.target.value)} onBlur={() => touchPhysicalField('pesoKg')} aria-invalid={shouldShowPhysicalMetricError('pesoKg')} className={getPhysicalMetricInputClassName('pesoKg')} />
+          </Field>
           <div className="space-y-2">
-            <Input type="text" inputMode="decimal" placeholder="Peso kg" value={form.pesoKg} onChange={(event) => handlePhysicalMetricChange('pesoKg', event.target.value)} onBlur={() => touchPhysicalField('pesoKg')} aria-invalid={shouldShowPhysicalMetricError('pesoKg')} className={getPhysicalMetricInputClassName('pesoKg')} />
-            {shouldShowPhysicalMetricError('pesoKg') ? <p className="text-xs text-destructive">{physicalMetricErrors.pesoKg}</p> : null}
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Gênero</p>
+            <div className="grid grid-cols-2 gap-3">
+              {GENDER_OPTIONS.map((item) => (
+                <SelectionCard key={item.value} label={item.label} selected={form.genero === item.value} onClick={() => updateForm('genero', item.value)} />
+              ))}
+            </div>
           </div>
         </section>
       )}
@@ -701,10 +595,10 @@ export default function AuthPage({ mode = 'register' }) {
         <section className="space-y-5">
           <div>
             <h2 className="text-2xl font-bold text-foreground">Você já corre?</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Isso define se o plano comeca pela base ou pela performance.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Isso define se o plano começa pela base ou pela performance.</p>
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
-            <SelectionCard label="Não corro" description="Quero comecar com progressão segura" selected={form.jaCorre === false} onClick={() => updateForm('jaCorre', false)} />
+            <SelectionCard label="Não corro" description="Quero começar com progressão segura" selected={form.jaCorre === false} onClick={() => updateForm('jaCorre', false)} />
             <SelectionCard label="Já corro" description="Tenho alguma experiência com corrida" selected={form.jaCorre === true} onClick={() => updateForm('jaCorre', true)} />
           </div>
         </section>
@@ -717,21 +611,28 @@ export default function AuthPage({ mode = 'register' }) {
             <p className="mt-2 text-sm text-muted-foreground">Essas respostas ajudam a evitar uma carga agressiva demais.</p>
           </div>
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">Faz outras atividades fisicas?</p>
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Faz outras atividades físicas?</p>
             <div className="grid grid-cols-2 gap-3">
               <SelectionCard label="Sim" selected={form.fazAtividade === true} onClick={() => updateForm('fazAtividade', true)} />
-              <SelectionCard label="Nao" selected={form.fazAtividade === false} onClick={() => updateForm('fazAtividade', false)} />
+              <SelectionCard label="Não" selected={form.fazAtividade === false} onClick={() => updateForm('fazAtividade', false)} />
             </div>
           </div>
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">Quao ativa e sua rotina?</p>
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Quão ativa é sua rotina?</p>
             <div className="space-y-2">
               <SelectionCard label="Pouco ativa" description="Passo boa parte do dia sentado" selected={form.atividadeNivel === 'POUCO_ATIVO'} onClick={() => updateForm('atividadeNivel', 'POUCO_ATIVO')} />
-              <SelectionCard label="Ativa" description="Caminho, treino ou me movimento com frequencia" selected={form.atividadeNivel === 'ATIVO'} onClick={() => updateForm('atividadeNivel', 'ATIVO')} />
-              <SelectionCard label="Muito ativa" description="Treino outras modalidades com boa consistencia" selected={form.atividadeNivel === 'MUITO_ATIVO'} onClick={() => updateForm('atividadeNivel', 'MUITO_ATIVO')} />
+              <SelectionCard label="Ativa" description="Caminho, treino ou me movimento com frequência" selected={form.atividadeNivel === 'ATIVO'} onClick={() => updateForm('atividadeNivel', 'ATIVO')} />
+              <SelectionCard label="Muito ativa" description="Treino outras modalidades com boa consistência" selected={form.atividadeNivel === 'MUITO_ATIVO'} onClick={() => updateForm('atividadeNivel', 'MUITO_ATIVO')} />
             </div>
           </div>
-          <Input type="number" min="3" max="12" placeholder="Horas de sono por noite" value={form.horasSonoMedia} onChange={(event) => updateForm('horasSonoMedia', event.target.value)} className="h-12 rounded-xl border-border bg-card" />
+          <div className="space-y-3">
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Como é a qualidade do seu sono?</p>
+            <div className="grid grid-cols-2 gap-3">
+              {SLEEP_QUALITY.map((item) => (
+                <SelectionCard key={item.value} label={item.label} description={item.description} selected={form.qualidadeSono === item.value} onClick={() => updateForm('qualidadeSono', item.value)} />
+              ))}
+            </div>
+          </div>
         </section>
       )}
 
@@ -739,17 +640,11 @@ export default function AuthPage({ mode = 'register' }) {
         <section className="space-y-6">
           <div>
             <h2 className="text-2xl font-bold text-foreground">Seu primeiro objetivo</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Escolha a distancia e o tempo de preparacao.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Escolha seus dias de treino e a distância.</p>
           </div>
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">Dias disponiveis por semana</p>
-            <DaySelector selected={form.diasSemanaTreino} onChange={(dias) => updateForm('diasSemanaTreino', dias)} />
-          </div>
-          <div className="space-y-2">
-            <Input type="text" inputMode="numeric" min={trainingWeeksGuidance.min} max={trainingWeeksGuidance.max} placeholder={'Semanas de treinamento (' + trainingWeeksGuidance.min + ' a ' + trainingWeeksGuidance.max + ')'} value={form.semanasTreino} onChange={(event) => handleWeeksChange(event.target.value)} onBlur={() => touchTrainingField('semanasTreino')} aria-invalid={shouldShowTrainingFieldError('semanasTreino')} className={getTrainingFieldInputClassName('semanasTreino')} />
-            <p className="text-xs text-muted-foreground">Faixa segura para seu perfil: {trainingWeeksGuidance.min} a {trainingWeeksGuidance.max} semanas. Recomendado agora: {trainingWeeksGuidance.recommended} semanas.</p>
-            <p className="text-xs text-muted-foreground">{trainingWeeksGuidance.summary}</p>
-            {shouldShowTrainingFieldError('semanasTreino') ? <p className="text-xs text-destructive">{trainingErrors.semanasTreino}</p> : null}
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Dias disponíveis por semana (3 ou 4)</p>
+            <DaySelector selected={form.diasSemanaTreino} max={TRAINING_DAYS.max} onChange={(dias) => updateForm('diasSemanaTreino', dias)} />
           </div>
           <div className="space-y-2">
             {DISTANCE_GOALS.map((item) => {
@@ -771,11 +666,11 @@ export default function AuthPage({ mode = 'register' }) {
       {currentKey === 'nivel' && (
         <section className="space-y-6">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">Seu nivel na corrida</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Escolha o nivel que melhor descreve seu momento atual para ajustar o resto do fluxo.</p>
+            <h2 className="text-2xl font-bold text-foreground">Seu nível na corrida</h2>
+            <p className="mt-2 text-sm text-muted-foreground">Escolha o nível que melhor descreve seu momento atual para ajustar o resto do fluxo.</p>
           </div>
           <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">Nivel na corrida</p>
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Nível na corrida</p>
             {LEVELS.map((item) => (
               <SelectionCard key={item.value} label={item.label} description={item.description} selected={form.nivelCorrida === item.value} onClick={() => updateForm('nivelCorrida', item.value)} />
             ))}
@@ -800,42 +695,22 @@ export default function AuthPage({ mode = 'register' }) {
       {currentKey === 'performance' && (
         <section className="space-y-6">
           <div>
-            <h2 className="text-2xl font-bold text-foreground">{isIntermediate ? 'Seu melhor ritmo' : 'Dados avancados'}</h2>
-            <p className="mt-2 text-sm text-muted-foreground">Use uma referencia real para a IA estimar treinos mais precisos.</p>
+            <h2 className="text-2xl font-bold text-foreground">{isIntermediate ? 'Seu melhor ritmo' : 'Dados avançados'}</h2>
+            <p className="mt-2 text-sm text-muted-foreground">Use uma referência real para a IA estimar treinos mais precisos.</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {RP_DISTANCES.map((item) => (
               <SelectionCard key={item.value} label={item.label} selected={form.distanciaRp === item.value} onClick={() => updateForm('distanciaRp', item.value)} />
             ))}
           </div>
-          <div className="space-y-2">
-            <Input placeholder="Pace do RP (ex.: 5:30 min/km)" value={form.paceRp} onChange={(event) => handlePaceChange(event.target.value)} onBlur={handlePaceBlur} aria-invalid={shouldShowTrainingFieldError('paceRp')} className={getTrainingFieldInputClassName('paceRp')} />
-            <p className="text-xs text-muted-foreground">Use o melhor pace real da distancia escolhida, sempre no formato m:ss.</p>
-            {shouldShowTrainingFieldError('paceRp') ? <p className="text-xs text-destructive">{trainingErrors.paceRp}</p> : null}
-          </div>
+          <Field label="Pace do seu melhor tempo (min/km)" error={shouldShowTrainingFieldError('paceRp') ? trainingErrors.paceRp : null}>
+            <Input placeholder="Ex.: 5:30" value={form.paceRp} onChange={(event) => handlePaceChange(event.target.value)} onBlur={handlePaceBlur} aria-invalid={shouldShowTrainingFieldError('paceRp')} className={getTrainingFieldInputClassName('paceRp')} />
+            <span className="block text-xs text-muted-foreground">Use o melhor pace real da distância escolhida, sempre no formato m:ss.</span>
+          </Field>
           <div className="space-y-3">
-            <p className="text-xs font-semibold uppercase text-muted-foreground">Dias disponiveis para treinar</p>
-            <DaySelector selected={form.diasSemanaTreino} onChange={(dias) => updateForm('diasSemanaTreino', dias)} />
+            <p className="text-xs font-semibold uppercase text-muted-foreground">Dias disponíveis para treinar (3 ou 4)</p>
+            <DaySelector selected={form.diasSemanaTreino} max={TRAINING_DAYS.max} onChange={(dias) => updateForm('diasSemanaTreino', dias)} />
           </div>
-          <div className="space-y-2">
-            <Input type="text" inputMode="numeric" min={trainingWeeksGuidance.min} max={trainingWeeksGuidance.max} placeholder={'Semanas ate o objetivo (' + trainingWeeksGuidance.min + ' a ' + trainingWeeksGuidance.max + ')'} value={form.semanasTreino} onChange={(event) => handleWeeksChange(event.target.value)} onBlur={() => touchTrainingField('semanasTreino')} aria-invalid={shouldShowTrainingFieldError('semanasTreino')} className={getTrainingFieldInputClassName('semanasTreino')} />
-            <p className="text-xs text-muted-foreground">Faixa segura para seu perfil: {trainingWeeksGuidance.min} a {trainingWeeksGuidance.max} semanas. Recomendado agora: {trainingWeeksGuidance.recommended} semanas.</p>
-            <p className="text-xs text-muted-foreground">{trainingWeeksGuidance.summary}</p>
-            {shouldShowTrainingFieldError('semanasTreino') ? <p className="text-xs text-destructive">{trainingErrors.semanasTreino}</p> : null}
-          </div>
-          {isAdvanced && (
-            <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
-              <div>
-                <p className="text-xs font-semibold uppercase text-muted-foreground">Paces por zona</p>
-                <p className="mt-1 text-xs text-muted-foreground">Preencha Z1 ate Z5 no formato min/km.</p>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                {['z1', 'z2', 'z3', 'z4', 'z5'].map((zone) => (
-                  <Input key={zone} placeholder={zone.toUpperCase()} value={form.zonasPace[zone]} onChange={(event) => updateZone(zone, event.target.value)} className="h-11 rounded-xl border-border bg-background" />
-                ))}
-              </div>
-            </div>
-          )}
         </section>
       )}
     </>
@@ -844,26 +719,29 @@ export default function AuthPage({ mode = 'register' }) {
   return (
     <div className="min-h-screen bg-background px-5 py-8">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-lg flex-col">
-        <div className="mb-8">
-          <Link to="/" className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+        <div className={isProfileOnly ? 'mb-5' : 'mb-8'}>
+          <Link to="/" className={(isProfileOnly ? 'mb-4' : 'mb-6') + ' inline-flex items-center gap-2 text-sm font-semibold text-primary'}>
             <ChevronLeft className="h-4 w-4" />
             SeuCorre
           </Link>
-          <div className="rounded-3xl border border-border bg-card/80 p-5 shadow-2xl shadow-black/20">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-              {isLogin ? <LogIn className="h-6 w-6" /> : isProfileOnly ? <ShieldCheck className="h-6 w-6" /> : <Mail className="h-6 w-6" />}
+          {isProfileOnly ? (
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <h1 className="text-xl font-bold text-foreground">Perfil do atleta</h1>
             </div>
-            <h1 className="text-3xl font-bold text-foreground">
-              {isLogin ? 'Entrar' : isProfileOnly ? 'Perfil do atleta' : 'Criar conta'}
-            </h1>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              {isLogin
-                ? 'Entre com email e senha ou continue pelo Google.'
-                : isProfileOnly
-                  ? 'Responda o necessario para o SeuCorre montar um plano coerente com seu momento.'
-                  : 'Crie sua conta com email e senha ou continue pelo Google.'}
-            </p>
-          </div>
+          ) : (
+            <div className="rounded-3xl border border-border bg-card/80 p-5 shadow-2xl shadow-black/20">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary">
+                {isLogin ? <LogIn className="h-6 w-6" /> : <Mail className="h-6 w-6" />}
+              </div>
+              <h1 className="text-3xl font-bold text-foreground">{isLogin ? 'Entrar' : 'Criar conta'}</h1>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                {isLogin ? 'Entre com email e senha ou continue pelo Google.' : 'Crie sua conta com email e senha ou continue pelo Google.'}
+              </p>
+            </div>
+          )}
         </div>
 
         <form onSubmit={submit} className="flex flex-1 flex-col gap-5 pb-28">
@@ -896,7 +774,7 @@ export default function AuthPage({ mode = 'register' }) {
           {isProfileOnly && renderProfileStep()}
 
           {!isLogin && !isProfileOnly && (
-            <Link to="/entrar" className="block text-center text-sm font-medium text-primary">Ja tenho conta</Link>
+            <Link to="/entrar" className="block text-center text-sm font-medium text-primary">Já tenho conta</Link>
           )}
 
           {error && <p className="rounded-xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">{error}</p>}
@@ -918,11 +796,11 @@ export default function AuthPage({ mode = 'register' }) {
                   Voltar
                 </Button>
                 {isLastProfileStep ? (
-                  <Button type="submit" disabled={!valid || loading} className="h-14 flex-1 rounded-2xl bg-primary text-base font-semibold text-primary-foreground">
+                  <Button key="finalizar" type="submit" disabled={loading} className="h-14 flex-1 rounded-2xl bg-primary text-base font-semibold text-primary-foreground">
                     {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : <span className="flex items-center gap-2"><Sparkles className="h-5 w-5" />Finalizar<ArrowRight className="h-5 w-5" /></span>}
                   </Button>
                 ) : (
-                  <Button type="button" onClick={goToNextProfileStep} className="h-14 flex-1 rounded-2xl bg-primary text-base font-semibold text-primary-foreground">
+                  <Button key="continuar" type="button" onClick={goToNextProfileStep} className="h-14 flex-1 rounded-2xl bg-primary text-base font-semibold text-primary-foreground">
                     Continuar
                     <ArrowRight className="h-5 w-5" />
                   </Button>

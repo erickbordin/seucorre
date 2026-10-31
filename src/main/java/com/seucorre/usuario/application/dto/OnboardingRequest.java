@@ -9,6 +9,5 @@ public record OnboardingRequest(
         @Valid DadosFisicosRequest dadosFisicos,
         @Valid PerfilAtletaRequest perfilAtleta,
         @Valid PerfilCorridaRequest perfilCorrida,
-        List<@Valid CondicaoSaudeRequest> condicoesSaude,
-        List<@Valid DispositivoExternoRequest> dispositivos
+        List<@Valid CondicaoSaudeRequest> condicoesSaude
 ) {}

@@ -29,7 +29,7 @@ seucorre:
   ia:
     provider: ${IA_PROVIDER:manual}
     anthropic:
-      model: claude-sonnet-4
+      model: claude-sonnet-5-5
       max-tokens: 8192
       timeout-seconds: 30
       max-retries: 3

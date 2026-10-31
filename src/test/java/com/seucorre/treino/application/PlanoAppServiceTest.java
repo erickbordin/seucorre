@@ -5,6 +5,7 @@ import com.seucorre.shared.domain.enums.NivelCondicionamento;
 import com.seucorre.shared.domain.enums.Objetivo;
 import com.seucorre.shared.domain.enums.StatusPlano;
 import com.seucorre.shared.domain.enums.TipoTreino;
+import com.seucorre.shared.exception.BusinessRuleException;
 import com.seucorre.shared.exception.EntityNotFoundException;
 import com.seucorre.treino.application.dto.GerarPlanoRequest;
 import com.seucorre.treino.application.dto.PlanoTreinoDTO;
@@ -19,6 +20,7 @@ import com.seucorre.usuario.infrastructure.UsuarioRepository;
 import com.seucorre.treino.infrastructure.PlanoRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -29,6 +31,7 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -100,6 +103,32 @@ class PlanoAppServiceTest {
     }
 
     @Test
+    void criarPlanoCancelaOsPlanosEmAndamentoAntesDeSalvarONovo() {
+        UUID usuarioId = UUID.randomUUID();
+        Usuario usuario = criarUsuario(usuarioId);
+        PlanoTreino planoAtivo = criarPlano(usuario);
+        PlanoTreino planoPausado = criarPlano(usuario);
+        planoPausado.pausar();
+        PlanoTreino planoNovo = criarPlano(usuario);
+        planoGenerationProperties.setMode(PlanoGenerationProperties.Mode.PRESET);
+
+        when(usuarioRepository.findById(usuarioId)).thenReturn(Optional.of(usuario));
+        when(usuarioRepository.findPerfilCorridaByUsuarioId(usuarioId)).thenReturn(Optional.empty());
+        when(planoRepository.findTop3ByUsuarioIdOrderByDataInicioDesc(usuarioId)).thenReturn(List.of());
+        when(planoRepository.findByUsuarioId(usuarioId)).thenReturn(List.of(planoAtivo, planoPausado));
+        when(planoPresetService.gerarPlano(usuario, Objetivo.COMPLETAR_10K)).thenReturn(planoNovo);
+        when(planoRepository.save(planoNovo)).thenReturn(planoNovo);
+
+        service.criarPlano(usuarioId, new GerarPlanoRequest(Objetivo.COMPLETAR_10K));
+
+        assertThat(planoAtivo.getStatus()).isEqualTo(StatusPlano.CANCELADO);
+        assertThat(planoPausado.getStatus()).isEqualTo(StatusPlano.CANCELADO);
+        InOrder ordem = inOrder(planoRepository);
+        ordem.verify(planoRepository).flush();
+        ordem.verify(planoRepository).save(planoNovo);
+    }
+
+    @Test
     void criarPlanoEmModoPresetPodeFazerFallbackParaIa() {
         UUID usuarioId = UUID.randomUUID();
         Usuario usuario = criarUsuario(usuarioId);
@@ -120,6 +149,20 @@ class PlanoAppServiceTest {
         assertThat(dto.id()).isEqualTo(planoTreino.getId());
         verify(planoPresetService).gerarPlano(usuario, Objetivo.COMPLETAR_10K);
         verify(geradorPlanoIA).gerarPlano(usuario, Objetivo.COMPLETAR_10K, List.of());
+    }
+
+    @Test
+    void usuarioNaoAcessaNemPausaPlanoDeOutroUsuario() {
+        PlanoTreino planoDaAna = criarPlano(criarUsuario(UUID.randomUUID()));
+        planoDaAna.setId(UUID.randomUUID());
+        UUID outroUsuario = UUID.randomUUID();
+        when(planoRepository.findById(planoDaAna.getId())).thenReturn(Optional.of(planoDaAna));
+
+        assertThatThrownBy(() -> service.buscarPlano(outroUsuario, planoDaAna.getId()))
+                .isInstanceOf(BusinessRuleException.class);
+        assertThatThrownBy(() -> service.pausarPlano(outroUsuario, planoDaAna.getId()))
+                .isInstanceOf(BusinessRuleException.class);
+        assertThat(planoDaAna.getStatus()).isEqualTo(StatusPlano.ATIVO);
     }
 
     @Test

@@ -64,7 +64,7 @@ public class PlanoTreinoParser {
 
         String jsonNormalizado = extrairJson(jsonBruto);
         try {
-            JsonNode raiz = lerJsonComFallback(jsonNormalizado);
+            JsonNode raiz = objectMapper.readTree(jsonNormalizado);
             if (raiz == null || raiz.isNull()) {
                 throw new BusinessRuleException("A resposta da IA não contém um JSON válido.");
             }
@@ -72,18 +72,6 @@ public class PlanoTreinoParser {
         } catch (IOException exception) {
             LOGGER.warn("Falha ao interpretar JSON da IA. Trecho recebido: {}", resumirTrecho(jsonNormalizado), exception);
             throw new BusinessRuleException("Falha ao interpretar o JSON retornado pela IA.");
-        }
-    }
-
-    private JsonNode lerJsonComFallback(String jsonNormalizado) throws IOException {
-        try {
-            return objectMapper.readTree(jsonNormalizado);
-        } catch (IOException primeiraExcecao) {
-            String jsonReparado = repararJsonTruncado(jsonNormalizado);
-            if (jsonReparado.equals(jsonNormalizado)) {
-                throw primeiraExcecao;
-            }
-            return objectMapper.readTree(jsonReparado);
         }
     }
 
@@ -191,6 +179,26 @@ public class PlanoTreinoParser {
         boolean sessaoSemTipo = planoTreino.getSessoes().stream().anyMatch(sessao -> sessao.getTipo() == null);
         if (sessaoSemTipo) {
             throw new BusinessRuleException("A resposta da IA contém sessão sem tipo de treino válido.");
+        }
+
+        boolean sessaoSemSemana = planoTreino.getSessoes().stream()
+                .anyMatch(sessao -> sessao.getNumeroSemana() == null || sessao.getNumeroSemana() <= 0);
+        if (sessaoSemSemana) {
+            throw new BusinessRuleException("A resposta da IA contém sessão sem número de semana.");
+        }
+
+        boolean distanciaInvalida = planoTreino.getSessoes().stream()
+                .anyMatch(sessao -> sessao.getDistanciaKm() != null && sessao.getDistanciaKm().signum() <= 0);
+        if (distanciaInvalida) {
+            throw new BusinessRuleException("A resposta da IA contém sessão com distância menor ou igual a zero.");
+        }
+
+        long semanasDistintas = planoTreino.getSessoes().stream()
+                .map(SessaoTreino::getNumeroSemana)
+                .distinct()
+                .count();
+        if (planoTreino.getTotalSemanas() != null && semanasDistintas < planoTreino.getTotalSemanas()) {
+            throw new BusinessRuleException("A resposta da IA não trouxe todas as semanas do plano.");
         }
     }
 
@@ -370,74 +378,6 @@ public class PlanoTreinoParser {
         }
 
         return texto.substring(inicioObjeto);
-    }
-
-    private String repararJsonTruncado(String texto) {
-        StringBuilder reparado = new StringBuilder(texto == null ? "" : texto.trim());
-        if (reparado.isEmpty()) {
-            return reparado.toString();
-        }
-
-        removerVirgulaFinalPendente(reparado);
-
-        boolean dentroDeString = false;
-        boolean escapeAtivo = false;
-        int chavesAbertas = 0;
-        int colchetesAbertos = 0;
-
-        for (int indice = 0; indice < reparado.length(); indice++) {
-            char caractere = reparado.charAt(indice);
-
-            if (escapeAtivo) {
-                escapeAtivo = false;
-                continue;
-            }
-
-            if (caractere == '\\' && dentroDeString) {
-                escapeAtivo = true;
-                continue;
-            }
-
-            if (caractere == '"') {
-                dentroDeString = !dentroDeString;
-                continue;
-            }
-
-            if (dentroDeString) {
-                continue;
-            }
-
-            if (caractere == '{') {
-                chavesAbertas++;
-            } else if (caractere == '}') {
-                chavesAbertas = Math.max(0, chavesAbertas - 1);
-            } else if (caractere == '[') {
-                colchetesAbertos++;
-            } else if (caractere == ']') {
-                colchetesAbertos = Math.max(0, colchetesAbertos - 1);
-            }
-        }
-
-        if (dentroDeString) {
-            reparado.append('"');
-        }
-        while (colchetesAbertos-- > 0) {
-            reparado.append(']');
-        }
-        while (chavesAbertas-- > 0) {
-            reparado.append('}');
-        }
-        return reparado.toString();
-    }
-
-    private void removerVirgulaFinalPendente(StringBuilder texto) {
-        int indice = texto.length() - 1;
-        while (indice >= 0 && Character.isWhitespace(texto.charAt(indice))) {
-            indice--;
-        }
-        if (indice >= 0 && texto.charAt(indice) == ',') {
-            texto.deleteCharAt(indice);
-        }
     }
 
     private String resumirTrecho(String texto) {

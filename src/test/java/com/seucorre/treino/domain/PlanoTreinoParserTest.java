@@ -1,8 +1,12 @@
 package com.seucorre.treino.domain;
 
+import com.seucorre.shared.exception.BusinessRuleException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class PlanoTreinoParserTest {
 
@@ -97,7 +101,7 @@ class PlanoTreinoParserTest {
     }
 
     @Test
-    void reparaJsonTruncadoNoFimQuandoEstruturaEstaCorreta() {
+    void recusaJsonTruncado() {
         String respostaIa = """
                 {
                   "plano": {
@@ -128,10 +132,20 @@ class PlanoTreinoParserTest {
                       }
                 """;
 
-        PlanoTreino planoTreino = parser.parsear(respostaIa);
+        assertThatThrownBy(() -> parser.parsear(respostaIa))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessage("Falha ao interpretar o JSON retornado pela IA.");
+    }
 
-        assertThat(planoTreino.getSessoes()).hasSize(2);
-        assertThat(planoTreino.getSessoes().get(0).getTipo().name()).isEqualTo("INTERVALADO");
-        assertThat(planoTreino.getSessoes().get(1).getTipo().name()).isEqualTo("LONGO");
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', value = {
+            "{\"sessoes\": [{\"tipo\": \"longo\", \"distanciaKm\": 5}]} | A resposta da IA contém sessão sem número de semana.",
+            "{\"sessoes\": [{\"numeroSemana\": 1, \"tipo\": \"longo\", \"distanciaKm\": -3}]} | A resposta da IA contém sessão com distância menor ou igual a zero.",
+            "{\"totalSemanas\": 12, \"sessoes\": [{\"numeroSemana\": 1, \"tipo\": \"longo\", \"distanciaKm\": 5}]} | A resposta da IA não trouxe todas as semanas do plano."
+    })
+    void recusaPlanoComSessaoInvalidaOuSemanasFaltando(String respostaIa, String mensagem) {
+        assertThatThrownBy(() -> parser.parsear(respostaIa))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessage(mensagem);
     }
 }

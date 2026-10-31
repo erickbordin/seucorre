@@ -10,9 +10,6 @@ import com.seucorre.usuario.domain.Usuario;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
-import java.util.List;
-import java.util.UUID;
-
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -47,18 +44,5 @@ public class UsuarioController {
     @GetMapping("/me/imc")
     public ResponseEntity<IMC> consultarMeuImc(@AuthenticationPrincipal Usuario usuarioLogado) {
         return ResponseEntity.ok(service.calcularImc(usuarioLogado.getId()));
-    }
-
-    @PutMapping("/{id}/onboarding")
-    public ResponseEntity<UsuarioResponse> atualizarOnboarding(
-            @PathVariable UUID id,
-            @RequestBody @Valid OnboardingRequest request
-    ) {
-        return ResponseEntity.ok(service.atualizarOnboarding(id, request));
-    }
-
-    @GetMapping 
-    public ResponseEntity<List<UsuarioResponse>> listarTodos() {
-        return ResponseEntity.ok(service.listarTodos());
     }
 }

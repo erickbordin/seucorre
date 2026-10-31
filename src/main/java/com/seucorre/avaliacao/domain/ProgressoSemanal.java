@@ -1,5 +1,6 @@
 package com.seucorre.avaliacao.domain;
 
+import com.seucorre.shared.domain.RegraDezPorCento;
 import com.seucorre.treino.domain.PlanoTreino;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -24,7 +25,6 @@ import java.util.UUID;
 @Data
 public class ProgressoSemanal {
 
-    private static final BigDecimal LIMITE_REGRA_DEZ_POR_CENTO = BigDecimal.valueOf(1.10d);
     private static final BigDecimal CEM = BigDecimal.valueOf(100);
 
     @Id
@@ -93,14 +93,7 @@ public class ProgressoSemanal {
     }
 
     public boolean ultrapassouRegra10Porcento(ProgressoSemanal anterior) {
-        BigDecimal volumeAnterior = volumeValido(anterior);
-        BigDecimal volumeAtual = volumeAtualOuZero();
-        if (volumeAnterior == null || volumeAnterior.signum() <= 0 || volumeAtual.signum() <= 0) {
-            return false;
-        }
-
-        BigDecimal limiteAceito = volumeAnterior.multiply(LIMITE_REGRA_DEZ_POR_CENTO);
-        return volumeAtual.compareTo(limiteAceito) > 0;
+        return RegraDezPorCento.excede(volumeValido(anterior), volumeAtualOuZero());
     }
 
     public String gerarResumo() {

@@ -26,6 +26,26 @@ async function parseResponse(response) {
   }
 }
 
+const SESSION_EXPIRED_EVENT = 'seucorre:sessao-expirada';
+let refreshInFlight = null;
+
+export function onSessionExpired(listener) {
+  window.addEventListener(SESSION_EXPIRED_EVENT, listener);
+  return () => window.removeEventListener(SESSION_EXPIRED_EVENT, listener);
+}
+
+function refreshSession() {
+  if (!tokenStore.getRefreshToken()) return Promise.resolve(null);
+  if (!refreshInFlight) {
+    refreshInFlight = auth.refresh()
+      .catch(() => null)
+      .finally(() => {
+        refreshInFlight = null;
+      });
+  }
+  return refreshInFlight;
+}
+
 async function request(path, options = {}, retry = true) {
   const headers = new Headers(options.headers || {});
   const hasBody = options.body !== undefined;
@@ -42,9 +62,11 @@ async function request(path, options = {}, retry = true) {
     body: hasBody && typeof options.body !== 'string' ? JSON.stringify(options.body) : options.body,
   });
 
-  if (response.status === 401 && retry && tokenStore.getRefreshToken()) {
-    const refreshed = await auth.refresh().catch(() => null);
+  if (response.status === 401 && retry) {
+    const refreshed = await refreshSession();
     if (refreshed) return request(path, options, false);
+    tokenStore.clear();
+    window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
   }
 
   const data = await parseResponse(response);
@@ -89,7 +111,6 @@ export function normalizeSession(session) {
   return {
     ...session,
     semana: session.numeroSemana,
-    dia_semana: parsedDate ? parsedDate.toLocaleDateString('pt-BR', { weekday: 'short' }).slice(0, 3).toLowerCase().replace('.', '') : null,
     dataLabel: parsedDate ? parsedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : null,
     tipo: normalizeTipo(session.tipo),
     tipoOriginal: session.tipo,
@@ -182,11 +203,6 @@ export const api = {
   checkins: {
     historico: () => request('/api/checkins/historico').then((items) => (items || []).map(normalizeCheckin)),
     enviar: (payload) => request('/api/checkins', { method: 'POST', body: payload }).then(normalizeCheckin),
-  },
-  dispositivos: {
-    listar: () => request('/api/dispositivos'),
-    conectar: (payload) => request('/api/dispositivos', { method: 'POST', body: payload }),
-    sincronizar: (plataforma) => request(`/api/dispositivos/${plataforma}/sincronizar`, { method: 'POST' }),
   },
 
 };

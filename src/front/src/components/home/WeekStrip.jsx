@@ -1,26 +1,18 @@
 import { motion } from 'framer-motion';
+import { currentWeekDates, localIsoDate } from '@/lib/date';
 
-const DAY_MAP = { dom: 0, seg: 1, ter: 2, qua: 3, qui: 4, sex: 5, sab: 6 };
 const DAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
 export default function WeekStrip({ sessions = [], onSelectDay, selectedDay }) {
   const today = new Date();
-  const startOfWeek = new Date(today);
-  startOfWeek.setDate(today.getDate() - today.getDay());
-
-  const weekDays = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(startOfWeek);
-    d.setDate(startOfWeek.getDate() + i);
-    return d;
-  });
-
-  const sessionDays = sessions.map(s => DAY_MAP[s.dia_semana]).filter(d => d !== undefined);
+  const weekDays = currentWeekDates(today);
+  const sessionDates = new Set(sessions.map((session) => session.dataPrevista));
 
   return (
     <div className="flex gap-2 justify-between px-1">
       {weekDays.map((day, i) => {
         const isToday = day.toDateString() === today.toDateString();
-        const hasWorkout = sessionDays.includes(i);
+        const hasWorkout = sessionDates.has(localIsoDate(day));
         const isSelected = selectedDay === i;
 
         return (

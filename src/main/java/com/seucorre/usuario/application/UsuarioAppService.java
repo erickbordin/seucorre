@@ -1,13 +1,11 @@
 package com.seucorre.usuario.application;
 
-import com.seucorre.shared.domain.enums.PlataformaRelogio;
 import com.seucorre.shared.domain.valueobjects.IMC;
 import com.seucorre.shared.exception.BusinessRuleException;
 import com.seucorre.shared.exception.EntityNotFoundException;
 import com.seucorre.shared.util.UuidGenerator;
 import com.seucorre.usuario.application.dto.CondicaoSaudeRequest;
 import com.seucorre.usuario.application.dto.DadosFisicosRequest;
-import com.seucorre.usuario.application.dto.DispositivoExternoRequest;
 import com.seucorre.usuario.application.dto.OnboardingRequest;
 import com.seucorre.usuario.application.dto.PerfilAtletaRequest;
 import com.seucorre.usuario.application.dto.PerfilCorridaRequest;
@@ -16,7 +14,6 @@ import com.seucorre.usuario.application.dto.UsuarioResponse;
 import com.seucorre.usuario.application.dto.ZonaFCRequest;
 import com.seucorre.usuario.domain.CondicaoSaude;
 import com.seucorre.usuario.domain.DadosFisicos;
-import com.seucorre.usuario.domain.DispositivoExterno;
 import com.seucorre.usuario.domain.PerfilAtleta;
 import com.seucorre.usuario.domain.PerfilCorrida;
 import com.seucorre.usuario.domain.Usuario;
@@ -38,7 +35,6 @@ public class UsuarioAppService {
 
     private final UsuarioRepository repository;
     private final PasswordEncoder passwordEncoder;
-    private final WearablePlatformRegistry wearablePlatformRegistry;
 
     @Transactional
     public UsuarioResponse registrar(UsuarioCadastroRequest request) {
@@ -59,8 +55,7 @@ public class UsuarioAppService {
                 request.dadosFisicos(),
                 request.perfilAtleta(),
                 request.perfilCorrida(),
-                request.condicoesSaude(),
-                request.dispositivos()
+                request.condicoesSaude()
         ), perfilCorrida);
 
         Usuario usuarioSalvo = repository.save(usuario);
@@ -81,14 +76,6 @@ public class UsuarioAppService {
         PerfilCorrida perfilCorridaSalvo = salvarPerfilCorrida(usuarioSalvo, perfilCorrida);
         anexarPerfilCorrida(usuarioSalvo, perfilCorridaSalvo);
         return UsuarioResponse.from(usuarioSalvo);
-    }
-
-    @Transactional(readOnly = true)
-    public List<UsuarioResponse> listarTodos() {
-        return repository.findAll().stream()
-                .peek(usuario -> anexarPerfilCorrida(usuario, buscarPerfilCorrida(usuario)))
-                .map(UsuarioResponse::from)
-                .toList();
     }
 
     @Transactional(readOnly = true)
@@ -115,8 +102,9 @@ public class UsuarioAppService {
 
         aplicarDadosFisicos(usuario, request.dadosFisicos());
         aplicarPerfilAtleta(usuario, request.perfilAtleta());
-        usuario.substituirCondicoesSaude(toCondicoesSaude(request.condicoesSaude()));
-        usuario.substituirDispositivos(toDispositivos(request.dispositivos()));
+        if (request.condicoesSaude() != null) {
+            usuario.substituirCondicoesSaude(toCondicoesSaude(request.condicoesSaude()));
+        }
         anexarPerfilCorrida(usuario, perfilCorrida);
         validarOnboarding(usuario, perfilCorrida);
     }
@@ -143,7 +131,7 @@ public class UsuarioAppService {
         dadosFisicos.setGenero(request.genero());
         dadosFisicos.setFcRepouso(request.fcRepouso());
         dadosFisicos.setFcMaxima(request.fcMaxima());
-        dadosFisicos.setHorasSonoMedia(request.horasSonoMedia());
+        dadosFisicos.setQualidadeSono(request.qualidadeSono());
         dadosFisicos.setSedentario(request.sedentario());
         return dadosFisicos;
     }
@@ -198,34 +186,6 @@ public class UsuarioAppService {
             condicaoSaude.setAtiva(request.ativa() == null || request.ativa());
             return condicaoSaude;
         }).toList();
-    }
-
-    private List<DispositivoExterno> toDispositivos(List<DispositivoExternoRequest> requests) {
-        if (requests == null) {
-            return List.of();
-        }
-        requests.forEach(this::validarDispositivoSuportado);
-        return requests.stream().map(request -> {
-            DispositivoExterno dispositivoExterno = new DispositivoExterno();
-            dispositivoExterno.setPlataforma(request.plataforma());
-            dispositivoExterno.setTokenAcesso(request.tokenAcesso());
-            dispositivoExterno.setTokenExpiresAt(request.tokenExpiresAt());
-            return dispositivoExterno;
-        }).toList();
-    }
-
-
-    private void validarDispositivoSuportado(DispositivoExternoRequest request) {
-        if (request == null || request.plataforma() == null) {
-            return;
-        }
-        validarPlataformaSuportada(request.plataforma());
-    }
-
-    private void validarPlataformaSuportada(PlataformaRelogio plataforma) {
-        if (!wearablePlatformRegistry.suporta(plataforma)) {
-            throw new BusinessRuleException(wearablePlatformRegistry.mensagemPlataformaNaoDisponivel(plataforma));
-        }
     }
 
     private void validarOnboarding(Usuario usuario, PerfilCorrida perfilCorrida) {

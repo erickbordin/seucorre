@@ -1,7 +1,6 @@
 package com.seucorre.usuario.infrastructure;
 
 import com.seucorre.usuario.domain.CondicaoSaude;
-import com.seucorre.usuario.domain.DispositivoExterno;
 import com.seucorre.usuario.domain.PerfilCorrida;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -54,13 +53,4 @@ public class UsuarioRepositoryImpl implements UsuarioRepositoryCustom {
                 .getResultList();
     }
 
-    @Override
-    public List<DispositivoExterno> findDispositivosByUsuarioId(UUID usuarioId) {
-        return entityManager.createQuery(
-                        "select d from DispositivoExterno d where d.usuario.id = :usuarioId",
-                        DispositivoExterno.class
-                )
-                .setParameter("usuarioId", usuarioId)
-                .getResultList();
-    }
 }

@@ -1,6 +1,7 @@
 package com.seucorre.usuario.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.seucorre.shared.domain.enums.QualidadeSono;
 import com.seucorre.shared.domain.enums.NivelCondicionamento;
 import com.seucorre.shared.domain.enums.Objetivo;
 import com.seucorre.shared.domain.valueobjects.IMC;
@@ -43,10 +44,6 @@ public class Usuario {
     @EqualsAndHashCode.Exclude
     private List<CondicaoSaude> condicoesSaude = new ArrayList<>();
 
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL, orphanRemoval = true)
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    private List<DispositivoExterno> dispositivos = new ArrayList<>();
 
     @Column(name = "criado_em", updatable = false)
     private LocalDate criadoEm = LocalDate.now();
@@ -80,19 +77,6 @@ public class Usuario {
     public void adicionarCondicaoSaude(CondicaoSaude condicaoSaude) {
         condicaoSaude.setUsuario(this);
         condicoesSaude.add(condicaoSaude);
-    }
-
-    public void substituirDispositivos(List<DispositivoExterno> novosDispositivos) {
-        dispositivos.clear();
-        if (novosDispositivos == null) {
-            return;
-        }
-        novosDispositivos.forEach(this::vincularDispositivo);
-    }
-
-    public void vincularDispositivo(DispositivoExterno dispositivoExterno) {
-        dispositivoExterno.setUsuario(this);
-        dispositivos.add(dispositivoExterno);
     }
 
     public IMC calcularIMC() {
@@ -168,12 +152,12 @@ public class Usuario {
         obterOuCriarDadosFisicos().setSedentario(sedentario);
     }
 
-    public Integer getHorasSonoMedia() {
-        return dadosFisicos == null ? null : dadosFisicos.getHorasSonoMedia();
+    public QualidadeSono getQualidadeSono() {
+        return dadosFisicos == null ? null : dadosFisicos.getQualidadeSono();
     }
 
-    public void setHorasSonoMedia(Integer horasSonoMedia) {
-        obterOuCriarDadosFisicos().setHorasSonoMedia(horasSonoMedia);
+    public void setQualidadeSono(QualidadeSono qualidadeSono) {
+        obterOuCriarDadosFisicos().setQualidadeSono(qualidadeSono);
     }
 
     public Integer getFcRepouso() {

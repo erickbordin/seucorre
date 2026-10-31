@@ -10,7 +10,6 @@ spring:
 # Configurações de Negócio (Ciência da Corrida)
 seucorre:
   treino:
-    fator-carga-base: 1.1 # Regra dos 10% para prevenção de lesões
     frequencia-max-padrao: 220
     geracao:
       mode: ${TREINO_GERACAO_MODE:preset}

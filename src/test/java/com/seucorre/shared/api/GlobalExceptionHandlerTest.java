@@ -12,6 +12,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.test.web.servlet.MockMvc;
@@ -60,6 +61,14 @@ class GlobalExceptionHandlerTest {
 
         assertThat(response.getStatusCode().value()).isEqualTo(404);
         assertThat(response.getBody()).isEqualTo(ApiResponse.erro("Plano não encontrado."));
+    }
+
+    @Test
+    void handleDataIntegrityViolationExceptionRetornaConflictNoPadraoApiResponse() {
+        var response = handler.handleDataIntegrityViolationException(new DataIntegrityViolationException("duplicado"));
+
+        assertThat(response.getStatusCode().value()).isEqualTo(409);
+        assertThat(response.getBody()).isEqualTo(ApiResponse.erro("Esta operação conflita com dados já registrados. Atualize a tela e tente de novo."));
     }
 
     @Test

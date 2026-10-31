@@ -1,6 +1,4 @@
 spring:
-  cache:
-    type: none
   datasource:
     url: ${DB_URL:jdbc:postgresql://localhost:5432/seucorre_db}
     username: ${DB_USERNAME:user}
@@ -28,7 +26,7 @@ seucorre:
   ia:
     provider: ${IA_PROVIDER:manual}
     anthropic:
-      model: claude-sonnet-4
+      model: claude-sonnet-5-5
       max-tokens: 8192
       timeout-seconds: 30
       max-retries: 3
@@ -49,4 +47,4 @@ seucorre:
 api:
   security:
     token:
-      secret: ${JWT_SECRET:seucorre_dev_secret}
+      secret: ${JWT_SECRET}

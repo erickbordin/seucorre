@@ -1,7 +1,6 @@
 package com.seucorre.usuario.infrastructure;
 
 import com.seucorre.usuario.domain.CondicaoSaude;
-import com.seucorre.usuario.domain.DispositivoExterno;
 import com.seucorre.usuario.domain.PerfilCorrida;
 
 import java.util.List;
@@ -18,5 +17,4 @@ public interface UsuarioRepositoryCustom {
 
     List<CondicaoSaude> findCondicoesSaudeByUsuarioId(UUID usuarioId);
 
-    List<DispositivoExterno> findDispositivosByUsuarioId(UUID usuarioId);
 }

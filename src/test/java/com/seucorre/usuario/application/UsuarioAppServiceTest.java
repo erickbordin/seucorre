@@ -1,14 +1,14 @@
 package com.seucorre.usuario.application;
 
+import com.seucorre.shared.domain.enums.QualidadeSono;
 import com.seucorre.shared.domain.enums.NivelCondicionamento;
 import com.seucorre.shared.domain.enums.Objetivo;
-import com.seucorre.shared.domain.enums.PlataformaRelogio;
 import com.seucorre.shared.domain.valueobjects.IMC;
 import com.seucorre.shared.exception.BusinessRuleException;
 import com.seucorre.shared.exception.EntityNotFoundException;
 import com.seucorre.usuario.application.dto.CondicaoSaudeRequest;
 import com.seucorre.usuario.application.dto.DadosFisicosRequest;
-import com.seucorre.usuario.application.dto.DispositivoExternoRequest;
+import com.seucorre.usuario.application.dto.OnboardingRequest;
 import com.seucorre.usuario.application.dto.PerfilAtletaRequest;
 import com.seucorre.usuario.application.dto.PerfilCorridaRequest;
 import com.seucorre.usuario.application.dto.UsuarioCadastroRequest;
@@ -25,7 +25,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -42,19 +41,13 @@ class UsuarioAppServiceTest {
 
     private UsuarioRepository repository;
     private PasswordEncoder passwordEncoder;
-    private WearableAdapter garminAdapter;
-    private WearableAdapter stravaAdapter;
     private UsuarioAppService service;
 
     @BeforeEach
     void setUp() {
         repository = mock(UsuarioRepository.class);
         passwordEncoder = mock(PasswordEncoder.class);
-        garminAdapter = mock(WearableAdapter.class);
-        stravaAdapter = mock(WearableAdapter.class);
-        when(garminAdapter.plataformaSuportada()).thenReturn(PlataformaRelogio.GARMIN);
-        when(stravaAdapter.plataformaSuportada()).thenReturn(PlataformaRelogio.STRAVA);
-        service = new UsuarioAppService(repository, passwordEncoder, new WearablePlatformRegistry(List.of(garminAdapter, stravaAdapter)));
+        service = new UsuarioAppService(repository, passwordEncoder);
     }
 
     @Test
@@ -74,7 +67,6 @@ class UsuarioAppServiceTest {
 
         assertThat(usuarioSalvo.getSenhaHash()).isEqualTo("hash-bcrypt");
         assertThat(usuarioSalvo.getCondicoesSaude()).hasSize(1);
-        assertThat(usuarioSalvo.getDispositivos()).hasSize(1);
         assertThat(response.aptoParaTreinar()).isTrue();
         assertThat(response.perfilCorrida().zonasFc()).hasSize(1);
     }
@@ -89,7 +81,6 @@ class UsuarioAppServiceTest {
                 "Ana Runner",
                 "ana@email.com",
                 "senha123",
-                null,
                 null,
                 null,
                 null,
@@ -129,48 +120,24 @@ class UsuarioAppServiceTest {
                 .hasMessage("Dias de treino não podem exceder os dias disponíveis na semana.");
     }
 
+
     @Test
-    void registrarRecusaPlataformaSemAdapterConfigurado() {
+    void atualizarOnboardingSemCondicoesSaudeMantemAsCondicoesExistentes() {
         when(repository.existsByEmail("ana@email.com")).thenReturn(false);
         when(passwordEncoder.encode("senha123")).thenReturn("hash-bcrypt");
+        when(repository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(repository.savePerfilCorrida(any(PerfilCorrida.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        service.registrar(cadastroValido("SEG,QUA,SEX"));
 
-        UsuarioCadastroRequest request = new UsuarioCadastroRequest(
-                "Ana Runner",
-                "ana@email.com",
-                "senha123",
-                "11999999999",
-                new DadosFisicosRequest(
-                        new BigDecimal("62.50"),
-                        new BigDecimal("168.00"),
-                        LocalDate.of(1995, 5, 10),
-                        "FEMININO",
-                        62,
-                        190,
-                        7,
-                        false
-                ),
-                new PerfilAtletaRequest(
-                        NivelCondicionamento.INICIANTE,
-                        Objetivo.COMPLETAR_5K,
-                        true,
-                        3,
-                        "SEG,QUA,SEX"
-                ),
-                new PerfilCorridaRequest(
-                        new BigDecimal("6.20"),
-                        null,
-                        null,
-                        null,
-                        38,
-                        List.of(new ZonaFCRequest(1, "Leve", 95, 115, false))
-                ),
-                List.of(new CondicaoSaudeRequest("ALERGIA", "Rinite", true)),
-                List.of(new DispositivoExternoRequest(PlataformaRelogio.POLAR, "token", LocalDateTime.now().plusDays(1)))
-        );
+        ArgumentCaptor<Usuario> captor = ArgumentCaptor.forClass(Usuario.class);
+        verify(repository).save(captor.capture());
+        Usuario usuario = captor.getValue();
+        usuario.setId(UUID.randomUUID());
+        when(repository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
 
-        assertThatThrownBy(() -> service.registrar(request))
-                .isInstanceOf(BusinessRuleException.class)
-                .hasMessage("A plataforma Polar Flow ainda não está disponível nesta versão. Plataformas disponíveis: Garmin Connect, Strava.");
+        service.atualizarOnboarding(usuario.getId(), new OnboardingRequest(null, null, null, null, null));
+
+        assertThat(usuario.getCondicoesSaude()).hasSize(1);
     }
 
     @Test
@@ -247,7 +214,7 @@ class UsuarioAppServiceTest {
                         "FEMININO",
                         62,
                         190,
-                        7,
+                        QualidadeSono.BOA,
                         false
                 ),
                 new PerfilAtletaRequest(
@@ -265,8 +232,7 @@ class UsuarioAppServiceTest {
                         38,
                         List.of(new ZonaFCRequest(1, "Leve", 95, 115, false))
                 ),
-                List.of(new CondicaoSaudeRequest("ALERGIA", "Rinite", true)),
-                List.of(new DispositivoExternoRequest(PlataformaRelogio.GARMIN, "token", LocalDateTime.now().plusDays(1)))
+                List.of(new CondicaoSaudeRequest("ALERGIA", "Rinite", true))
         );
     }
 }

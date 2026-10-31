@@ -2,6 +2,7 @@ package com.seucorre.treino.domain;
 
 import com.seucorre.avaliacao.domain.CheckinSemanal;
 import com.seucorre.avaliacao.domain.ProgressoSemanal;
+import com.seucorre.shared.domain.RegraDezPorCento;
 import com.seucorre.shared.domain.enums.Objetivo;
 import com.seucorre.shared.exception.BusinessRuleException;
 import com.seucorre.usuario.domain.Usuario;
@@ -18,7 +19,6 @@ import java.util.TreeSet;
 @Service
 public class GeradorPlanoIA {
 
-    private static final BigDecimal LIMITE_REGRA_DEZ_POR_CENTO = BigDecimal.valueOf(1.10d);
     private static final int SCALE_DISTANCIA = 2;
 
     private final IAClient iaClient;
@@ -47,7 +47,7 @@ public class GeradorPlanoIA {
         String resposta = iaClient.gerarResposta(prompt);
 
         PlanoTreino planoTreino = parsearResposta(resposta, usuario);
-        aplicarRegraDosDezPorCento(planoTreino);
+        aplicarRegraDosDezPorCento(planoTreino, null);
         return planoTreino;
     }
 
@@ -74,7 +74,7 @@ public class GeradorPlanoIA {
 
         PlanoTreino planoReescrito = parsearResposta(resposta, plano.getUsuario());
         herdarMetadadosBasicos(plano, planoReescrito);
-        aplicarRegraDosDezPorCento(planoReescrito);
+        aplicarRegraDosDezPorCento(planoReescrito, plano.calcularVolumeSemanal(checkin.getSemana()));
         checkin.setPlanoReescrito(true);
         return planoReescrito;
     }
@@ -142,7 +142,7 @@ public class GeradorPlanoIA {
         }
     }
 
-    private void aplicarRegraDosDezPorCento(PlanoTreino planoTreino) {
+    private void aplicarRegraDosDezPorCento(PlanoTreino planoTreino, BigDecimal volumeDeReferencia) {
         if (planoTreino == null || planoTreino.getSessoes() == null || planoTreino.getSessoes().isEmpty()) {
             return;
         }
@@ -152,34 +152,18 @@ public class GeradorPlanoIA {
                 .filter(Objects::nonNull)
                 .collect(TreeSet::new, TreeSet::add, TreeSet::addAll);
 
-        Integer semanaAnterior = null;
+        BigDecimal volumeAnterior = volumeDeReferencia;
         for (Integer semanaAtual : semanas) {
-            if (semanaAnterior == null) {
-                semanaAnterior = semanaAtual;
-                continue;
+            BigDecimal volumeAtual = planoTreino.calcularVolumeSemanal(semanaAtual);
+            if (RegraDezPorCento.excede(volumeAnterior, volumeAtual)) {
+                ajustarVolumeSemanal(planoTreino, semanaAtual, RegraDezPorCento.limite(volumeAnterior), volumeAtual);
             }
-
-            BigDecimal volumeAnterior = calcularVolumeSemanal(planoTreino, semanaAnterior);
-            BigDecimal volumeAtual = calcularVolumeSemanal(planoTreino, semanaAtual);
-            if (volumeAnterior.signum() > 0) {
-                BigDecimal limiteAceito = volumeAnterior.multiply(LIMITE_REGRA_DEZ_POR_CENTO);
-                if (volumeAtual.compareTo(limiteAceito) > 0) {
-                    ajustarVolumeSemanal(planoTreino, semanaAtual, limiteAceito, volumeAtual);
-                }
-            }
-            semanaAnterior = semanaAtual;
+            volumeAnterior = planoTreino.calcularVolumeSemanal(semanaAtual);
         }
 
         recalcularKmTotais(planoTreino);
         ordenarSessoes(planoTreino);
         preencherDatasDerivadas(planoTreino);
-    }
-
-    private BigDecimal calcularVolumeSemanal(PlanoTreino planoTreino, Integer semana) {
-        return planoTreino.obterSessoesDaSemana(semana).stream()
-                .map(SessaoTreino::getDistanciaKm)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     private void ajustarVolumeSemanal(PlanoTreino planoTreino,

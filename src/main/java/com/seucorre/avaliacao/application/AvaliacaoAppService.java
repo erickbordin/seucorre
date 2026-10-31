@@ -1,6 +1,5 @@
 package com.seucorre.avaliacao.application;
 
-import com.seucorre.infra.cache.CacheConfig;
 import com.seucorre.infra.events.EventPublisher;
 import com.seucorre.infra.ia.IAProperties;
 import com.seucorre.infra.notification.NotificacaoService;
@@ -25,7 +24,6 @@ import com.seucorre.treino.infrastructure.RegistroRepository;
 import com.seucorre.usuario.domain.Usuario;
 import com.seucorre.usuario.infrastructure.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -64,6 +62,9 @@ public class AvaliacaoAppService {
         if (planoTreino.getUsuario() == null || !usuario.getId().equals(planoTreino.getUsuario().getId())) {
             throw new BusinessRuleException("O plano informado nao pertence ao usuario.");
         }
+        if (planoTreino.getStatus() != StatusPlano.ATIVO) {
+            throw new BusinessRuleException("O check-in só pode ser feito no plano ativo.");
+        }
 
         CheckinSemanal checkinSemanal = checkinRepository.findByPlanoIdAndSemana(request.planoId(), request.semana())
                 .orElseGet(CheckinSemanal::new);
@@ -94,7 +95,6 @@ public class AvaliacaoAppService {
     }
 
     @Transactional
-    @CacheEvict(cacheNames = CacheConfig.PLANO_ATIVO_CACHE, key = "#usuarioId")
     public AnaliseRiscoDTO processarCheckin(UUID usuarioId, CheckinSemanalRequest request) {
         if (request == null) {
             throw new IllegalArgumentException("Request de check-in e obrigatoria.");
@@ -257,8 +257,8 @@ public class AvaliacaoAppService {
         }
 
         checkinSemanal.setPlanoReescrito(true);
-        planoOriginal.setStatus(StatusPlano.CANCELADO);
-        planoRepository.save(planoOriginal);
+        planoOriginal.cancelar();
+        planoRepository.saveAndFlush(planoOriginal);
 
         planoReescrito.setStatus(StatusPlano.ATIVO);
         PlanoTreino novoPlanoSalvo = planoRepository.save(planoReescrito);

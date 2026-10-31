@@ -44,7 +44,7 @@ public class AnthropicClient implements IAClient {
     @Value("${seucorre.ia.anthropic.base-url:https://api.anthropic.com/v1/messages}")
     private String baseUrl;
 
-    @Value("${seucorre.ia.anthropic.model:claude-sonnet-4}")
+    @Value("${seucorre.ia.anthropic.model:claude-sonnet-5-5}")
     private String model;
 
     @Value("${seucorre.ia.anthropic.max-tokens:8192}")
@@ -106,6 +106,10 @@ public class AnthropicClient implements IAClient {
                     .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
+            if (response.statusCode() == 429 || response.statusCode() >= 500) {
+                throw new FalhaTemporaria("Anthropic retornou status " + response.statusCode()
+                        + ": " + extrairMensagemErro(response.body()));
+            }
             if (response.statusCode() < 200 || response.statusCode() >= 300) {
                 throw new IAUnavailableException("Anthropic retornou status " + response.statusCode()
                         + ": " + extrairMensagemErro(response.body()));
@@ -131,9 +135,21 @@ public class AnthropicClient implements IAClient {
         RetryConfig retryConfig = RetryConfig.custom()
                 .maxAttempts(maxRetries)
                 .intervalFunction(IntervalFunction.ofExponentialBackoff(initialBackoffMillis, 2.0d))
-                .retryExceptions(IAUnavailableException.class, TimeoutException.class)
+                .retryOnException(AnthropicClient::falhaTemporaria)
                 .build();
         return Retry.of("anthropicClient", retryConfig);
+    }
+
+    private static boolean falhaTemporaria(Throwable erro) {
+        for (Throwable atual = erro; atual != null; atual = atual.getCause()) {
+            if (atual instanceof JsonProcessingException) {
+                return false;
+            }
+            if (atual instanceof FalhaTemporaria || atual instanceof TimeoutException || atual instanceof IOException) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private TimeLimiter criarTimeLimiter() {
@@ -186,6 +202,13 @@ public class AnthropicClient implements IAClient {
     @PreDestroy
     void shutdown() {
         executorService.shutdownNow();
+    }
+
+    private static final class FalhaTemporaria extends IAUnavailableException {
+
+        private FalhaTemporaria(String message) {
+            super(message);
+        }
     }
 
     private record AnthropicRequest(

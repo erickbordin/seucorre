@@ -1,8 +1,11 @@
 package com.seucorre.usuario.domain;
 
+import com.seucorre.shared.domain.enums.QualidadeSono;
 import com.seucorre.shared.domain.valueobjects.IMC;
 import jakarta.persistence.Column;
 import jakarta.persistence.Embeddable;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Transient;
 import lombok.Data;
 
@@ -38,8 +41,9 @@ public class DadosFisicos implements Serializable {
     @Column(name = "fc_maximo")
     private Integer fcMaxima;
 
-    @Column(name = "horas_sono_media")
-    private Integer horasSonoMedia;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "qualidade_sono", length = 20)
+    private QualidadeSono qualidadeSono;
 
     @Column(name = "sedentario")
     private Boolean sedentario;
@@ -74,7 +78,7 @@ public class DadosFisicos implements Serializable {
                 + ", IMC " + resumirImc()
                 + ", FC repouso " + valorOuNaoInformado(fcRepouso)
                 + ", FC máxima " + valorOuNaoInformado(fcMaxima)
-                + ", horas médias de sono " + valorOuNaoInformado(horasSonoMedia)
+                + ", qualidade do sono " + valorOuNaoInformado(qualidadeSono == null ? null : qualidadeSono.getDescricao())
                 + ", sedentário " + descreverBooleano(sedentario);
     }
 

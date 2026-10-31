@@ -1,6 +1,4 @@
 spring:
-  cache:
-    type: none
   jpa:
     hibernate:
       ddl-auto: validate

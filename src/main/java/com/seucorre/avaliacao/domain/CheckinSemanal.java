@@ -74,25 +74,22 @@ public class CheckinSemanal {
 
     public boolean indicaSobrecarga() {
         int esforco = inteiroOuZero(nivelEsforco);
-        int sono = inteiroOuZero(horasSonoSemana);
-        return esforco >= ESFORCO_ALTO || (esforco >= ESFORCO_SOBRECARGA && sono <= SONO_BAIXO);
+        return esforco >= ESFORCO_ALTO || (esforco >= ESFORCO_SOBRECARGA && sonoAte(SONO_BAIXO));
     }
 
     public boolean indicaRecuperacaoInsuficiente() {
         int dor = inteiroOuZero(nivelDor);
-        int sono = inteiroOuZero(horasSonoSemana);
-        return dor >= DOR_MODERADA || sono <= SONO_BAIXO;
+        return dor >= DOR_MODERADA || sonoAte(SONO_BAIXO);
     }
 
     public NivelRisco avaliarNivelRisco() {
         int dor = inteiroOuZero(nivelDor);
         int esforco = inteiroOuZero(nivelEsforco);
-        int sono = inteiroOuZero(horasSonoSemana);
 
-        if (dor >= DOR_CRITICA || (dor >= DOR_ALTA && sono <= SONO_CRITICO)) {
+        if (dor >= DOR_CRITICA || (dor >= DOR_ALTA && sonoAte(SONO_CRITICO))) {
             return NivelRisco.CRITICO;
         }
-        if (dor >= DOR_ALTA || (esforco >= ESFORCO_SOBRECARGA && sono <= SONO_CRITICO)) {
+        if (dor >= DOR_ALTA || (esforco >= ESFORCO_SOBRECARGA && sonoAte(SONO_CRITICO))) {
             return NivelRisco.ALTO;
         }
         if (indicaSobrecarga() || indicaRecuperacaoInsuficiente()) {
@@ -133,6 +130,10 @@ public class CheckinSemanal {
 
     private int inteiroOuZero(Integer valor) {
         return valor == null ? 0 : valor;
+    }
+
+    private boolean sonoAte(int horas) {
+        return horasSonoSemana != null && horasSonoSemana <= horas;
     }
 
     @PrePersist

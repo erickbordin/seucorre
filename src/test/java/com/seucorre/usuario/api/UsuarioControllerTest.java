@@ -1,5 +1,6 @@
 package com.seucorre.usuario.api;
 
+import com.seucorre.shared.domain.enums.QualidadeSono;
 import com.seucorre.shared.domain.valueobjects.IMC;
 import com.seucorre.shared.domain.enums.NivelCondicionamento;
 import com.seucorre.shared.domain.enums.Objetivo;
@@ -50,7 +51,7 @@ class UsuarioControllerTest {
     void atualizarMeuOnboardingUsaIdDoUsuarioLogado() {
         Usuario usuarioLogado = new Usuario();
         usuarioLogado.setId(UUID.randomUUID());
-        OnboardingRequest request = new OnboardingRequest(null, null, null, null, null, null);
+        OnboardingRequest request = new OnboardingRequest(null, null, null, null, null);
         UsuarioResponse responseEsperado = usuarioResponse(usuarioLogado.getId());
 
         when(service.atualizarOnboarding(usuarioLogado.getId(), request)).thenReturn(responseEsperado);
@@ -89,14 +90,13 @@ class UsuarioControllerTest {
                 Objetivo.COMPLETAR_10K,
                 true,
                 false,
-                7,
+                QualidadeSono.BOA,
                 4,
                 "SEG,QUA,SEX,SAB",
                 58,
                 190,
                 true,
                 null,
-                List.of(),
                 List.of(),
                 LocalDate.of(2026, 5, 5)
         );
