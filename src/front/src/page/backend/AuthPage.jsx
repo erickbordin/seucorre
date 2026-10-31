@@ -461,11 +461,11 @@ export default function AuthPage({ mode = 'register' }) {
   const isAdvanced = form.jaCorre && form.nivelCorrida === 'AVANCADO';
 
   const profileSteps = useMemo(() => {
-    if (form.jaCorre === null || profileStep < 2) return ['dados', 'historico', 'nivel'];
+    if (form.jaCorre === null) return ['dados', 'historico', 'nivel'];
     if (isNoRunnerFlow) return ['dados', 'historico', 'base', 'objetivo'];
     if (isBeginnerRunnerFlow) return ['dados', 'historico', 'nivel', 'base', 'objetivo'];
     return ['dados', 'historico', 'nivel', 'corrida', 'performance'];
-  }, [form.jaCorre, isBeginnerRunnerFlow, isNoRunnerFlow, profileStep]);
+  }, [form.jaCorre, isBeginnerRunnerFlow, isNoRunnerFlow]);
 
   useEffect(() => {
     if (isProfileOnly) {
@@ -674,7 +674,9 @@ export default function AuthPage({ mode = 'register' }) {
           />
         ))}
       </div>
-      <p className="mb-2 text-xs font-semibold text-primary">Etapa {profileStep + 1} de {totalSteps}</p>
+      <p className="mb-2 text-xs font-semibold text-primary">
+        {form.jaCorre === null ? `Etapa ${profileStep + 1}` : `Etapa ${profileStep + 1} de ${totalSteps}`}
+      </p>
     </div>
   );
 
