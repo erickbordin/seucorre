@@ -5,6 +5,7 @@ import com.seucorre.shared.domain.enums.NivelCondicionamento;
 import com.seucorre.shared.domain.enums.Objetivo;
 import com.seucorre.shared.domain.enums.StatusPlano;
 import com.seucorre.shared.domain.enums.TipoTreino;
+import com.seucorre.shared.exception.BusinessRuleException;
 import com.seucorre.shared.exception.EntityNotFoundException;
 import com.seucorre.treino.application.dto.GerarPlanoRequest;
 import com.seucorre.treino.application.dto.PlanoTreinoDTO;
@@ -148,6 +149,20 @@ class PlanoAppServiceTest {
         assertThat(dto.id()).isEqualTo(planoTreino.getId());
         verify(planoPresetService).gerarPlano(usuario, Objetivo.COMPLETAR_10K);
         verify(geradorPlanoIA).gerarPlano(usuario, Objetivo.COMPLETAR_10K, List.of());
+    }
+
+    @Test
+    void usuarioNaoAcessaNemPausaPlanoDeOutroUsuario() {
+        PlanoTreino planoDaAna = criarPlano(criarUsuario(UUID.randomUUID()));
+        planoDaAna.setId(UUID.randomUUID());
+        UUID outroUsuario = UUID.randomUUID();
+        when(planoRepository.findById(planoDaAna.getId())).thenReturn(Optional.of(planoDaAna));
+
+        assertThatThrownBy(() -> service.buscarPlano(outroUsuario, planoDaAna.getId()))
+                .isInstanceOf(BusinessRuleException.class);
+        assertThatThrownBy(() -> service.pausarPlano(outroUsuario, planoDaAna.getId()))
+                .isInstanceOf(BusinessRuleException.class);
+        assertThat(planoDaAna.getStatus()).isEqualTo(StatusPlano.ATIVO);
     }
 
     @Test
