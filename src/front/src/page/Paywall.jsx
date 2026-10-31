@@ -16,7 +16,6 @@ const PREMIUM_FEATURES = [
   'Coach IA ilimitado',
   'Zonas de FC personalizadas',
   'Feedback pós-corrida com IA',
-  'Integração com wearables',
   'Reescrita automática de plano',
   'Suporte prioritário',
 ];
@@ -47,7 +46,7 @@ export default function Paywall() {
       <div className="bg-card rounded-2xl p-4 border border-border/50 mb-8">
         <p className="text-xs text-muted-foreground mb-1">Indicado para quem quer evoluir com menos tentativa e erro</p>
         <p className="text-sm text-foreground">
-          O plano free cobre a base. O premium entra quando você quer check-ins adaptativos, integração com wearable e reescrita automática do ciclo com base na sua semana real.
+          O plano free cobre a base. O premium entra quando você quer check-ins adaptativos e reescrita automática do ciclo com base na sua semana real.
         </p>
         <p className="text-xs text-muted-foreground mt-3">Nesta versão, a proposta comercial já está desenhada, mas o checkout e o backend de billing ainda não estão conectados.</p>
       </div>
