@@ -47,7 +47,7 @@ public class GeradorPlanoIA {
         String resposta = iaClient.gerarResposta(prompt);
 
         PlanoTreino planoTreino = parsearResposta(resposta, usuario);
-        aplicarRegraDosDezPorCento(planoTreino);
+        aplicarRegraDosDezPorCento(planoTreino, null);
         return planoTreino;
     }
 
@@ -74,7 +74,7 @@ public class GeradorPlanoIA {
 
         PlanoTreino planoReescrito = parsearResposta(resposta, plano.getUsuario());
         herdarMetadadosBasicos(plano, planoReescrito);
-        aplicarRegraDosDezPorCento(planoReescrito);
+        aplicarRegraDosDezPorCento(planoReescrito, plano.calcularVolumeSemanal(checkin.getSemana()));
         checkin.setPlanoReescrito(true);
         return planoReescrito;
     }
@@ -142,7 +142,7 @@ public class GeradorPlanoIA {
         }
     }
 
-    private void aplicarRegraDosDezPorCento(PlanoTreino planoTreino) {
+    private void aplicarRegraDosDezPorCento(PlanoTreino planoTreino, BigDecimal volumeDeReferencia) {
         if (planoTreino == null || planoTreino.getSessoes() == null || planoTreino.getSessoes().isEmpty()) {
             return;
         }
@@ -152,19 +152,13 @@ public class GeradorPlanoIA {
                 .filter(Objects::nonNull)
                 .collect(TreeSet::new, TreeSet::add, TreeSet::addAll);
 
-        Integer semanaAnterior = null;
+        BigDecimal volumeAnterior = volumeDeReferencia;
         for (Integer semanaAtual : semanas) {
-            if (semanaAnterior == null) {
-                semanaAnterior = semanaAtual;
-                continue;
-            }
-
-            BigDecimal volumeAnterior = planoTreino.calcularVolumeSemanal(semanaAnterior);
             BigDecimal volumeAtual = planoTreino.calcularVolumeSemanal(semanaAtual);
             if (RegraDezPorCento.excede(volumeAnterior, volumeAtual)) {
                 ajustarVolumeSemanal(planoTreino, semanaAtual, RegraDezPorCento.limite(volumeAnterior), volumeAtual);
             }
-            semanaAnterior = semanaAtual;
+            volumeAnterior = planoTreino.calcularVolumeSemanal(semanaAtual);
         }
 
         recalcularKmTotais(planoTreino);
