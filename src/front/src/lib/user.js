@@ -76,3 +76,30 @@ export function ageFromBirthDate(value) {
   }
   return String(age);
 }
+
+const ONBOARDING_DRAFT_KEY = 'seucorre:onboarding-rascunho';
+
+export function readOnboardingDraft(email) {
+  try {
+    const draft = JSON.parse(localStorage.getItem(ONBOARDING_DRAFT_KEY) || 'null');
+    return draft && draft.email === email ? draft : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveOnboardingDraft(draft) {
+  try {
+    localStorage.setItem(ONBOARDING_DRAFT_KEY, JSON.stringify(draft));
+  } catch {
+    return;
+  }
+}
+
+export function clearOnboardingDraft() {
+  try {
+    localStorage.removeItem(ONBOARDING_DRAFT_KEY);
+  } catch {
+    return;
+  }
+}
