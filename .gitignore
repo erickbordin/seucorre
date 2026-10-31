@@ -30,3 +30,4 @@ build/
 /dist/
 /nbdist/
 /.nb-gradle/
+__pycache__/
