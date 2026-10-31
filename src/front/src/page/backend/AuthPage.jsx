@@ -222,21 +222,11 @@ const buildTrainingWeeksGuidance = (form) => {
     reasons.push('você ainda está construindo base');
   }
 
-  if (trainingDays <= 2) {
-    min += 2;
-    max += 4;
-    recommended += 3;
-    reasons.push('você tem até 2 dias de treino por semana');
-  } else if (trainingDays === 3) {
+  if (trainingDays === 3) {
     min += 1;
     max += 2;
     recommended += 1;
     reasons.push('você tem 3 dias de treino por semana');
-  } else if (trainingDays >= 5 && form.jaCorre && form.nivelCorrida === 'AVANCADO') {
-    min -= 1;
-    max -= 1;
-    recommended -= 1;
-    reasons.push('sua rotina suporta um ciclo um pouco mais enxuto');
   }
 
   if (sleepQuality === 'RUIM') {
