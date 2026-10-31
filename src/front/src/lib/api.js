@@ -58,6 +58,7 @@ async function request(path, options = {}, retry = true) {
   return data;
 }
 
+const WEEKDAY_KEYS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
 const normalizeStatus = (status) => String(status || '').toLowerCase();
 const TYPE_METADATA = {
   INTERVALADO: { key: 'intervals', label: 'Intervalado' },
@@ -89,7 +90,7 @@ export function normalizeSession(session) {
   return {
     ...session,
     semana: session.numeroSemana,
-    dia_semana: parsedDate ? parsedDate.toLocaleDateString('pt-BR', { weekday: 'short' }).slice(0, 3).toLowerCase().replace('.', '') : null,
+    dia_semana: parsedDate ? WEEKDAY_KEYS[parsedDate.getDay()] : null,
     dataLabel: parsedDate ? parsedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : null,
     tipo: normalizeTipo(session.tipo),
     tipoOriginal: session.tipo,
