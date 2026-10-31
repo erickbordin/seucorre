@@ -111,7 +111,6 @@ export function normalizeSession(session) {
   return {
     ...session,
     semana: session.numeroSemana,
-    dia_semana: parsedDate ? WEEKDAY_KEYS[parsedDate.getDay()] : null,
     dataLabel: parsedDate ? parsedDate.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : null,
     tipo: normalizeTipo(session.tipo),
     tipoOriginal: session.tipo,

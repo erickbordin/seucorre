@@ -4,12 +4,11 @@ import { useQuery } from '@tanstack/react-query';
 import { Bell, CalendarDays, ChevronRight, ClipboardList, History, Plus } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
+import { currentWeekDates, localIsoDate } from '@/lib/date';
 import AIInsightCard from '@/components/home/AlInsightCard';
 import QuickStats from '@/components/home/QuickStats';
 import TodayWorkoutCard from '@/components/home/TodayWorkoutCard';
 import WeekStrip from '@/components/home/WeekStrip';
-
-const DAY_KEYS = ['dom', 'seg', 'ter', 'qua', 'qui', 'sex', 'sab'];
 
 const formatWeekRange = (sessions = []) => {
   const withDate = sessions.filter((session) => session?.dataPrevista);
@@ -33,8 +32,8 @@ export default function Home() {
   const sessions = plan?.sessoes || [];
   const currentWeek = plan?.semana_atual || 1;
   const currentWeekSessions = sessions.filter((session) => session.semana === currentWeek);
-  const selectedDayKey = DAY_KEYS[selectedDay];
-  const todaySession = currentWeekSessions.find((session) => session.dia_semana === selectedDayKey);
+  const selectedDate = localIsoDate(currentWeekDates()[selectedDay]);
+  const todaySession = sessions.find((session) => session.dataPrevista === selectedDate);
   const nextWeekSession = currentWeekSessions.find((session) => session.status !== 'concluido');
   const nextPlanSession = sessions.find((session) => session.status !== 'concluido');
   const highlightedSession = todaySession || nextWeekSession || nextPlanSession || null;
@@ -113,7 +112,7 @@ export default function Home() {
           </section>
 
           <div className="mb-6">
-            <WeekStrip sessions={currentWeekSessions} selectedDay={selectedDay} onSelectDay={setSelectedDay} />
+            <WeekStrip sessions={sessions} selectedDay={selectedDay} onSelectDay={setSelectedDay} />
           </div>
 
           <section className="mb-6">
