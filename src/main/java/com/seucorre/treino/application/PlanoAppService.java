@@ -42,6 +42,10 @@ public class PlanoAppService {
         List<PlanoTreino> historicoPlanos = planoRepository.findTop3ByUsuarioIdOrderByDataInicioDesc(usuarioId);
         Objetivo objetivo = request.objetivo() != null ? request.objetivo() : usuario.getObjetivo();
         PlanoTreino planoTreino = gerarPlanoInicial(usuario, objetivo, historicoPlanos);
+        planoRepository.findByUsuarioId(usuarioId).stream()
+                .filter(PlanoTreino::emAndamento)
+                .forEach(PlanoTreino::cancelar);
+        planoRepository.flush();
         PlanoTreino planoSalvo = planoRepository.save(planoTreino);
         eventPublisher.publish(new PlanoGeradoEvent(usuarioId, planoSalvo.getId(), objetivo, planoSalvo.getTotalSemanas()));
         return PlanoTreinoDTO.from(planoSalvo);
