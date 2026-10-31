@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { Activity, Bell, ChevronRight, Heart, Link2, LogOut, Ruler, Scale, Settings, Shield, Target, User } from 'lucide-react';
+import { Activity, Bell, ChevronRight, Heart, LogOut, Ruler, Scale, Settings, Shield, Target, User } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { GOAL_LABELS, LEVEL_LABELS, parseTrainingDays } from '@/lib/user';
 
@@ -18,13 +18,6 @@ const HEALTH_LABELS = {
   ASMA: 'Asma',
   HIPERTENSAO: 'Hipertensão',
   LESAO_ANTERIOR: 'Lesão anterior',
-};
-
-const PLATFORM_LABELS = {
-  GARMIN: 'Garmin',
-  POLAR: 'Polar',
-  APPLE_WATCH: 'Apple Watch',
-  STRAVA: 'Strava',
 };
 
 export default function Profile() {
@@ -117,48 +110,28 @@ export default function Profile() {
         )}
       </div>
 
-      <div className="mb-8">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Integrações</h2>
-        <div className="space-y-3">
+      {user?.perfilCorrida && (
+        <div className="mb-8">
+          <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Perfil de corrida</h2>
           <div className="flex items-center gap-3 bg-card rounded-2xl p-4 border border-border/50">
             <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center">
-              <Link2 className="w-4 h-4 text-muted-foreground" />
+              <Shield className="w-4 h-4 text-muted-foreground" />
             </div>
             <div className="flex-1">
-              <p className="text-[10px] text-muted-foreground">Wearables conectados</p>
+              <p className="text-[10px] text-muted-foreground">VO₂ estimado e zonas</p>
               <p className="text-sm font-medium text-foreground">
-                {(user?.dispositivos || []).length > 0
-                  ? user.dispositivos.map((item) => PLATFORM_LABELS[item.plataforma] || item.plataforma).join(', ')
-                  : 'Nenhum conectado'}
+                VO₂ {user.perfilCorrida.vo2Estimado || '-'} • {(user.perfilCorrida.zonasFc || []).length} zonas disponíveis
               </p>
             </div>
           </div>
-          {user?.perfilCorrida && (
-            <div className="flex items-center gap-3 bg-card rounded-2xl p-4 border border-border/50">
-              <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center">
-                <Shield className="w-4 h-4 text-muted-foreground" />
-              </div>
-              <div className="flex-1">
-                <p className="text-[10px] text-muted-foreground">VO₂ estimado e zonas</p>
-                <p className="text-sm font-medium text-foreground">
-                  VO₂ {user.perfilCorrida.vo2Estimado || '-'} • {(user.perfilCorrida.zonasFc || []).length} zonas disponíveis
-                </p>
-              </div>
-            </div>
-          )}
         </div>
-      </div>
+      )}
 
       <div className="space-y-2">
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-2">Configurações</h2>
         <Link to="/onboarding" className="w-full flex items-center gap-3 bg-card rounded-2xl p-4 border border-border/50">
           <Settings className="w-4 h-4 text-muted-foreground" />
           <span className="text-sm text-foreground flex-1 text-left">Atualizar dados do perfil</span>
-          <ChevronRight className="w-4 h-4 text-muted-foreground" />
-        </Link>
-        <Link to="/wearables" className="w-full flex items-center gap-3 bg-card rounded-2xl p-4 border border-border/50">
-          <Link2 className="w-4 h-4 text-muted-foreground" />
-          <span className="text-sm text-foreground flex-1 text-left">Gerenciar wearables</span>
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
         </Link>
         <Link to="/notificacoes" className="w-full flex items-center gap-3 bg-card rounded-2xl p-4 border border-border/50">
