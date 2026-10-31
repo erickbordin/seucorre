@@ -872,26 +872,29 @@ export default function AuthPage({ mode = 'register' }) {
   return (
     <div className="min-h-screen bg-background px-5 py-8">
       <div className="mx-auto flex min-h-[calc(100vh-4rem)] w-full max-w-lg flex-col">
-        <div className="mb-8">
-          <Link to="/" className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+        <div className={isProfileOnly ? 'mb-5' : 'mb-8'}>
+          <Link to="/" className={(isProfileOnly ? 'mb-4' : 'mb-6') + ' inline-flex items-center gap-2 text-sm font-semibold text-primary'}>
             <ChevronLeft className="h-4 w-4" />
             SeuCorre
           </Link>
-          <div className="rounded-3xl border border-border bg-card/80 p-5 shadow-2xl shadow-black/20">
-            <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary">
-              {isLogin ? <LogIn className="h-6 w-6" /> : isProfileOnly ? <ShieldCheck className="h-6 w-6" /> : <Mail className="h-6 w-6" />}
+          {isProfileOnly ? (
+            <div className="flex items-center gap-3">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/15 text-primary">
+                <ShieldCheck className="h-5 w-5" />
+              </div>
+              <h1 className="text-xl font-bold text-foreground">Perfil do atleta</h1>
             </div>
-            <h1 className="text-3xl font-bold text-foreground">
-              {isLogin ? 'Entrar' : isProfileOnly ? 'Perfil do atleta' : 'Criar conta'}
-            </h1>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-              {isLogin
-                ? 'Entre com email e senha ou continue pelo Google.'
-                : isProfileOnly
-                  ? 'Responda o necessário para o SeuCorre montar um plano coerente com seu momento.'
-                  : 'Crie sua conta com email e senha ou continue pelo Google.'}
-            </p>
-          </div>
+          ) : (
+            <div className="rounded-3xl border border-border bg-card/80 p-5 shadow-2xl shadow-black/20">
+              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/15 text-primary">
+                {isLogin ? <LogIn className="h-6 w-6" /> : <Mail className="h-6 w-6" />}
+              </div>
+              <h1 className="text-3xl font-bold text-foreground">{isLogin ? 'Entrar' : 'Criar conta'}</h1>
+              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                {isLogin ? 'Entre com email e senha ou continue pelo Google.' : 'Crie sua conta com email e senha ou continue pelo Google.'}
+              </p>
+            </div>
+          )}
         </div>
 
         <form onSubmit={submit} className="flex flex-1 flex-col gap-5 pb-28">
