@@ -19,7 +19,6 @@ import {
 } from '@/lib/user';
 
 const DISTANCE_GOALS = [
-  { value: '3K', label: '3 km', description: 'Começar leve e ganhar consistência' },
   { value: '5K', label: '5 km', description: 'Recomendado para construir base com segurança', recommended: true },
   { value: '10K', label: '10 km', description: 'Disponível para quem está muito ativo' },
 ];
@@ -27,7 +26,6 @@ const DISTANCE_GOALS = [
 const RUNNER_GOALS = [
   { value: 'COMPLETAR_5K', label: '5 km', description: 'Completar a distância com boa base' },
   { value: 'COMPLETAR_10K', label: '10 km', description: 'Evoluir resistencia e ritmo' },
-  { value: 'COMPLETAR_15K', label: '15 km', description: 'Subir volume sem perder controle' },
   { value: 'COMPLETAR_MEIA_MARATONA', label: '21 km', description: 'Preparar meia maratona' },
   { value: 'COMPLETAR_MARATONA', label: '42 km', description: 'Preparar maratona' },
   { value: 'MELHORAR_DISTANCIA', label: 'Melhorar marca', description: 'Baixar tempo em uma distância' },
@@ -68,19 +66,11 @@ const createEmptyForm = () => ({
   atividadeNivel: '',
   qualidadeSono: '',
   diasSemanaTreino: ['seg', 'qua', 'sex'],
-  semanasTreino: '10',
   objetivoNaoCorredor: '5K',
   objetivoCorredor: 'COMPLETAR_10K',
   nivelCorrida: '',
   distanciaRp: '5',
   paceRp: '',
-  zonasPace: {
-    z1: '',
-    z2: '',
-    z3: '',
-    z4: '',
-    z5: '',
-  },
 });
 
 const PHYSICAL_METRIC_LIMITS = {
@@ -94,33 +84,9 @@ const PACE_LIMITS = {
   maxSeconds: 720,
 };
 
-const NO_RUNNER_WEEKS_CONFIG = {
-  '3K': { label: '3 km', min: 6, max: 14, recommended: 8 },
-  '5K': { label: '5 km', min: 8, max: 18, recommended: 10 },
-  '10K': { label: '10 km', min: 12, max: 24, recommended: 16 },
-};
-
-const RUNNER_WEEKS_CONFIG = {
-  COMPLETAR_5K: { label: '5 km', min: 6, max: 12, recommended: 8 },
-  COMPLETAR_10K: { label: '10 km', min: 8, max: 16, recommended: 10 },
-  COMPLETAR_15K: { label: '15 km', min: 10, max: 18, recommended: 12 },
-  COMPLETAR_MEIA_MARATONA: { label: '21 km', min: 12, max: 20, recommended: 14 },
-  COMPLETAR_MARATONA: { label: '42 km', min: 16, max: 28, recommended: 20 },
-  VOLTAR_A_CORRER: { label: 'voltar a correr', min: 8, max: 16, recommended: 10 },
-};
-
-const IMPROVEMENT_WEEKS_CONFIG = {
-  '5': { label: 'melhorar 5 km', min: 8, max: 14, recommended: 10 },
-  '10': { label: 'melhorar 10 km', min: 10, max: 16, recommended: 12 },
-  '21': { label: 'melhorar 21 km', min: 12, max: 20, recommended: 14 },
-  '42': { label: 'melhorar 42 km', min: 16, max: 28, recommended: 20 },
-};
-
 const TRAINING_DAYS = { min: 3, max: 4 };
 
 const hasValidTrainingDays = (days) => days.length >= TRAINING_DAYS.min && days.length <= TRAINING_DAYS.max;
-
-const clamp = (value, min, max) => Math.min(Math.max(value, min), max);
 
 const sanitizeIntegerMetric = (value) => String(value ?? '').replace(/\D/g, '');
 
@@ -196,105 +162,9 @@ const getStoredRacePace = (perfilCorrida) => {
   return { distanciaRp: '5', paceRp: '' };
 };
 
-const resolveTrainingWeeksBaseConfig = (form) => {
-  const isBeginnerBaseFlow = form.jaCorre === false || form.nivelCorrida === 'INICIANTE';
-
-  if (isBeginnerBaseFlow) {
-    return NO_RUNNER_WEEKS_CONFIG[form.objetivoNaoCorredor || '5K'] || NO_RUNNER_WEEKS_CONFIG['5K'];
-  }
-
-  if (form.objetivoCorredor === 'MELHORAR_DISTANCIA') {
-    return IMPROVEMENT_WEEKS_CONFIG[form.distanciaRp || '5'] || IMPROVEMENT_WEEKS_CONFIG['5'];
-  }
-
-  return RUNNER_WEEKS_CONFIG[form.objetivoCorredor || 'COMPLETAR_10K'] || RUNNER_WEEKS_CONFIG.COMPLETAR_10K;
-};
-
-const buildTrainingWeeksGuidance = (form) => {
-  const baseConfig = resolveTrainingWeeksBaseConfig(form);
-  const age = Number(form.idade);
-  const sleepQuality = form.qualidadeSono;
-  const trainingDays = form.diasSemanaTreino.length;
-  let min = baseConfig.min;
-  let max = baseConfig.max;
-  let recommended = baseConfig.recommended;
-  const reasons = [];
-
-  if (form.jaCorre === false || form.nivelCorrida === 'INICIANTE') {
-    min += 1;
-    max += 2;
-    recommended += 2;
-    reasons.push('você ainda está construindo base');
-  }
-
-  if (trainingDays === 3) {
-    min += 1;
-    max += 2;
-    recommended += 1;
-    reasons.push('você tem 3 dias de treino por semana');
-  }
-
-  if (sleepQuality === 'RUIM') {
-    min += 1;
-    max += 2;
-    recommended += 2;
-    reasons.push('sono ruim pede mais recuperação');
-  } else if (sleepQuality === 'REGULAR') {
-    recommended += 1;
-    max += 1;
-    reasons.push('sono regular pede progressão gradual');
-  }
-
-  if (form.fazAtividade === false) {
-    recommended += 1;
-    max += 1;
-    reasons.push('você relatou pouca base complementar');
-  }
-
-  if (form.atividadeNivel === 'POUCO_ATIVO') {
-    recommended += 1;
-    max += 1;
-    reasons.push('sua rotina atual é pouco ativa');
-  } else if (form.atividadeNivel === 'MUITO_ATIVO' && trainingDays >= 4 && (sleepQuality === 'BOA' || sleepQuality === 'OTIMA')) {
-    recommended -= 1;
-  }
-
-  if (Number.isFinite(age) && age >= 60) {
-    min += 1;
-    max += 2;
-    recommended += 2;
-    reasons.push('vale deixar mais margem para recuperação');
-  } else if (Number.isFinite(age) && age >= 45) {
-    recommended += 1;
-    max += 1;
-    reasons.push('uma margem extra ajuda na recuperação');
-  }
-
-  min = clamp(min, 6, 30);
-  max = clamp(max, min + 2, 32);
-  recommended = clamp(recommended, min, max);
-
-  const summary = reasons.length > 0
-    ? 'Recomendação ajustada porque ' + reasons.slice(0, 2).join(' e ') + '.'
-    : 'Recomendação baseada no seu objetivo e no volume atual de treino.';
-
-  return {
-    ...baseConfig,
-    min,
-    max,
-    recommended,
-    summary,
-  };
-};
-
-const buildTrainingErrors = (form, guidance) => {
+const buildTrainingErrors = (form) => {
   const errors = {};
-  const weeks = Number(form.semanasTreino);
   const paceSeconds = parsePaceToSeconds(form.paceRp);
-
-  if (!form.semanasTreino || !Number.isInteger(weeks) || weeks < guidance.min || weeks > guidance.max) {
-    errors.semanasTreino = 'Para ' + guidance.label + ', use entre ' + guidance.min + ' e ' + guidance.max + ' semanas.';
-  }
 
   if (!form.paceRp) {
     errors.paceRp = 'Informe o pace do RP no formato m:ss.';
@@ -373,7 +243,6 @@ const getRunnerGoal = (form) => {
   }
 
   if (form.objetivoCorredor === 'VOLTAR_A_CORRER') return 'SAUDE_GERAL';
-  if (form.objetivoCorredor === 'COMPLETAR_15K') return 'COMPLETAR_10K';
   return form.objetivoCorredor;
 };
 
@@ -458,7 +327,6 @@ export default function AuthPage({ mode = 'register' }) {
   const isNoRunnerFlow = form.jaCorre === false;
   const isBeginnerRunnerFlow = form.jaCorre === true && form.nivelCorrida === 'INICIANTE';
   const isIntermediate = form.jaCorre && form.nivelCorrida === 'INTERMEDIARIO';
-  const isAdvanced = form.jaCorre && form.nivelCorrida === 'AVANCADO';
 
   const profileSteps = useMemo(() => {
     if (form.jaCorre === null) return ['dados', 'historico', 'nivel'];
@@ -518,11 +386,6 @@ export default function AuthPage({ mode = 'register' }) {
 
   const getTrainingFieldInputClassName = (field) => 'h-12 rounded-xl bg-card ' + (shouldShowTrainingFieldError(field) ? 'border-destructive' : 'border-border');
 
-  const handleWeeksChange = (value) => {
-    updateForm('semanasTreino', sanitizeIntegerMetric(value));
-    if (error) setError('');
-  };
-
   const handlePaceChange = (value) => {
     updateForm('paceRp', sanitizePaceInput(value));
     if (error) setError('');
@@ -536,17 +399,9 @@ export default function AuthPage({ mode = 'register' }) {
     }
   };
 
-  const updateZone = (field, value) => {
-    setForm((current) => ({
-      ...current,
-      zonasPace: { ...current.zonasPace, [field]: value },
-    }));
-  };
-
   const physicalMetricErrors = useMemo(() => buildPhysicalMetricErrors(form), [form.alturaCm, form.idade, form.pesoKg]);
   const hasPhysicalMetricErrors = Object.keys(physicalMetricErrors).length > 0;
-  const trainingWeeksGuidance = useMemo(() => buildTrainingWeeksGuidance(form), [form.atividadeNivel, form.diasSemanaTreino, form.distanciaRp, form.fazAtividade, form.idade, form.qualidadeSono, form.jaCorre, form.nivelCorrida, form.objetivoCorredor, form.objetivoNaoCorredor]);
-  const trainingErrors = useMemo(() => buildTrainingErrors(form, trainingWeeksGuidance), [form.paceRp, form.semanasTreino, trainingWeeksGuidance]);
+  const trainingErrors = useMemo(() => buildTrainingErrors(form), [form.paceRp]);
 
   const isCurrentProfileStepValid = useMemo(() => {
     if (!isProfileOnly) return true;
@@ -572,7 +427,6 @@ export default function AuthPage({ mode = 'register' }) {
       return Boolean(
         hasValidTrainingDays(form.diasSemanaTreino) &&
         form.objetivoNaoCorredor &&
-        !trainingErrors.semanasTreino &&
         (!wants10k || form.atividadeNivel === 'MUITO_ATIVO')
       );
     }
@@ -582,13 +436,11 @@ export default function AuthPage({ mode = 'register' }) {
     }
 
     if (currentKey === 'performance') {
-      const hasBase = Boolean(form.distanciaRp && hasValidTrainingDays(form.diasSemanaTreino) && !trainingErrors.paceRp && !trainingErrors.semanasTreino);
-      const hasZones = !isAdvanced || Object.values(form.zonasPace).every(Boolean);
-      return hasBase && hasZones;
+      return Boolean(form.distanciaRp && hasValidTrainingDays(form.diasSemanaTreino) && !trainingErrors.paceRp);
     }
 
     return true;
-  }, [currentKey, form, hasPhysicalMetricErrors, isAdvanced, isProfileOnly, trainingErrors]);
+  }, [currentKey, form, hasPhysicalMetricErrors, isProfileOnly, trainingErrors]);
 
   const valid = useMemo(() => {
     if (isLogin) return Boolean(form.email && form.senha);
@@ -659,22 +511,20 @@ export default function AuthPage({ mode = 'register' }) {
     }
     if (currentKey === 'objetivo' || currentKey === 'performance') {
       if (!hasValidTrainingDays(form.diasSemanaTreino)) missing.push('3 ou 4 dias de treino');
-      if (trainingErrors.semanasTreino) return trainingErrors.semanasTreino;
     }
     if (currentKey === 'performance') {
       if (trainingErrors.paceRp) return trainingErrors.paceRp;
-      if (isAdvanced && !Object.values(form.zonasPace).every(Boolean)) missing.push('os paces de Z1 a Z5');
     }
     if (currentKey === 'objetivo' && form.objetivoNaoCorredor === '10K' && form.atividadeNivel !== 'MUITO_ATIVO') {
-      return '10 km só fica liberado para quem marcou rotina muito ativa. Escolha 3 ou 5 km.';
+      return '10 km só fica liberado para quem marcou rotina muito ativa. Escolha 5 km.';
     }
     return missing.length > 0 ? 'Falta informar ' + missing.join(', ') + '.' : 'Revise as respostas desta etapa para continuar.';
   };
 
   const showMissing = () => {
     if (currentKey === 'dados') setTouchedPhysicalFields({ idade: true, alturaCm: true, pesoKg: true });
-    if (currentKey === 'objetivo' || currentKey === 'performance') {
-      setTouchedTrainingFields((current) => ({ ...current, paceRp: currentKey === 'performance', semanasTreino: true }));
+    if (currentKey === 'performance') {
+      setTouchedTrainingFields((current) => ({ ...current, paceRp: true }));
     }
     setError(describeMissing());
   };
@@ -796,11 +646,6 @@ export default function AuthPage({ mode = 'register' }) {
             <p className="text-xs font-semibold uppercase text-muted-foreground">Dias disponíveis por semana (3 ou 4)</p>
             <DaySelector selected={form.diasSemanaTreino} max={TRAINING_DAYS.max} onChange={(dias) => updateForm('diasSemanaTreino', dias)} />
           </div>
-          <Field label={'Semanas de treinamento (' + trainingWeeksGuidance.min + ' a ' + trainingWeeksGuidance.max + ')'} error={shouldShowTrainingFieldError('semanasTreino') ? trainingErrors.semanasTreino : null}>
-            <Input type="text" inputMode="numeric" min={trainingWeeksGuidance.min} max={trainingWeeksGuidance.max} placeholder={'Recomendado: ' + trainingWeeksGuidance.recommended} value={form.semanasTreino} onChange={(event) => handleWeeksChange(event.target.value)} onBlur={() => touchTrainingField('semanasTreino')} aria-invalid={shouldShowTrainingFieldError('semanasTreino')} className={getTrainingFieldInputClassName('semanasTreino')} />
-            <span className="block text-xs text-muted-foreground">Faixa segura para seu perfil: {trainingWeeksGuidance.min} a {trainingWeeksGuidance.max} semanas. Recomendado agora: {trainingWeeksGuidance.recommended} semanas.</span>
-            <span className="block text-xs text-muted-foreground">{trainingWeeksGuidance.summary}</span>
-          </Field>
           <div className="space-y-2">
             {DISTANCE_GOALS.map((item) => {
               const disabled = item.value === '10K' && form.atividadeNivel !== 'MUITO_ATIVO';
@@ -866,26 +711,6 @@ export default function AuthPage({ mode = 'register' }) {
             <p className="text-xs font-semibold uppercase text-muted-foreground">Dias disponíveis para treinar (3 ou 4)</p>
             <DaySelector selected={form.diasSemanaTreino} max={TRAINING_DAYS.max} onChange={(dias) => updateForm('diasSemanaTreino', dias)} />
           </div>
-          <Field label={'Semanas até o objetivo (' + trainingWeeksGuidance.min + ' a ' + trainingWeeksGuidance.max + ')'} error={shouldShowTrainingFieldError('semanasTreino') ? trainingErrors.semanasTreino : null}>
-            <Input type="text" inputMode="numeric" min={trainingWeeksGuidance.min} max={trainingWeeksGuidance.max} placeholder={'Recomendado: ' + trainingWeeksGuidance.recommended} value={form.semanasTreino} onChange={(event) => handleWeeksChange(event.target.value)} onBlur={() => touchTrainingField('semanasTreino')} aria-invalid={shouldShowTrainingFieldError('semanasTreino')} className={getTrainingFieldInputClassName('semanasTreino')} />
-            <span className="block text-xs text-muted-foreground">Faixa segura para seu perfil: {trainingWeeksGuidance.min} a {trainingWeeksGuidance.max} semanas. Recomendado agora: {trainingWeeksGuidance.recommended} semanas.</span>
-            <span className="block text-xs text-muted-foreground">{trainingWeeksGuidance.summary}</span>
-          </Field>
-          {isAdvanced && (
-            <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
-              <div>
-                <p className="text-xs font-semibold uppercase text-muted-foreground">Paces por zona</p>
-                <p className="mt-1 text-xs text-muted-foreground">Preencha Z1 até Z5 no formato min/km.</p>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                {['z1', 'z2', 'z3', 'z4', 'z5'].map((zone) => (
-                  <Field key={zone} label={zone.toUpperCase()}>
-                    <Input placeholder="m:ss" value={form.zonasPace[zone]} onChange={(event) => updateZone(zone, event.target.value)} className="h-11 rounded-xl border-border bg-background" />
-                  </Field>
-                ))}
-              </div>
-            </div>
-          )}
         </section>
       )}
     </>
