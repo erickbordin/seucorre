@@ -1,3 +1,5 @@
+import { localIsoDate } from '@/lib/date';
+
 export const LEVEL_OPTIONS = [
   { value: 'INICIANTE', label: 'Iniciante', description: 'Começando agora' },
   { value: 'INTERMEDIARIO', label: 'Intermediário', description: 'Corre com alguma rotina' },
@@ -57,7 +59,7 @@ export function birthDateFromAge(age) {
   if (!Number.isInteger(years) || years <= 0) return '';
   const date = new Date();
   date.setFullYear(date.getFullYear() - years);
-  return date.toISOString().slice(0, 10);
+  return localIsoDate(date);
 }
 
 export function ageFromBirthDate(value) {

@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, ArrowRight, Brain, CheckCircle2, ClipboardList, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
+import { localIsoDate } from '@/lib/date';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
@@ -70,7 +71,7 @@ export default function CheckIn() {
       usuarioId: user.id,
       planoId: activePlan.id,
       semana: currentWeek,
-      dataCheckin: new Date().toISOString().slice(0, 10),
+      dataCheckin: localIsoDate(),
       nivelEsforco: Number(form.nivelEsforco),
       nivelDor: Number(form.nivelDor),
       horasSonoSemana: Number(form.horasSonoSemana),
