@@ -4,16 +4,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AlertTriangle, ArrowRight, Brain, CheckCircle2, ClipboardList, Loader2 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
+import { RISK_STYLES } from '@/lib/checkin';
 import { localIsoDate } from '@/lib/date';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
-
-const riskStyles = {
-  BAIXO: 'bg-primary/10 text-primary',
-  MODERADO: 'bg-orange-400/10 text-orange-400',
-  ALTO: 'bg-destructive/10 text-destructive',
-  CRITICO: 'bg-destructive/10 text-destructive',
-};
 
 const buildScale = (label, value, onChange, helper) => (
   <section className="space-y-3">
@@ -112,7 +106,7 @@ export default function CheckIn() {
                 <h2 className="text-lg font-bold text-foreground">Semana {currentWeek} de {activePlan.total_semanas}</h2>
               </div>
               {latestWeekCheckin && (
-                <span className={`px-3 py-1 rounded-full text-[10px] font-semibold ${riskStyles[latestWeekCheckin.nivelRisco] || 'bg-primary/10 text-primary'}`}>
+                <span className={`px-3 py-1 rounded-full text-[10px] font-semibold ${RISK_STYLES[latestWeekCheckin.nivelRisco] || 'bg-primary/10 text-primary'}`}>
                   {latestWeekCheckin.nivelRiscoLabel || latestWeekCheckin.nivelRisco}
                 </span>
               )}
@@ -176,7 +170,7 @@ export default function CheckIn() {
                     <p className="text-xs text-muted-foreground">Semana {mutation.data.semana} • {mutation.data.dataCheckin}</p>
                   </div>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-[10px] font-semibold ${riskStyles[mutation.data.nivelRisco] || 'bg-primary/10 text-primary'}`}>
+                <span className={`px-3 py-1 rounded-full text-[10px] font-semibold ${RISK_STYLES[mutation.data.nivelRisco] || 'bg-primary/10 text-primary'}`}>
                   {mutation.data.nivelRiscoLabel || mutation.data.nivelRisco}
                 </span>
               </div>
@@ -228,7 +222,7 @@ export default function CheckIn() {
                     <p className="text-sm font-semibold text-foreground">Semana {item.semana}</p>
                     <p className="text-xs text-muted-foreground">{item.dataCheckin}</p>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-semibold ${riskStyles[item.nivelRisco] || 'bg-primary/10 text-primary'}`}>
+                  <span className={`px-3 py-1 rounded-full text-[10px] font-semibold ${RISK_STYLES[item.nivelRisco] || 'bg-primary/10 text-primary'}`}>
                     {item.nivelRiscoLabel || item.nivelRisco}
                   </span>
                 </div>

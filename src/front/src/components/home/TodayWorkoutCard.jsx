@@ -2,19 +2,11 @@ import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Play, Clock, MapPin, Zap, ChevronRight } from 'lucide-react';
 import { localIsoDate } from '@/lib/date';
-
-const TYPE_STYLES = {
-  easy_run: { color: 'text-green-400', bg: 'bg-green-400/10', label: 'Corrida leve' },
-  intervals: { color: 'text-orange-400', bg: 'bg-orange-400/10', label: 'Intervalado' },
-  long_run: { color: 'text-blue-400', bg: 'bg-blue-400/10', label: 'Longão' },
-  recovery: { color: 'text-purple-400', bg: 'bg-purple-400/10', label: 'Recuperação' },
-  tempo: { color: 'text-yellow-400', bg: 'bg-yellow-400/10', label: 'Fartlek' },
-};
+import { WORKOUT_TYPE_COLORS } from '@/lib/workoutTypes';
 
 export default function TodayWorkoutCard({ session, planoId, sessionIndex }) {
   if (!session) return null;
 
-  const style = TYPE_STYLES[session.tipo] || TYPE_STYLES.easy_run;
   const when = !session.dataPrevista
     ? 'Próximo treino'
     : session.dataPrevista === localIsoDate()
@@ -36,7 +28,10 @@ export default function TodayWorkoutCard({ session, planoId, sessionIndex }) {
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
           </div>
 
-          <h3 className="text-2xl font-bold text-foreground mb-1">{style.label}</h3>
+          <h3 className="flex items-center gap-2 text-2xl font-bold text-foreground mb-1">
+            <span className={`h-3 w-3 shrink-0 rounded-full ${WORKOUT_TYPE_COLORS[session.tipo] || WORKOUT_TYPE_COLORS.easy_run}`} aria-hidden="true" />
+            {session.tipoLabel}
+          </h3>
           <p className="text-xs text-muted-foreground mb-4 line-clamp-2">{session.descricao}</p>
 
           <div className="flex items-center gap-4">
