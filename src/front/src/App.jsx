@@ -97,11 +97,6 @@ const AuthenticatedRoutes = () => {
           <WorkoutDetail />
         </RequireAuth>
       } />
-      <Route path="/check-in" element={
-        <RequireAuth requireOnboarding>
-          <CheckIn />
-        </RequireAuth>
-      } />
       <Route path="/historico" element={
         <RequireAuth requireOnboarding>
           <History />
@@ -119,6 +114,7 @@ const AuthenticatedRoutes = () => {
         </RequireAuth>
       }>
         <Route path="/plano" element={<Plan />} />
+        <Route path="/check-in" element={<CheckIn />} />
         <Route path="/ia" element={<Navigate to="/plano" replace />} />
         <Route path="/progresso" element={<Progress />} />
         <Route path="/perfil" element={<Profile />} />
