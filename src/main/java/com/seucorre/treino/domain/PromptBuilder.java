@@ -205,7 +205,7 @@ public class PromptBuilder {
         prompt.append("- reescrever apenas o necessario para reduzir risco e preservar continuidade\n");
         prompt.append("- se houver alerta relevante, reduzir volume ou intensidade antes de progredir\n");
         if (semanasRestantes != null) {
-            prompt.append("- o plano reescrito comeca nesta semana: gerar todas as semanas de 1 a ")
+            prompt.append("- o plano reescrito comeca na semana seguinte ao check-in, que passa a ser a semana 1: gerar todas as semanas de 1 a ")
                     .append(semanasRestantes).append(", com totalSemanas igual a ").append(semanasRestantes).append('\n');
         }
         prompt.append("- responder apenas JSON puro, sem markdown, sem comentarios e sem texto antes ou depois\n");
@@ -219,7 +219,7 @@ public class PromptBuilder {
         if (plano == null || plano.getTotalSemanas() == null || checkin == null || checkin.getSemana() == null) {
             return null;
         }
-        return Math.max(1, plano.getTotalSemanas() - checkin.getSemana() + 1);
+        return Math.max(1, plano.getTotalSemanas() - checkin.getSemana());
     }
 
     private String resumirSessoes(PlanoTreino plano) {

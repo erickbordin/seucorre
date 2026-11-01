@@ -47,7 +47,7 @@ export default function CheckinInsightCard({ checkin, currentWeek }) {
       )}
 
       {checkin.planoReescrito && (
-        <p className="mt-3 text-xs font-medium text-primary">Plano ajustado a partir deste check-in.</p>
+        <p className="mt-3 text-xs font-medium text-primary">Próximas semanas ajustadas a partir deste check-in.</p>
       )}
 
       {Number(checkin.semana) !== Number(currentWeek) && (

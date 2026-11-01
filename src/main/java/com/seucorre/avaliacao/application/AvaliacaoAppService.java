@@ -75,16 +75,15 @@ public class AvaliacaoAppService {
         String alertaSemanal = progressoSemanal == null
                 ? null
                 : progressoAppService.gerarAlertaSemanal(planoTreino.getId(), request.semana());
-        checkinSemanal.setAnaliseIA(gerarAnalise(checkinSemanal, progressoSemanal, alertaSemanal));
+        boolean ajustarPlano = checkinSemanal.precisaReescreverPlano()
+                && !iaProperties.usaModoManual()
+                && haSemanasDepois(planoTreino, request.semana());
+        checkinSemanal.setAnaliseIA(gerarAnalise(checkinSemanal, progressoSemanal, alertaSemanal, ajustarPlano));
 
-        if (checkinSemanal.precisaReescreverPlano()) {
-            if (iaProperties.usaModoManual()) {
-                checkinSemanal.setPlanoReescrito(false);
-            } else {
-                List<ProgressoSemanal> progressosRecentes = progressoAppService.listarUltimosProgressosDoPlano(planoTreino.getId());
-                PlanoTreino planoReescrito = geradorPlanoIA.reescreverPlano(planoTreino, checkinSemanal, progressosRecentes);
-                persistirReescrita(planoTreino, planoReescrito, checkinSemanal);
-            }
+        if (ajustarPlano) {
+            List<ProgressoSemanal> progressosRecentes = progressoAppService.listarUltimosProgressosDoPlano(planoTreino.getId());
+            PlanoTreino planoReescrito = geradorPlanoIA.reescreverPlano(planoTreino, checkinSemanal, progressosRecentes);
+            persistirReescrita(planoTreino, planoReescrito, checkinSemanal);
         } else {
             checkinSemanal.setPlanoReescrito(false);
         }
@@ -212,31 +211,20 @@ public class AvaliacaoAppService {
         checkinSemanal.setAvaliacao(request.avaliacao());
     }
 
+    private boolean haSemanasDepois(PlanoTreino planoTreino, Integer semana) {
+        return planoTreino.getTotalSemanas() != null && semana != null && semana < planoTreino.getTotalSemanas();
+    }
+
     private String gerarAnalise(CheckinSemanal checkinSemanal,
                                 ProgressoSemanal progressoSemanal,
-                                String alertaSemanal) {
+                                String alertaSemanal,
+                                boolean ajustarPlano) {
         if (iaProperties.usaModoManual()) {
             return manualCheckinAnalysisService.gerarAnalise(checkinSemanal, progressoSemanal, alertaSemanal);
         }
 
-        String analiseCheckin = geradorPlanoIA.gerarAnaliseCheckin(checkinSemanal);
-        if (progressoSemanal == null) {
-            return combinarAnaliseComAlerta(analiseCheckin, alertaSemanal);
-        }
-
-        String sugestaoProgresso = geradorPlanoIA.sugerirAjuste(progressoSemanal);
-        String analiseComSugestao = combinarAnaliseComSugestao(analiseCheckin, sugestaoProgresso);
-        return combinarAnaliseComAlerta(analiseComSugestao, alertaSemanal);
-    }
-
-    private String combinarAnaliseComSugestao(String analiseBase, String sugestaoProgresso) {
-        if (sugestaoProgresso == null || sugestaoProgresso.isBlank()) {
-            return analiseBase;
-        }
-        if (analiseBase == null || analiseBase.isBlank()) {
-            return sugestaoProgresso;
-        }
-        return analiseBase + "\nAjuste semanal: " + sugestaoProgresso;
+        String analiseCheckin = geradorPlanoIA.gerarAnaliseCheckin(checkinSemanal, ajustarPlano);
+        return combinarAnaliseComAlerta(analiseCheckin, alertaSemanal);
     }
 
     private String combinarAnaliseComAlerta(String analiseBase, String alertaSemanal) {
@@ -257,11 +245,8 @@ public class AvaliacaoAppService {
         }
 
         checkinSemanal.setPlanoReescrito(true);
-        planoOriginal.cancelar();
-        planoRepository.saveAndFlush(planoOriginal);
-
-        planoReescrito.setStatus(StatusPlano.ATIVO);
-        PlanoTreino novoPlanoSalvo = planoRepository.save(planoReescrito);
+        planoOriginal.substituirSemanasApos(checkinSemanal.getSemana(), planoReescrito.getSessoes());
+        PlanoTreino novoPlanoSalvo = planoRepository.save(planoOriginal);
 
         NivelRisco nivelRisco = checkinSemanal.avaliarNivelRisco();
         eventPublisher.publish(new PlanoReescritoEvent(

@@ -12,6 +12,7 @@ import com.seucorre.infra.notification.NotificacaoService;
 import com.seucorre.shared.domain.event.CheckinProcessadoEvent;
 import com.seucorre.shared.domain.event.PlanoReescritoEvent;
 import com.seucorre.shared.domain.enums.StatusPlano;
+import com.seucorre.shared.domain.enums.TipoTreino;
 import com.seucorre.shared.exception.BusinessRuleException;
 import com.seucorre.treino.domain.GeradorPlanoIA;
 import com.seucorre.treino.domain.PlanoTreino;
@@ -98,7 +99,7 @@ class AvaliacaoAppServiceTest {
         when(planoRepository.findById(planoTreino.getId())).thenReturn(Optional.of(planoTreino));
         when(checkinRepository.findByPlanoIdAndSemana(planoTreino.getId(), 2)).thenReturn(Optional.empty());
         when(progressoAppService.buscarProgressoSemana(planoTreino.getId(), 2)).thenReturn(null);
-        when(geradorPlanoIA.gerarAnaliseCheckin(org.mockito.ArgumentMatchers.any(CheckinSemanal.class)))
+        when(geradorPlanoIA.gerarAnaliseCheckin(org.mockito.ArgumentMatchers.any(CheckinSemanal.class), org.mockito.ArgumentMatchers.anyBoolean()))
                 .thenReturn("Risco baixo, manter plano.");
         when(checkinRepository.save(org.mockito.ArgumentMatchers.any(CheckinSemanal.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
@@ -150,8 +151,16 @@ class AvaliacaoAppServiceTest {
     void processaCheckinComReescritaQuandoRiscoExigeAjuste() {
         Usuario usuario = criarUsuario();
         PlanoTreino planoTreino = criarPlano(usuario);
+        planoTreino.setTotalSemanas(8);
+        SessaoTreino treinoFeito = sessao(3, "5.00");
+        RegistroTreino registro = new RegistroTreino();
+        treinoFeito.registrarExecucao(registro);
+        planoTreino.adicionarSessao(treinoFeito);
+        planoTreino.adicionarSessao(sessao(4, "6.00"));
         PlanoTreino planoReescrito = criarPlano(usuario);
         planoReescrito.setId(null);
+        planoReescrito.adicionarSessao(sessao(1, "4.00"));
+        planoReescrito.adicionarSessao(sessao(2, "4.40"));
 
         ProgressoSemanal progressoSemanal = new ProgressoSemanal();
         progressoSemanal.setPlano(planoTreino);
@@ -179,10 +188,8 @@ class AvaliacaoAppServiceTest {
         when(progressoAppService.listarUltimosProgressosDoPlano(planoTreino.getId())).thenReturn(List.of(progressoSemanal));
         when(progressoAppService.gerarAlertaSemanal(planoTreino.getId(), 3))
                 .thenReturn("Alerta: a semana 3 ultrapassou a Regra dos 10%.");
-        when(geradorPlanoIA.gerarAnaliseCheckin(org.mockito.ArgumentMatchers.any(CheckinSemanal.class)))
+        when(geradorPlanoIA.gerarAnaliseCheckin(org.mockito.ArgumentMatchers.any(CheckinSemanal.class), org.mockito.ArgumentMatchers.eq(true)))
                 .thenReturn("Risco alto, revisar a carga.");
-        when(geradorPlanoIA.sugerirAjuste(progressoSemanal))
-                .thenReturn("Reduzir volume em 20 por cento.");
         when(geradorPlanoIA.reescreverPlano(
                 org.mockito.ArgumentMatchers.eq(planoTreino),
                 org.mockito.ArgumentMatchers.any(CheckinSemanal.class),
@@ -205,9 +212,12 @@ class AvaliacaoAppServiceTest {
         assertThat(dto.precisaReescreverPlano()).isTrue();
         assertThat(dto.planoReescrito()).isTrue();
         assertThat(dto.analiseIA()).contains("Risco alto, revisar a carga.");
-        assertThat(dto.analiseIA()).contains("Ajuste semanal");
         assertThat(dto.analiseIA()).contains("Regra dos 10%");
-        assertThat(planoTreino.getStatus()).isEqualTo(StatusPlano.CANCELADO);
+        assertThat(planoTreino.getStatus()).isEqualTo(StatusPlano.ATIVO);
+        assertThat(planoTreino.getSessoes()).extracting(SessaoTreino::getNumeroSemana).containsExactly(3, 4, 5);
+        assertThat(planoTreino.getSessoes().get(0).foiExecutada()).isTrue();
+        assertThat(planoTreino.calcularVolumeSemanal(4)).isEqualByComparingTo("4.00");
+        assertThat(planoTreino.getTotalSemanas()).isEqualTo(5);
         verify(geradorPlanoIA).reescreverPlano(
                 org.mockito.ArgumentMatchers.eq(planoTreino),
                 org.mockito.ArgumentMatchers.any(CheckinSemanal.class),
@@ -215,6 +225,42 @@ class AvaliacaoAppServiceTest {
         );
         verify(eventPublisher).publish(org.mockito.ArgumentMatchers.any(PlanoReescritoEvent.class));
         verify(eventPublisher).publish(org.mockito.ArgumentMatchers.any(CheckinProcessadoEvent.class));
+    }
+
+    @Test
+    void naUltimaSemanaNaoReescreveEAAnaliseSabeQueOPlanoSegue() {
+        Usuario usuario = criarUsuario();
+        PlanoTreino planoTreino = criarPlano(usuario);
+        planoTreino.setTotalSemanas(8);
+        CheckinSemanalRequest request = new CheckinSemanalRequest(
+                usuario.getId(),
+                planoTreino.getId(),
+                8,
+                LocalDate.of(2026, 5, 27),
+                9,
+                7,
+                4,
+                "Dor e fadiga altas"
+        );
+
+        when(usuarioRepository.findById(usuario.getId())).thenReturn(Optional.of(usuario));
+        when(planoRepository.findById(planoTreino.getId())).thenReturn(Optional.of(planoTreino));
+        when(checkinRepository.findByPlanoIdAndSemana(planoTreino.getId(), 8)).thenReturn(Optional.empty());
+        when(geradorPlanoIA.gerarAnaliseCheckin(org.mockito.ArgumentMatchers.any(CheckinSemanal.class), org.mockito.ArgumentMatchers.eq(false)))
+                .thenReturn("Risco alto, descanse.");
+        when(checkinRepository.save(org.mockito.ArgumentMatchers.any(CheckinSemanal.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        AnaliseRiscoDTO dto = service.processarCheckin(request);
+
+        assertThat(dto.precisaReescreverPlano()).isTrue();
+        assertThat(dto.planoReescrito()).isFalse();
+        assertThat(dto.analiseIA()).isEqualTo("Risco alto, descanse.");
+        verify(geradorPlanoIA, never()).reescreverPlano(
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.any(),
+                org.mockito.ArgumentMatchers.anyList()
+        );
     }
 
     @Test
@@ -262,7 +308,7 @@ class AvaliacaoAppServiceTest {
                 org.mockito.ArgumentMatchers.eq(progressoSemanal),
                 org.mockito.ArgumentMatchers.eq("Alerta: revisar a carga manualmente.")
         );
-        verify(geradorPlanoIA, never()).gerarAnaliseCheckin(org.mockito.ArgumentMatchers.any(CheckinSemanal.class));
+        verify(geradorPlanoIA, never()).gerarAnaliseCheckin(org.mockito.ArgumentMatchers.any(CheckinSemanal.class), org.mockito.ArgumentMatchers.anyBoolean());
         verify(geradorPlanoIA, never()).reescreverPlano(
                 org.mockito.ArgumentMatchers.any(),
                 org.mockito.ArgumentMatchers.any(),
@@ -389,6 +435,14 @@ class AvaliacaoAppServiceTest {
         dadosFisicos.setFcRepouso(58);
         usuario.setDadosFisicos(dadosFisicos);
         return usuario;
+    }
+
+    private SessaoTreino sessao(int semana, String distanciaKm) {
+        SessaoTreino sessao = new SessaoTreino();
+        sessao.setNumeroSemana(semana);
+        sessao.setTipo(TipoTreino.LONGO);
+        sessao.setDistanciaKm(new BigDecimal(distanciaKm));
+        return sessao;
     }
 
     private PlanoTreino criarPlano(Usuario usuario) {

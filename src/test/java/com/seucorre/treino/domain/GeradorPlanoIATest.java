@@ -121,6 +121,49 @@ class GeradorPlanoIATest {
                 .isFalse();
     }
 
+    @Test
+    void naReescritaAsSemanasNovasComecamDepoisDoUltimoTreinoDaSemanaDoCheckin() {
+        GeradorPlanoIA gerador = new GeradorPlanoIA(prompt -> PLANO_DA_IA, new PromptBuilder(), RELOGIO);
+        PlanoTreino planoAntigo = new PlanoTreino();
+        planoAntigo.setUsuario(criarUsuario());
+        SessaoTreino ultimoTreino = sessao(3, "5.00");
+        ultimoTreino.setDataPrevista(LocalDate.of(2026, 11, 4));
+        planoAntigo.adicionarSessao(ultimoTreino);
+        CheckinSemanal checkin = new CheckinSemanal();
+        checkin.setSemana(3);
+        checkin.setNivelEsforco(8);
+        checkin.setNivelDor(8);
+        checkin.setHorasSonoSemana(5);
+
+        PlanoTreino planoReescrito = gerador.reescreverPlano(planoAntigo, checkin);
+
+        assertThat(planoReescrito.getDataInicio()).isEqualTo(LocalDate.of(2026, 11, 6));
+    }
+
+    @Test
+    void oPromptDaAnaliseLevaADecisaoDoSistemaEPedeTextoPuro() {
+        StringBuilder promptRecebido = new StringBuilder();
+        GeradorPlanoIA gerador = new GeradorPlanoIA(prompt -> {
+            promptRecebido.append(prompt);
+            return "ok";
+        }, new PromptBuilder(), RELOGIO);
+        CheckinSemanal checkin = new CheckinSemanal();
+        checkin.setSemana(2);
+        checkin.setNivelEsforco(6);
+        checkin.setNivelDor(2);
+        checkin.setHorasSonoSemana(6);
+
+        gerador.gerarAnaliseCheckin(checkin, true);
+
+        assertThat(promptRecebido.toString())
+                .contains("Risco Moderado")
+                .contains("as proximas semanas do plano serao ajustadas")
+                .contains("nunca contradiz")
+                .contains("sem markdown")
+                .doesNotContain("sobrecarga=")
+                .doesNotContain("=false");
+    }
+
     private SessaoTreino sessao(int semana, String distanciaKm) {
         SessaoTreino sessao = new SessaoTreino();
         sessao.setNumeroSemana(semana);

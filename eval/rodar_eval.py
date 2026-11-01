@@ -71,20 +71,23 @@ def avaliar(caso, semana_atual):
 
     _, planos = chamar("GET", "/api/planos/me", token=token)
     plano_ativo = next((p for p in planos if p["status"] == "ATIVO"), None)
-    reescrito = plano_ativo is not None and plano_ativo["id"] != plano_base["id"]
+    reescrito = status == 201 and analise.get("planoReescrito") is True and plano_ativo is not None
+    semana_nova = semana_atual + 1
+    novas = [s for s in plano_ativo["sessoes"] if s["numeroSemana"] >= semana_nova] if reescrito else []
     volume_atual = volume(plano_base, semana_atual)
-    volume_novo = volume(plano_ativo, 1) if reescrito else None
+    volume_novo = volume(plano_ativo, semana_nova) if reescrito else None
+    texto = (analise.get("analiseIA") or "") if isinstance(analise, dict) else ""
 
     verificacoes = {
         "sem_reescrita": status == 201 and not reescrito,
         "json_valido": status == 201 and reescrito,
-        "tipos_validos": reescrito and all(s["tipo"] in TIPOS_VALIDOS for s in plano_ativo["sessoes"]),
+        "tipos_validos": reescrito and all(s["tipo"] in TIPOS_VALIDOS for s in novas),
         "dez_por_cento_bruto": None,
         "dez_por_cento_final": reescrito and respeita_dez_por_cento(plano_ativo),
         "nao_aumenta_volume": reescrito and volume_novo <= volume_atual,
         "reduz_volume_10": reescrito and volume_novo <= volume_atual * 0.90,
         "reduz_volume_30_sem_intervalado": reescrito and volume_novo <= volume_atual * 0.70 and all(
-            s["tipo"] != "INTERVALADO" for s in plano_ativo["sessoes"] if s["numeroSemana"] == 1),
+            s["tipo"] != "INTERVALADO" for s in novas if s["numeroSemana"] == semana_nova),
     }
     return {
         "id": caso["id"],
@@ -96,6 +99,7 @@ def avaliar(caso, semana_atual):
         "segundos": segundos,
         "volumeSemanaAtual": volume_atual,
         "volumePrimeiraSemanaNova": volume_novo,
+        "analiseTextoPuro": status == 201 and not any(marca in texto for marca in ("**", "true", "false", "=")),
         "resultados": {nome: verificacoes[nome] for nome in caso["expectativas"]},
     }
 

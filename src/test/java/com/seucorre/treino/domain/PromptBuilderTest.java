@@ -18,7 +18,7 @@ class PromptBuilderTest {
 
         String prompt = new PromptBuilder().construirPromptReescrita(plano, checkin, List.of());
 
-        assertThat(prompt).contains("gerar todas as semanas de 1 a 6, com totalSemanas igual a 6");
+        assertThat(prompt).contains("gerar todas as semanas de 1 a 5, com totalSemanas igual a 5");
         assertThat(prompt).contains("\"numeroSemana\": 1");
         assertThat(prompt).doesNotContain("dataPrevista");
         assertThat(prompt).doesNotContain("\"paceAlvo\": 0");
