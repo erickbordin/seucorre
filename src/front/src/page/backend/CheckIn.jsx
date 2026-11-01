@@ -9,6 +9,8 @@ import { localIsoDate } from '@/lib/date';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
+const AVALIACAO_MAX = 100;
+
 const buildScale = (label, value, onChange, helper) => (
   <section className="space-y-3">
     <div className="flex items-center justify-between gap-4">
@@ -144,10 +146,11 @@ export default function CheckIn() {
             <section className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-foreground">Resumo subjetivo</h2>
-                <span className="text-[10px] font-semibold text-muted-foreground">Opcional</span>
+                <span className="text-[10px] font-semibold text-muted-foreground tabular-nums">Opcional · {form.avaliacao.length}/{AVALIACAO_MAX}</span>
               </div>
               <Textarea
                 value={form.avaliacao}
+                maxLength={AVALIACAO_MAX}
                 onChange={(event) => setForm((current) => ({ ...current, avaliacao: event.target.value }))}
                 placeholder="Ex.: senti as pernas pesadas no longo, dormi mal em dois dias, recuperei melhor no fim da semana..."
                 className="min-h-[120px] rounded-2xl border-border bg-card"

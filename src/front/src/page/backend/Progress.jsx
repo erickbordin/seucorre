@@ -4,6 +4,22 @@ import { useQuery } from '@tanstack/react-query';
 import { Activity, ArrowRight, Award, Flame, Target } from 'lucide-react';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import { api } from '@/lib/api';
+import { formatKm } from '@/lib/workoutTypes';
+
+const percent = (value) => `${Math.floor(Number(value || 0))}%`;
+const km = (value) => formatKm(Number(value || 0));
+const contagem = (n, singular, plural) => `${n} ${n === 1 ? singular : plural}`;
+
+function resumoSemana(item) {
+  const partes = [
+    [item.treinosConcluidos, 'concluído', 'concluídos'],
+    [item.treinosParciais, 'parcial', 'parciais'],
+    [item.treinosPerdidos, 'perdido', 'perdidos'],
+  ].filter(([n]) => n > 0).map(([n, singular, plural]) => contagem(n, singular, plural));
+  if (partes.length === 0) return 'Continue registrando seus treinos para enriquecer a leitura da semana.';
+  const lista = partes.length > 1 ? `${partes.slice(0, -1).join(', ')} e ${partes.at(-1)}` : partes[0];
+  return `${lista} · ${km(item.volumeKm)} km no total.`;
+}
 
 export default function Progress() {
   const { data: overview } = useQuery({ queryKey: ['progresso', 'visao'], queryFn: api.progresso.visaoGeral });
@@ -16,9 +32,9 @@ export default function Progress() {
   }));
 
   const stats = [
-    { icon: Target, label: 'Adesão média', value: `${overview?.taxaAdesaoMedia || 0}%`, color: 'text-primary', bg: 'bg-primary/10' },
+    { icon: Target, label: 'Adesão média', value: percent(overview?.taxaAdesaoMedia), color: 'text-primary', bg: 'bg-primary/10' },
     { icon: Flame, label: 'Treinos', value: `${overview?.totalTreinos || 0}`, color: 'text-orange-400', bg: 'bg-orange-400/10' },
-    { icon: Activity, label: 'Km totais', value: `${overview?.volumeTotalKm || 0}`, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+    { icon: Activity, label: 'Km totais', value: km(overview?.volumeTotalKm), color: 'text-blue-400', bg: 'bg-blue-400/10' },
     { icon: Award, label: 'Semanas', value: `${overview?.semanasRegistradas || 0}`, color: 'text-purple-400', bg: 'bg-purple-400/10' },
   ];
 
@@ -66,10 +82,10 @@ export default function Progress() {
               <h3 className="text-sm font-semibold text-foreground">Semana {latestWeek.numeroSemana}</h3>
             </div>
             <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-primary/10 text-primary">
-              {latestWeek.taxaAdesao || 0}% adesão
+              {percent(latestWeek.taxaAdesao)} adesão
             </span>
           </div>
-          <p className="text-xs text-muted-foreground">{latestWeek.resumo || 'Continue registrando seus treinos para enriquecer a leitura da semana.'}</p>
+          <p className="text-xs text-muted-foreground">{resumoSemana(latestWeek)}</p>
         </div>
       )}
 
@@ -95,12 +111,11 @@ export default function Progress() {
           <div key={item.id} className="bg-card rounded-2xl p-4 border border-border/50">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-semibold text-foreground">Semana {item.numeroSemana}</span>
-              <span className="text-xs text-muted-foreground">{item.totalTreinos} treinos • {item.volumeKm || 0} km</span>
+              <span className="text-xs text-muted-foreground">{contagem(item.totalTreinos, 'treino', 'treinos')} • {km(item.volumeKm)} km</span>
             </div>
-            <div className="w-full h-2 rounded-full bg-background overflow-hidden mb-3">
+            <div className="w-full h-2 rounded-full bg-background overflow-hidden">
               <div className="h-full bg-primary rounded-full" style={{ width: `${Math.max(0, Math.min(100, Number(item.taxaAdesao || 0)))}%` }} />
             </div>
-            <p className="text-xs text-muted-foreground">{item.resumo}</p>
           </div>
         ))}
       </div>

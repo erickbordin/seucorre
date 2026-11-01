@@ -9,7 +9,7 @@ export default function WeekStrip({ sessions = [], onSelectDay, selectedDay }) {
   const sessionDates = new Set(sessions.map((session) => session.dataPrevista));
 
   return (
-    <div className="flex gap-2 justify-between px-1">
+    <div className="grid grid-cols-7 gap-1">
       {weekDays.map((day, i) => {
         const isToday = day.toDateString() === today.toDateString();
         const hasWorkout = sessionDates.has(localIsoDate(day));
@@ -20,7 +20,7 @@ export default function WeekStrip({ sessions = [], onSelectDay, selectedDay }) {
             key={i}
             whileTap={{ scale: 0.9 }}
             onClick={() => onSelectDay(i)}
-            className={`flex flex-col items-center gap-1 py-2 px-2.5 rounded-xl transition-all ${
+            className={`flex min-w-0 flex-col items-center gap-1 py-2 rounded-xl transition-all ${
               isSelected
                 ? 'bg-primary text-primary-foreground'
                 : isToday
