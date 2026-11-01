@@ -1,7 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
-import { AlertTriangle, ArrowLeft, CheckCircle2, Clock, Heart, Loader2, MapPin, Save, Timer, Zap } from 'lucide-react';
+import { AlertTriangle, ArrowLeft, CheckCircle2, ChevronDown, Clock, Heart, Loader2, MapPin, Save, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -26,6 +26,14 @@ const STATUS_OPTIONS = [
     description: 'Quero registrar o motivo para manter o histórico e evitar lacunas.',
   },
 ];
+
+const Field = ({ label, error, children }) => (
+  <label className="block space-y-1.5">
+    <span className="text-xs font-medium text-muted-foreground">{label}</span>
+    {children}
+    {error && <span className="block text-xs text-destructive">{error}</span>}
+  </label>
+);
 
 const READABLE_STATUS = {
   CONCLUIDO: 'Concluído',
@@ -76,6 +84,7 @@ export default function WorkoutDetail() {
     viagem: false,
     observacao: '',
   });
+  const [triedSubmit, setTriedSubmit] = useState(false);
 
   const { data: plan, isLoading } = useQuery({
     queryKey: ['plano', planoId],
@@ -84,33 +93,40 @@ export default function WorkoutDetail() {
   });
 
   const session = plan?.sessoes?.[Number(sessionIdx)];
+
+  useEffect(() => {
+    if (!session) return;
+    setForm((current) => ({
+      ...current,
+      distanciaRealKm: current.distanciaRealKm || (session.distancia_km ? String(session.distancia_km) : ''),
+      duracaoRealMin: current.duracaoRealMin || (session.duracao_min ? String(session.duracao_min) : ''),
+    }));
+  }, [session?.id]);
   const alreadyRegistered = Boolean(session?.registro);
   const shouldShowMetrics = form.status !== 'PERDIDO';
   const parsedPace = parsePaceToSeconds(form.paceMedioReal);
 
-  const validationMessage = useMemo(() => {
-    if (!session) return '';
+  const errors = useMemo(() => {
+    const found = {};
     if (form.status === 'PERDIDO') {
       if (!form.doente && !form.viagem && !form.observacao.trim()) {
-        return 'Explique por que o treino não aconteceu para manter o histórico útil.';
+        found.observacao = 'Conte por que o treino não aconteceu.';
       }
-      return '';
+      return found;
     }
-
     if (!form.distanciaRealKm) {
-      return 'Informe a distância realizada para registrar a sessão.';
+      found.distanciaRealKm = 'Informe a distância que você correu.';
     }
-
     if (form.paceMedioReal && parsedPace == null) {
-      return 'Use o formato de pace mm:ss, por exemplo 5:30.';
+      found.paceMedioReal = 'Use o formato m:ss, por exemplo 5:30.';
     }
-
     if (form.sentiuDor && !form.localDor.trim()) {
-      return 'Se marcou dor, informe onde ela aconteceu.';
+      found.localDor = 'Diga onde foi a dor.';
     }
-
-    return '';
-  }, [form, parsedPace, session]);
+    return found;
+  }, [form, parsedPace]);
+  const visibleErrors = triedSubmit ? errors : {};
+  const hasErrors = Object.keys(errors).length > 0;
 
   const mutation = useMutation({
     mutationFn: () => api.treinos.registrar(session.id, {
@@ -192,7 +208,7 @@ export default function WorkoutDetail() {
             <div>
               <h2 className="text-sm font-semibold text-foreground">Treino já registrado</h2>
               <p className="text-xs text-muted-foreground mt-1">
-                Esta sessão já foi salva. Se precisar corrigir dados, o backend ainda não expõe edição de registro.
+                Esta sessão já foi registrada.
               </p>
             </div>
           </div>
@@ -224,19 +240,16 @@ export default function WorkoutDetail() {
           )}
         </section>
       ) : (
-        <form onSubmit={(event) => { event.preventDefault(); if (!validationMessage) mutation.mutate(); }} className="space-y-5">
+        <form onSubmit={(event) => { event.preventDefault(); setTriedSubmit(true); if (!hasErrors) mutation.mutate(); }} noValidate className="space-y-6">
           <section className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Como foi essa sessão?</h2>
-              <span className="text-[10px] font-semibold text-primary">Obrigatório</span>
-            </div>
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Como foi o treino?</h2>
             <div className="space-y-2">
               {STATUS_OPTIONS.map((option) => (
                 <button
                   key={option.value}
                   type="button"
                   onClick={() => setForm((current) => ({ ...current, status: option.value }))}
-                  className={`w-full rounded-2xl border p-4 text-left ${form.status === option.value ? 'bg-primary/10 border-primary/40 ring-1 ring-primary/20' : 'bg-card border-border'}`}
+                  className={`w-full rounded-2xl border p-4 text-left transition-transform active:scale-[0.98] ${form.status === option.value ? 'bg-primary/10 border-primary/40 ring-1 ring-primary/20' : 'bg-card border-border'}`}
                 >
                   <p className={`text-sm font-semibold ${form.status === option.value ? 'text-primary' : 'text-foreground'}`}>{option.label}</p>
                   <p className="text-xs text-muted-foreground mt-1">{option.description}</p>
@@ -247,36 +260,49 @@ export default function WorkoutDetail() {
 
           {shouldShowMetrics && (
             <section className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Métricas da execução</h2>
-                <span className="text-[10px] font-semibold text-primary">Obrigatório em parte</span>
-              </div>
+              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">O que você fez</h2>
               <div className="grid grid-cols-2 gap-3">
-                <Input type="number" step="0.1" placeholder="Distância real km" value={form.distanciaRealKm} onChange={(event) => setForm({ ...form, distanciaRealKm: event.target.value })} className="bg-card border-border h-12 rounded-xl" />
-                <Input type="text" inputMode="numeric" placeholder="Pace médio mm:ss" value={form.paceMedioReal} onChange={(event) => setForm({ ...form, paceMedioReal: event.target.value })} className="bg-card border-border h-12 rounded-xl" />
-                <Input type="number" placeholder="Esforço 0-10" value={form.esforcoPercebido} onChange={(event) => setForm({ ...form, esforcoPercebido: event.target.value })} className="bg-card border-border h-12 rounded-xl" />
-                <Input type="number" placeholder="FC média" value={form.fcMedia} onChange={(event) => setForm({ ...form, fcMedia: event.target.value })} className="bg-card border-border h-12 rounded-xl" />
-                <Input type="number" placeholder="FC máxima" value={form.fcMaxima} onChange={(event) => setForm({ ...form, fcMaxima: event.target.value })} className="bg-card border-border h-12 rounded-xl" />
-                <Input type="number" placeholder="Duração real min" value={form.duracaoRealMin} onChange={(event) => setForm({ ...form, duracaoRealMin: event.target.value })} className="bg-card border-border h-12 rounded-xl" />
+                <Field label="Distância (km)" error={visibleErrors.distanciaRealKm}>
+                  <Input type="number" inputMode="decimal" step="0.1" value={form.distanciaRealKm} onChange={(event) => setForm({ ...form, distanciaRealKm: event.target.value })} aria-invalid={Boolean(visibleErrors.distanciaRealKm)} className={`bg-card h-12 rounded-xl ${visibleErrors.distanciaRealKm ? 'border-destructive' : 'border-border'}`} />
+                </Field>
+                <Field label="Duração (min, opcional)">
+                  <Input type="number" inputMode="numeric" value={form.duracaoRealMin} onChange={(event) => setForm({ ...form, duracaoRealMin: event.target.value })} className="bg-card border-border h-12 rounded-xl" />
+                </Field>
+                <Field label="Esforço de 0 a 10 (opcional)">
+                  <Input type="number" inputMode="numeric" min="0" max="10" value={form.esforcoPercebido} onChange={(event) => setForm({ ...form, esforcoPercebido: event.target.value })} className="bg-card border-border h-12 rounded-xl" />
+                </Field>
               </div>
-              <div className="rounded-xl border border-border bg-card p-3 flex items-start gap-3">
-                <Timer className="w-4 h-4 text-muted-foreground mt-0.5" />
-                <p className="text-xs text-muted-foreground">
-                  Use a duração real para comparar a execução com o treino planejado.
-                </p>
-              </div>
+              <details className="group rounded-2xl border border-border bg-card">
+                <summary className="flex cursor-pointer list-none items-center justify-between px-4 py-3 text-sm font-medium text-foreground">
+                  Mais detalhes (pace e frequência cardíaca)
+                  <ChevronDown className="w-4 h-4 text-muted-foreground transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="grid grid-cols-2 gap-3 px-4 pb-4">
+                  <Field label="Pace médio (m:ss)" error={visibleErrors.paceMedioReal}>
+                    <Input type="text" inputMode="numeric" placeholder="5:30" value={form.paceMedioReal} onChange={(event) => setForm({ ...form, paceMedioReal: event.target.value })} className={`bg-background h-12 rounded-xl ${visibleErrors.paceMedioReal ? 'border-destructive' : 'border-border'}`} />
+                  </Field>
+                  <Field label="FC média (bpm)">
+                    <Input type="number" inputMode="numeric" value={form.fcMedia} onChange={(event) => setForm({ ...form, fcMedia: event.target.value })} className="bg-background border-border h-12 rounded-xl" />
+                  </Field>
+                  <Field label="FC máxima (bpm)">
+                    <Input type="number" inputMode="numeric" value={form.fcMaxima} onChange={(event) => setForm({ ...form, fcMaxima: event.target.value })} className="bg-background border-border h-12 rounded-xl" />
+                  </Field>
+                </div>
+              </details>
             </section>
           )}
 
           <section className="space-y-3">
-            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Contexto e alertas</h2>
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Algo atrapalhou?</h2>
             <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
               <div className="flex items-center space-x-3">
                 <Checkbox id="sentiuDor" checked={form.sentiuDor} onCheckedChange={(checked) => setForm((current) => ({ ...current, sentiuDor: Boolean(checked), localDor: checked ? current.localDor : '' }))} />
                 <Label htmlFor="sentiuDor" className="text-sm text-foreground">Senti dor durante ou depois do treino</Label>
               </div>
               {form.sentiuDor && (
-                <Input placeholder="Onde foi a dor? Ex.: joelho, panturrilha" value={form.localDor} onChange={(event) => setForm({ ...form, localDor: event.target.value })} className="bg-background border-border h-12 rounded-xl" />
+                <Field label="Onde foi a dor?" error={visibleErrors.localDor}>
+                  <Input placeholder="Ex.: joelho, panturrilha" value={form.localDor} onChange={(event) => setForm({ ...form, localDor: event.target.value })} className={`bg-background h-12 rounded-xl ${visibleErrors.localDor ? 'border-destructive' : 'border-border'}`} />
+                </Field>
               )}
 
               <div className="flex items-center space-x-3">
@@ -292,32 +318,24 @@ export default function WorkoutDetail() {
           </section>
 
           <section className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Observações</h2>
-              <span className="text-[10px] font-semibold text-muted-foreground">Opcional</span>
-            </div>
+            <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">{form.status === 'PERDIDO' ? 'O que aconteceu?' : 'Observações (opcional)'}</h2>
             <Textarea
               placeholder="Ex.: reduzi o treino por dor, fiz na esteira, clima muito quente, viagem de trabalho..."
               value={form.observacao}
               onChange={(event) => setForm({ ...form, observacao: event.target.value })}
-              className="min-h-[120px] rounded-xl border-border bg-card"
+              className={`min-h-[120px] rounded-xl bg-card ${visibleErrors.observacao ? 'border-destructive' : 'border-border'}`}
             />
+            {visibleErrors.observacao && <p className="text-xs text-destructive">{visibleErrors.observacao}</p>}
           </section>
 
-          {(validationMessage || mutation.error) && (
-            <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4">
-              <div className="flex items-start gap-3">
-                <AlertTriangle className="w-4 h-4 text-destructive mt-0.5" />
-                <div>
-                  {validationMessage && <p className="text-sm text-destructive">{validationMessage}</p>}
-                  {mutation.error && <p className="text-sm text-destructive">{mutation.error.message}</p>}
-                  <p className="text-xs text-destructive/80 mt-1">Revise os campos e tente novamente.</p>
-                </div>
-              </div>
+          {mutation.error && (
+            <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 flex items-start gap-3">
+              <AlertTriangle className="w-4 h-4 text-destructive mt-0.5" />
+              <p className="text-sm text-destructive">{mutation.error.message}</p>
             </div>
           )}
 
-          <Button type="submit" disabled={mutation.isPending || Boolean(validationMessage)} className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-semibold gap-2">
+          <Button type="submit" disabled={mutation.isPending} className="w-full h-14 rounded-2xl bg-primary text-primary-foreground font-semibold gap-2 transition-transform active:scale-[0.98]">
             {mutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
             Registrar treino
           </Button>
