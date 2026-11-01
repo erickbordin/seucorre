@@ -55,7 +55,7 @@ def criar_usuario_com_plano(caso_id):
     status, plano = chamar("POST", "/api/planos/gerar", {"objetivo": "COMPLETAR_5K"}, token)
     if status != 201:
         raise SystemExit(f"Falha ao gerar o plano base ({status}): {plano}")
-    if "preset" not in (plano.get("resumoIA") or "").lower():
+    if not (plano.get("resumoIA") or "").startswith("Plano de 8 semanas"):
         raise SystemExit("O plano base não veio do preset. Suba o backend com TREINO_GERACAO_MODE=preset.")
     return token, usuario["id"], plano
 
