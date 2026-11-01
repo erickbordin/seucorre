@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
-import { AlertTriangle, CheckCircle2, ChevronDown, Clock, Heart, Loader2, MapPin, Save, Zap } from 'lucide-react';
+import { AlertTriangle, Calendar, CheckCircle2, ChevronDown, Flag, Loader2, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { api } from '@/lib/api';
 import BackButton from '@/components/layout/BackButton';
+import { WORKOUT_TYPE_COLORS, formatKm } from '@/lib/workoutTypes';
 
 const STATUS_OPTIONS = [
   {
@@ -60,11 +61,43 @@ const parsePaceToSeconds = (value) => {
 };
 
 const formatPaceFromSeconds = (value) => {
-  if (!value || Number(value) <= 0) return '-';
-  const totalSeconds = Number(value);
+  const totalSeconds = Math.round(Number(value));
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
-  return `${minutes}:${String(seconds).padStart(2, '0')} min/km`;
+  return `${minutes}:${String(seconds).padStart(2, '0')}`;
+};
+
+const Stat = ({ label, value, unit, hint }) => (
+  <div className="min-w-0">
+    <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+    <p className="mt-1 text-xl font-bold text-foreground tabular-nums">
+      {value}
+      {unit && <span className="ml-0.5 text-sm font-semibold text-muted-foreground">{unit}</span>}
+    </p>
+    {hint && <p className="text-[10px] text-muted-foreground">{hint}</p>}
+  </div>
+);
+
+const plannedStats = (session) => [
+  { label: 'Distância', value: formatKm(Number(session.distancia_km || 0)), unit: 'km' },
+  { label: 'Duração', value: session.duracao_min || '-', unit: session.duracao_min ? 'min' : null },
+  { label: 'Zona', value: session.zona_fc || '-' },
+  session.paceAlvo ? { label: 'Pace alvo', value: session.paceAlvo, unit: '/km' } : null,
+].filter(Boolean);
+
+const doneStats = (session) => {
+  const registro = session.registro || {};
+  const distance = Number(registro.distanciaRealKm || 0);
+  const duration = Number(registro.duracaoRealMin || 0);
+  const pace = registro.paceMedioReal || (distance > 0 && duration > 0 ? (duration * 60) / distance : null);
+  return [
+    distance > 0 ? { label: 'Distância', value: formatKm(distance), unit: 'km', hint: `de ${formatKm(Number(session.distancia_km || 0))} km` } : null,
+    duration > 0 ? { label: 'Tempo', value: duration, unit: 'min' } : null,
+    pace ? { label: 'Pace médio', value: formatPaceFromSeconds(pace), unit: '/km' } : null,
+    registro.esforcoPercebido != null ? { label: 'Esforço', value: registro.esforcoPercebido, unit: '/10' } : null,
+    registro.fcMedia ? { label: 'FC média', value: registro.fcMedia, unit: 'bpm' } : null,
+    registro.fcMaxima ? { label: 'FC máxima', value: registro.fcMaxima, unit: 'bpm' } : null,
+  ].filter(Boolean);
 };
 
 export default function WorkoutDetail() {
@@ -153,13 +186,6 @@ export default function WorkoutDetail() {
     },
   });
 
-  const metrics = useMemo(() => [
-    { icon: Clock, label: 'Duração planejada', value: `${session?.duracao_min || '-'} min` },
-    { icon: MapPin, label: 'Distância planejada', value: `${session?.distancia_km || 0} km` },
-    { icon: Zap, label: 'Pace alvo', value: session?.pace_alvo_min || '-' },
-    { icon: Heart, label: 'Zona alvo', value: session?.zona_fc || '-' },
-  ], [session]);
-
   if (isLoading || !session) {
     return <div className="min-h-screen flex items-center justify-center text-sm text-muted-foreground">Carregando treino...</div>;
   }
@@ -168,76 +194,76 @@ export default function WorkoutDetail() {
     <div className="min-h-screen bg-background max-w-lg mx-auto px-5 pt-14 pb-10">
       <BackButton fallback="/plano" />
 
-      <div className="mb-6">
-        <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary">Semana {session.semana}</span>
-        <h1 className="text-2xl font-bold text-foreground mt-3 mb-2">{session.titulo}</h1>
-        <p className="text-sm text-muted-foreground">{session.descricao}</p>
-      </div>
+      <header className="mb-6">
+        <h1 className="flex items-center gap-2 text-3xl font-bold text-foreground">
+          <span className={`h-3 w-3 shrink-0 rounded-full ${WORKOUT_TYPE_COLORS[session.tipo] || WORKOUT_TYPE_COLORS.easy_run}`} aria-hidden="true" />
+          {session.tipoLabel}
+        </h1>
+        <ul className="mt-3 space-y-1.5 text-sm text-muted-foreground">
+          {session.dataPrevista && (
+            <li className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" aria-hidden="true" />
+              {new Date(`${session.dataPrevista}T00:00:00`).toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
+            </li>
+          )}
+          <li className="flex items-center gap-2">
+            <Flag className="h-4 w-4" aria-hidden="true" />
+            Semana {session.semana} do plano
+          </li>
+          {alreadyRegistered && (
+            <li className="flex items-center gap-2 text-primary">
+              <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+              {READABLE_STATUS[session.registro?.status] || session.registro?.status}
+            </li>
+          )}
+        </ul>
+        {session.descricao && <p className="mt-3 text-sm text-foreground">{session.descricao}</p>}
+      </header>
 
-      <div className="grid grid-cols-2 gap-3 mb-6">
-        {metrics.map((metric) => {
-          const Icon = metric.icon;
-          return (
-            <div key={metric.label} className="bg-card rounded-2xl p-4 border border-border/50">
-              <Icon className="w-4 h-4 text-muted-foreground mb-2" />
-              <p className="text-sm font-bold text-foreground break-words">{metric.value}</p>
-              <p className="text-[10px] text-muted-foreground">{metric.label}</p>
-            </div>
-          );
-        })}
-      </div>
-
-      <section className="mb-8">
-        <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Estrutura</h2>
-        <div className="space-y-3">
-          {session.estrutura.map((fase) => (
-            <div key={fase.fase} className="rounded-2xl bg-card border border-border p-4">
-              <p className="text-xs text-primary font-semibold capitalize mb-1">{fase.fase.replace('_', ' ')}</p>
-              <p className="text-sm text-foreground">{fase.descricao}</p>
-              <p className="text-xs text-muted-foreground mt-2">{fase.duracao}</p>
-            </div>
+      <section className="mb-6 rounded-3xl border border-border bg-card p-5">
+        <h2 className="mb-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">{alreadyRegistered ? 'Seu treino' : 'Planejado'}</h2>
+        <div className="grid grid-cols-3 gap-x-3 gap-y-5">
+          {(alreadyRegistered ? doneStats(session) : plannedStats(session)).map((stat) => (
+            <Stat key={stat.label} {...stat} />
           ))}
         </div>
+        {alreadyRegistered && doneStats(session).length === 0 && (
+          <p className="text-sm text-muted-foreground">Sem métricas registradas.</p>
+        )}
       </section>
 
-      {alreadyRegistered ? (
-        <section className="rounded-2xl border border-border bg-card p-5 space-y-4">
-          <div className="flex items-start gap-3">
-            <CheckCircle2 className="w-5 h-5 text-primary mt-0.5" />
-            <div>
-              <h2 className="text-sm font-semibold text-foreground">Treino já registrado</h2>
-              <p className="text-xs text-muted-foreground mt-1">
-                Esta sessão já foi registrada.
-              </p>
-            </div>
+      {!alreadyRegistered && (
+        <section className="mb-8">
+          <h2 className="text-sm font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Estrutura</h2>
+          <div className="space-y-3">
+            {session.estrutura.map((fase) => (
+              <div key={fase.fase} className="rounded-2xl bg-card border border-border p-4">
+                <p className="text-xs text-primary font-semibold capitalize mb-1">{fase.fase.replace('_', ' ')}</p>
+                <p className="text-sm text-foreground">{fase.descricao}</p>
+                <p className="text-xs text-muted-foreground mt-2">{fase.duracao}</p>
+              </div>
+            ))}
           </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded-xl border border-border p-3">
-              <p className="text-[10px] text-muted-foreground mb-1">Status</p>
-              <p className="text-sm font-semibold text-foreground">{READABLE_STATUS[session.registro?.status] || session.registro?.status || '-'}</p>
-            </div>
-            <div className="rounded-xl border border-border p-3">
-              <p className="text-[10px] text-muted-foreground mb-1">Distância real</p>
-              <p className="text-sm font-semibold text-foreground">{session.registro?.distanciaRealKm ? `${session.registro.distanciaRealKm} km` : '-'}</p>
-            </div>
-            <div className="rounded-xl border border-border p-3">
-              <p className="text-[10px] text-muted-foreground mb-1">Pace médio</p>
-              <p className="text-sm font-semibold text-foreground">{formatPaceFromSeconds(session.registro?.paceMedioReal)}</p>
-            </div>
-            <div className="rounded-xl border border-border p-3">
-              <p className="text-[10px] text-muted-foreground mb-1">Esforço percebido</p>
-              <p className="text-sm font-semibold text-foreground">{session.registro?.esforcoPercebido ?? '-'}</p>
-            </div>
-          </div>
-
-          {session.registro?.observacao && (
-            <div className="rounded-xl border border-border p-3">
-              <p className="text-[10px] text-muted-foreground mb-1">Observação</p>
-              <p className="text-sm text-foreground">{session.registro.observacao}</p>
-            </div>
-          )}
         </section>
+      )}
+
+      {alreadyRegistered ? (
+        (session.registro?.observacao || session.registro?.localDor) && (
+          <section className="rounded-3xl border border-border bg-card p-5 space-y-3">
+            {session.registro?.localDor && (
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Dor</p>
+                <p className="mt-1 text-sm text-foreground">{session.registro.localDor}</p>
+              </div>
+            )}
+            {session.registro?.observacao && (
+              <div>
+                <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Observação</p>
+                <p className="mt-1 text-sm text-foreground">{session.registro.observacao}</p>
+              </div>
+            )}
+          </section>
+        )
       ) : (
         <form onSubmit={(event) => { event.preventDefault(); setTriedSubmit(true); if (!hasErrors) mutation.mutate(); }} noValidate className="space-y-6">
           <section className="space-y-3">

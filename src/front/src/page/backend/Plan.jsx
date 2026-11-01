@@ -5,7 +5,7 @@ import { Calendar, CheckCircle2, ChevronRight, ClipboardCheck, History, Pause, P
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
 import { GOAL_LABELS } from '@/lib/user';
-import { WORKOUT_TYPE_COLORS } from '@/lib/workoutTypes';
+import { WORKOUT_TYPE_COLORS, formatKm } from '@/lib/workoutTypes';
 
 const STATUS_ICONS = {
   concluido: <CheckCircle2 className="w-5 h-5 text-primary" />,
@@ -31,7 +31,6 @@ const GOAL_BADGES = {
   MELHORAR_MARATONA: '42K',
 };
 
-const formatKm = (value) => value.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
 const sumDistance = (items) => items.reduce((acc, session) => acc + Number(session.distancia_km || 0), 0);
 const doneDistance = (session) => Number(session.registro?.distanciaRealKm ?? session.distancia_km ?? 0);
 
