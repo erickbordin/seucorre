@@ -45,7 +45,7 @@ export default function TodayWorkoutCard({ session, planoId, sessionIndex }) {
             {session.distancia_km > 0 && (
               <div className="flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">{session.distancia_km} km</span>
+                <span className="text-xs text-muted-foreground">{String(session.distancia_km).replace('.', ',')} km</span>
               </div>
             )}
             <div className="flex items-center gap-1.5">

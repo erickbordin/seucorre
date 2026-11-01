@@ -48,7 +48,6 @@ export default function Paywall() {
         <p className="text-sm text-foreground">
           O plano free cobre a base. O premium entra quando você quer check-ins adaptativos e reescrita automática do ciclo com base na sua semana real.
         </p>
-        <p className="text-xs text-muted-foreground mt-3">Nesta versão, a proposta comercial já está desenhada, mas o checkout e o backend de billing ainda não estão conectados.</p>
       </div>
 
       {/* Benefits icons */}
@@ -128,7 +127,6 @@ export default function Paywall() {
             <Sparkles className="w-4 h-4" />
             Premium em breve
           </Button>
-          <p className="text-[10px] text-muted-foreground mt-3">O fluxo de assinatura fica habilitado depois que billing, entitlement e webhook estiverem prontos no backend.</p>
         </motion.div>
       </div>
 
