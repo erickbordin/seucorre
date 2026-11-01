@@ -5,3 +5,5 @@ export const WORKOUT_TYPE_COLORS = {
   recovery: 'bg-emerald-400',
   easy_run: 'bg-primary',
 };
+
+export const formatKm = (value) => value.toLocaleString('pt-BR', { maximumFractionDigits: 1 });
