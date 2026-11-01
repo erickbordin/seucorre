@@ -112,8 +112,9 @@ def resumir(linhas):
     print(f"\n{'expectativa':<34} passou")
     for nome, (passou, total) in sorted(por_expectativa.items()):
         print(f"{nome:<34} {passou}/{total} ({passou / total:.0%})")
-    acertos = sum(linha["riscoObtido"] == linha["riscoEsperado"] for linha in linhas)
-    print(f"{'risco classificado certo':<34} {acertos}/{len(linhas)}")
+    respondidas = [linha for linha in linhas if linha["status"] == 201]
+    acertos = sum(linha["riscoObtido"] == linha["riscoEsperado"] for linha in respondidas)
+    print(f"{'risco classificado certo':<34} {acertos}/{len(respondidas)}")
     tempos = [linha["segundos"] for linha in linhas if linha["status"] == 201]
     if tempos:
         print(f"{'tempo do check-in (mediana)':<34} {statistics.median(tempos):.1f} s (máx. {max(tempos):.1f} s)")
@@ -127,6 +128,7 @@ def main():
     argumentos = argparse.ArgumentParser(description="Eval do check-in do SeuCorre contra a API local.")
     argumentos.add_argument("--casos", help="ids separados por vírgula, ex.: c04,c13")
     argumentos.add_argument("--saida", default=str(PASTA / "resultados" / f"{datetime.date.today()}.jsonl"))
+    argumentos.add_argument("--pausa", type=float, default=0, help="segundos de espera entre casos, para respeitar o limite por minuto")
     opcoes = argumentos.parse_args()
 
     definicao = json.loads((PASTA / "casos.json").read_text())
@@ -150,6 +152,7 @@ def main():
             arquivo.write(json.dumps(linha, ensure_ascii=False) + "\n")
         marcas = " ".join(f"{n}={'ok' if v else ('-' if v is None else 'FALHOU')}" for n, v in linha["resultados"].items())
         print(f"{linha['id']} {linha['status']} risco={linha['riscoObtido']} {linha['segundos']}s {marcas}")
+        time.sleep(opcoes.pausa)
 
     resumir([json.loads(l) for l in saida.read_text().splitlines()])
 
