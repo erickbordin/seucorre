@@ -93,6 +93,34 @@ class GeradorPlanoIATest {
         assertThat(planoReescrito.calcularVolumeSemanal(2)).isEqualByComparingTo("6.05");
     }
 
+    @Test
+    void comRiscoCriticoASemanaUmFicaComNoMaximo70PorCentoESemIntervalado() {
+        String planoComIntervalado = """
+                {"totalSemanas": 2, "sessoes": [
+                  {"numeroSemana": 1, "tipo": "intervalado", "distanciaKm": 4},
+                  {"numeroSemana": 1, "tipo": "longo", "distanciaKm": 6},
+                  {"numeroSemana": 2, "tipo": "intervalado", "distanciaKm": 10}
+                ]}
+                """;
+        GeradorPlanoIA gerador = new GeradorPlanoIA(prompt -> planoComIntervalado, new PromptBuilder(), RELOGIO);
+        PlanoTreino planoAntigo = new PlanoTreino();
+        planoAntigo.setUsuario(criarUsuario());
+        planoAntigo.adicionarSessao(sessao(3, "10.00"));
+        CheckinSemanal checkin = new CheckinSemanal();
+        checkin.setSemana(3);
+        checkin.setNivelEsforco(10);
+        checkin.setNivelDor(10);
+        checkin.setHorasSonoSemana(3);
+
+        PlanoTreino planoReescrito = gerador.reescreverPlano(planoAntigo, checkin);
+
+        assertThat(planoReescrito.calcularVolumeSemanal(1)).isLessThanOrEqualTo(new BigDecimal("7.00"));
+        assertThat(planoReescrito.obterSessoesDaSemana(1)).extracting(SessaoTreino::getTipo)
+                .doesNotContain(TipoTreino.INTERVALADO);
+        assertThat(RegraDezPorCento.excede(planoReescrito.calcularVolumeSemanal(1), planoReescrito.calcularVolumeSemanal(2)))
+                .isFalse();
+    }
+
     private SessaoTreino sessao(int semana, String distanciaKm) {
         SessaoTreino sessao = new SessaoTreino();
         sessao.setNumeroSemana(semana);
