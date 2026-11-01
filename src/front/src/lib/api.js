@@ -1,3 +1,5 @@
+import { RISK_LABELS } from '@/lib/checkin';
+
 const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 const ACCESS_TOKEN_KEY = 'seucorre_access_token';
 const REFRESH_TOKEN_KEY = 'seucorre_refresh_token';
@@ -152,7 +154,8 @@ export function normalizeCheckin(item) {
   if (!item) return null;
   return {
     ...item,
-    nivelRiscoLabel: String(item.nivelRisco || '').replaceAll('_', ' '),
+    nivelRiscoLabel: RISK_LABELS[item.nivelRisco] || item.nivelRisco,
+    dataLabel: item.dataCheckin ? new Date(`${item.dataCheckin}T00:00:00`).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : null,
   };
 }
 

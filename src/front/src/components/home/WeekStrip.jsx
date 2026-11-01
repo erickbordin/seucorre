@@ -28,7 +28,7 @@ export default function WeekStrip({ sessions = [], onSelectDay, selectedDay }) {
                   : 'text-muted-foreground'
             }`}
           >
-            <span className="text-[10px] font-medium uppercase">{DAY_LABELS[i]}</span>
+            <span className="text-[0.625rem] font-medium uppercase">{DAY_LABELS[i]}</span>
             <span className={`text-sm font-bold ${isSelected ? '' : isToday ? 'text-foreground' : ''}`}>
               {day.getDate()}
             </span>

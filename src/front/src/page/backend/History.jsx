@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, CheckCircle2, Clock3, MapPin, XCircle } from 'lucide-react';
 import { api } from '@/lib/api';
+import { formatKm } from '@/lib/workoutTypes';
 import BackButton from '@/components/layout/BackButton';
 
 const STATUS_META = {
@@ -58,8 +59,8 @@ export default function History() {
                 <div className="flex items-start justify-between gap-4 mb-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className={`px-2 py-1 rounded-full text-[10px] font-semibold ${meta.className}`}>{meta.label}</span>
-                      <span className="px-2 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-semibold">{session.tipoLabel || session.tipoOriginal}</span>
+                      <span className={`px-2 py-1 rounded-full text-[0.625rem] font-semibold ${meta.className}`}>{meta.label}</span>
+                      <span className="px-2 py-1 rounded-full bg-primary/10 text-primary text-[0.625rem] font-semibold">{session.tipoLabel || session.tipoOriginal}</span>
                     </div>
                     <h2 className="text-sm font-semibold text-foreground">{session.titulo}</h2>
                     <p className="text-xs text-muted-foreground">{session.dataLabel || session.dataPrevista || `Sessão ${index + 1}`}</p>
@@ -69,21 +70,21 @@ export default function History() {
 
                 <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mb-3">
                   <span className="inline-flex items-center gap-1"><Clock3 className="w-3.5 h-3.5" /> {session.registro?.duracaoRealMin || session.duracao_min || '-'} min</span>
-                  <span className="inline-flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {session.registro?.distanciaRealKm || session.distancia_km || 0} km</span>
+                  <span className="inline-flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {formatKm(Number(session.registro?.distanciaRealKm || session.distancia_km || 0))} km</span>
                   {session.registro?.paceMedioReal && <span>{formatPace(session.registro.paceMedioReal)}</span>}
                 </div>
 
                 {(session.registro?.observacao || session.registro?.localDor) && (
-                  <p className="text-xs text-muted-foreground mb-3">
+                  <p className="text-xs text-muted-foreground mb-3 line-clamp-3">
                     {session.registro.observacao || `Dor relatada em ${session.registro.localDor}.`}
                   </p>
                 )}
 
                 <div className="flex flex-wrap gap-2">
-                  {session.registro?.sentiuDor && <span className="px-2 py-1 rounded-full bg-orange-400/10 text-orange-400 text-[10px] font-semibold">Dor relatada</span>}
-                  {session.registro?.doente && <span className="px-2 py-1 rounded-full bg-destructive/10 text-destructive text-[10px] font-semibold">Doente</span>}
-                  {session.registro?.viagem && <span className="px-2 py-1 rounded-full bg-card border border-border text-[10px] font-semibold text-muted-foreground">Viagem</span>}
-                  {healthAlert && <span className="px-2 py-1 rounded-full bg-destructive/10 text-destructive text-[10px] font-semibold">Alerta de saúde</span>}
+                  {session.registro?.sentiuDor && <span className="px-2 py-1 rounded-full bg-orange-400/10 text-orange-400 text-[0.625rem] font-semibold">Dor relatada</span>}
+                  {session.registro?.doente && <span className="px-2 py-1 rounded-full bg-destructive/10 text-destructive text-[0.625rem] font-semibold">Doente</span>}
+                  {session.registro?.viagem && <span className="px-2 py-1 rounded-full bg-card border border-border text-[0.625rem] font-semibold text-muted-foreground">Viagem</span>}
+                  {healthAlert && <span className="px-2 py-1 rounded-full bg-destructive/10 text-destructive text-[0.625rem] font-semibold">Alerta de saúde</span>}
                 </div>
               </div>
             );

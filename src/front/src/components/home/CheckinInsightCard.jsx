@@ -34,7 +34,7 @@ export default function CheckinInsightCard({ checkin, currentWeek }) {
           <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
           Leitura da IA · Semana {checkin.semana}
         </div>
-        <span className={`shrink-0 rounded-full px-3 py-1 text-[10px] font-semibold ${RISK_STYLES[checkin.nivelRisco] || RISK_STYLES.BAIXO}`}>
+        <span className={`shrink-0 rounded-full px-3 py-1 text-[0.625rem] font-semibold ${RISK_STYLES[checkin.nivelRisco] || RISK_STYLES.BAIXO}`}>
           {checkin.nivelRiscoLabel || checkin.nivelRisco}
         </span>
       </div>

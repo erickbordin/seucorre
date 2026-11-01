@@ -48,7 +48,7 @@ export default function Progress() {
 
   return (
     <div className="px-5 pt-14 pb-28">
-      <div className="flex items-start justify-between gap-4 mb-6">
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2 mb-6">
         <div>
           <h1 className="text-2xl font-bold text-foreground mb-1">Progresso</h1>
           <p className="text-xs text-muted-foreground">Visão semanal e evolução do ciclo</p>
@@ -68,7 +68,7 @@ export default function Progress() {
                 <Icon className={`w-4 h-4 ${stat.color}`} />
               </div>
               <p className="text-xl font-bold text-foreground tabular-nums">{stat.value}</p>
-              <p className="text-[10px] text-muted-foreground">{stat.label}</p>
+              <p className="text-[0.625rem] text-muted-foreground">{stat.label}</p>
             </div>
           );
         })}
@@ -81,7 +81,7 @@ export default function Progress() {
               <p className="text-xs text-muted-foreground mb-1">Leitura mais recente</p>
               <h3 className="text-sm font-semibold text-foreground">Semana {latestWeek.numeroSemana}</h3>
             </div>
-            <span className="text-[10px] font-semibold px-2 py-1 rounded-full bg-primary/10 text-primary">
+            <span className="text-[0.625rem] font-semibold px-2 py-1 rounded-full bg-primary/10 text-primary">
               {percent(latestWeek.taxaAdesao)} adesão
             </span>
           </div>
@@ -91,16 +91,20 @@ export default function Progress() {
 
       <div className="bg-card rounded-2xl border border-border/50 p-4 mb-6">
         <h3 className="text-sm font-semibold text-foreground mb-1">Volume semanal</h3>
-        <p className="text-[10px] text-muted-foreground mb-4">Km registrados por semana para mostrar tendência de consistência.</p>
-        <div className="h-44">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={weeklyData}>
-              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'hsl(0,0%,55%)' }} />
-              <YAxis hide />
-              <Bar dataKey="km" radius={[8, 8, 0, 0]} fill="hsl(75,100%,65%)" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        <p className="text-[0.625rem] text-muted-foreground mb-4">Km registrados por semana para mostrar tendência de consistência.</p>
+        {weeklyData.length === 0 ? (
+          <p className="rounded-xl border border-dashed border-border p-6 text-center text-xs text-muted-foreground">O gráfico aparece depois do primeiro treino registrado.</p>
+        ) : (
+          <div className="h-44">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={weeklyData}>
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11, fill: 'hsl(0,0%,55%)' }} />
+                <YAxis hide />
+                <Bar dataKey="km" radius={[8, 8, 0, 0]} maxBarSize={40} fill="hsl(75,100%,65%)" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        )}
       </div>
 
       <div className="space-y-3">

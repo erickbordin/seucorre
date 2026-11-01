@@ -69,12 +69,12 @@ const formatPaceFromSeconds = (value) => {
 
 const Stat = ({ label, value, unit, hint }) => (
   <div className="min-w-0">
-    <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
-    <p className="mt-1 text-xl font-bold text-foreground tabular-nums">
+    <p className="text-[0.625rem] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+    <p className="mt-1 flex flex-wrap items-baseline text-xl font-bold text-foreground tabular-nums">
       {value}
       {unit && <span className="ml-0.5 text-sm font-semibold text-muted-foreground">{unit}</span>}
     </p>
-    {hint && <p className="text-[10px] text-muted-foreground">{hint}</p>}
+    {hint && <p className="text-[0.625rem] text-muted-foreground">{hint}</p>}
   </div>
 );
 
@@ -195,7 +195,7 @@ export default function WorkoutDetail() {
       <BackButton fallback="/plano" />
 
       <header className="mb-6">
-        <h1 className="flex items-center gap-2 text-3xl font-bold text-foreground">
+        <h1 className="flex min-w-0 items-center gap-2 text-3xl font-bold text-foreground [overflow-wrap:anywhere]">
           <span className={`h-3 w-3 shrink-0 rounded-full ${WORKOUT_TYPE_COLORS[session.tipo] || WORKOUT_TYPE_COLORS.easy_run}`} aria-hidden="true" />
           {session.tipoLabel}
         </h1>
@@ -222,7 +222,7 @@ export default function WorkoutDetail() {
 
       <section className="mb-6 rounded-3xl border border-border bg-card p-5">
         <h2 className="mb-4 text-xs font-medium uppercase tracking-wide text-muted-foreground">{alreadyRegistered ? 'Seu treino' : 'Planejado'}</h2>
-        <div className="grid grid-cols-3 gap-x-3 gap-y-5">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(5.5rem,1fr))] gap-x-3 gap-y-5">
           {(alreadyRegistered ? doneStats(session) : plannedStats(session)).map((stat) => (
             <Stat key={stat.label} {...stat} />
           ))}
@@ -252,13 +252,13 @@ export default function WorkoutDetail() {
           <section className="rounded-3xl border border-border bg-card p-5 space-y-3">
             {session.registro?.localDor && (
               <div>
-                <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Dor</p>
+                <p className="text-[0.625rem] font-medium uppercase tracking-wide text-muted-foreground">Dor</p>
                 <p className="mt-1 text-sm text-foreground">{session.registro.localDor}</p>
               </div>
             )}
             {session.registro?.observacao && (
               <div>
-                <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">Observação</p>
+                <p className="text-[0.625rem] font-medium uppercase tracking-wide text-muted-foreground">Observação</p>
                 <p className="mt-1 text-sm text-foreground">{session.registro.observacao}</p>
               </div>
             )}

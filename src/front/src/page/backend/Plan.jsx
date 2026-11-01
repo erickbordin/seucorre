@@ -122,7 +122,7 @@ export default function Plan() {
               ))}
             </div>
 
-            <div className="mt-4 flex items-end justify-between tabular-nums">
+            <div className="mt-4 flex flex-wrap items-end justify-between gap-x-4 gap-y-2 tabular-nums">
               <div>
                 <p className="text-xs text-muted-foreground">Semanas concluídas</p>
                 <p className="mt-0.5 text-lg font-bold text-foreground">{finishedWeeks.size}/{totalWeeks}</p>

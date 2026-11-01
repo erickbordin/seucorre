@@ -69,7 +69,7 @@ export default function Paywall() {
               <div className={`w-10 h-10 rounded-xl ${b.bg} flex items-center justify-center mx-auto mb-2`}>
                 <Icon className={`w-5 h-5 ${b.color}`} />
               </div>
-              <p className="text-[10px] text-muted-foreground">{b.label}</p>
+              <p className="text-[0.625rem] text-muted-foreground">{b.label}</p>
             </motion.div>
           );
         })}
@@ -102,7 +102,7 @@ export default function Paywall() {
           animate={{ opacity: 1, y: 0 }}
           className="bg-gradient-to-br from-primary/10 via-card to-card rounded-2xl p-5 border-2 border-primary/40 relative overflow-hidden"
         >
-          <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-bl-xl">
+          <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-[0.625rem] font-bold px-3 py-1 rounded-bl-xl">
             RECOMENDADO
           </div>
           <div className="flex items-center justify-between mb-4">
@@ -112,7 +112,7 @@ export default function Paywall() {
             </div>
             <div className="text-right">
               <p className="text-2xl font-bold text-foreground">R$ 29<span className="text-sm font-normal text-muted-foreground">/mês</span></p>
-              <p className="text-[10px] text-muted-foreground">ou R$ 249/ano</p>
+              <p className="text-[0.625rem] text-muted-foreground">ou R$ 249/ano</p>
             </div>
           </div>
           <div className="space-y-2 mb-5">
@@ -134,7 +134,7 @@ export default function Paywall() {
         Continuar no plano free
       </Button>
 
-      <p className="text-[10px] text-muted-foreground text-center">
+      <p className="text-[0.625rem] text-muted-foreground text-center">
         Cancele a qualquer momento. Sem compromisso.
       </p>
     </div>
