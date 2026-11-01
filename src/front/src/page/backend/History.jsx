@@ -1,7 +1,7 @@
-import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { AlertTriangle, ArrowRight, CheckCircle2, Clock3, MapPin, XCircle } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Clock3, MapPin, XCircle } from 'lucide-react';
 import { api } from '@/lib/api';
+import BackButton from '@/components/layout/BackButton';
 
 const STATUS_META = {
   concluido: { label: 'Concluído', className: 'bg-primary/10 text-primary', icon: CheckCircle2 },
@@ -34,16 +34,11 @@ export default function History() {
 
   return (
     <div className="px-5 pt-14 pb-28">
-      <div className="flex items-start justify-between gap-4 mb-6">
-        <div>
-          <p className="text-xs text-muted-foreground mb-1">Histórico de treinos</p>
-          <h1 className="text-2xl font-bold text-foreground">Tudo o que já aconteceu no plano</h1>
-        </div>
-        <Link to="/plano" className="text-xs text-primary font-semibold inline-flex items-center gap-1 mt-1">
-          Voltar ao plano
-          <ArrowRight className="w-3 h-3" />
-        </Link>
-      </div>
+      <BackButton fallback="/plano" />
+      <header className="mb-6">
+        <h1 className="text-3xl font-bold text-foreground">Histórico</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Treinos que já passaram no plano.</p>
+      </header>
 
       {isLoading ? (
         <div className="rounded-2xl bg-card border border-border p-6 text-sm text-muted-foreground">Carregando histórico...</div>

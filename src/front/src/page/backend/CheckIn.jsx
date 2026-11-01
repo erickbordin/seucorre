@@ -87,10 +87,10 @@ export default function CheckIn() {
 
   return (
     <div className="px-5 pt-14 pb-28">
-      <div className="mb-6">
-        <p className="text-xs text-muted-foreground mb-1">Check-in semanal</p>
-        <h1 className="text-2xl font-bold text-foreground">Como seu corpo respondeu nesta semana?</h1>
-      </div>
+      <header className="mb-6">
+        <h1 className="text-3xl font-bold text-foreground">Check-in</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Como seu corpo respondeu nesta semana?</p>
+      </header>
 
       {isLoadingPlans ? (
         <div className="rounded-2xl bg-card border border-border p-6 text-sm text-muted-foreground">Carregando plano ativo...</div>

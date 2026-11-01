@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Bell, CalendarClock, HeartPulse, MoonStar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import BackButton from '@/components/layout/BackButton';
 
 const DEFAULT_SETTINGS = {
   treinoHoje: true,
@@ -53,10 +54,11 @@ export default function Notifications() {
 
   return (
     <div className="px-5 pt-14 pb-28">
-      <div className="mb-6">
-        <p className="text-xs text-muted-foreground mb-1">Notificações</p>
-        <h1 className="text-2xl font-bold text-foreground">Escolha o que realmente vale te interromper</h1>
-      </div>
+      <BackButton />
+      <header className="mb-6">
+        <h1 className="text-3xl font-bold text-foreground">Notificações</h1>
+        <p className="mt-1 text-sm text-muted-foreground">Escolha o que vale te interromper.</p>
+      </header>
 
       <section className="rounded-3xl bg-card border border-border p-5 mb-6">
         <p className="text-sm text-foreground">
