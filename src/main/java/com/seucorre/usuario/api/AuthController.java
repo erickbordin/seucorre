@@ -1,7 +1,10 @@
 package com.seucorre.usuario.api;
 
+import com.seucorre.infra.security.GoogleIdTokenVerifier;
 import com.seucorre.infra.security.JwtService;
 import com.seucorre.shared.api.ApiResponse;
+import com.seucorre.usuario.application.UsuarioAppService;
+import com.seucorre.usuario.application.dto.GoogleLoginRequest;
 import com.seucorre.usuario.application.dto.LoginRequest;
 import com.seucorre.usuario.application.dto.LoginResponse;
 import com.seucorre.usuario.infrastructure.UsuarioRepository;
@@ -27,6 +30,8 @@ public class AuthController {
     private final UsuarioRepository repository;
     private final JwtService tokenService;
     private final PasswordEncoder passwordEncoder;
+    private final GoogleIdTokenVerifier googleIdTokenVerifier;
+    private final UsuarioAppService usuarioAppService;
 
     @PostMapping("/login")
     public ResponseEntity<?> login(@RequestBody @Valid LoginRequest data) {
@@ -35,10 +40,28 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.erro("E-mail incorreto."));
         }
 
+        if (usuario.getSenhaHash() == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.erro("Esta conta entra pelo Google."));
+        }
+
         if (!passwordEncoder.matches(data.senha(), usuario.getSenhaHash())) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.erro("Senha incorreta."));
         }
 
+        return ResponseEntity.ok(new LoginResponse(
+                tokenService.gerarAccessToken(usuario),
+                tokenService.gerarRefreshToken(usuario)
+        ));
+    }
+
+    @PostMapping("/google")
+    public ResponseEntity<?> google(@RequestBody @Valid GoogleLoginRequest data) {
+        var identidade = googleIdTokenVerifier.verificar(data.credential()).orElse(null);
+        if (identidade == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.erro("Não foi possível validar o login com o Google."));
+        }
+
+        var usuario = usuarioAppService.entrarComGoogle(identidade);
         return ResponseEntity.ok(new LoginResponse(
                 tokenService.gerarAccessToken(usuario),
                 tokenService.gerarRefreshToken(usuario)

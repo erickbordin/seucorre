@@ -33,6 +33,10 @@ public class Usuario {
     @Column(name = "senha_hash")
     private String senhaHash;
 
+    @JsonIgnore
+    @Column(name = "google_id", unique = true)
+    private String googleId;
+
     @Embedded
     private DadosFisicos dadosFisicos;
 

@@ -47,6 +47,11 @@ export const AuthProvider = ({ children }) => {
     return loadUser();
   };
 
+  const loginWithGoogle = async (credential) => {
+    await auth.google(credential);
+    return loadUser();
+  };
+
   const logout = () => {
     auth.logout();
     clearOnboardingDraft();
@@ -66,6 +71,7 @@ export const AuthProvider = ({ children }) => {
     isLoadingPublicSettings: false,
     authError,
     login,
+    loginWithGoogle,
     logout,
     reloadUser: loadUser,
   }), [user, isAuthenticated, hasCompletedOnboarding, isLoadingAuth, authError]);

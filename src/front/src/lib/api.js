@@ -162,6 +162,11 @@ export const auth = {
     tokenStore.setTokens(data);
     return data;
   },
+  google: async (credential) => {
+    const data = await request('/auth/google', { method: 'POST', body: { credential } }, false);
+    tokenStore.setTokens(data);
+    return data;
+  },
   refresh: async () => {
     const refreshToken = tokenStore.getRefreshToken();
     if (!refreshToken) return null;

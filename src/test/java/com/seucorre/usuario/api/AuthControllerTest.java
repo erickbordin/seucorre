@@ -1,7 +1,10 @@
 package com.seucorre.usuario.api;
 
+import com.seucorre.infra.security.GoogleIdTokenVerifier;
 import com.seucorre.infra.security.JwtService;
 import com.seucorre.shared.api.ApiResponse;
+import com.seucorre.usuario.application.UsuarioAppService;
+import com.seucorre.usuario.application.dto.GoogleLoginRequest;
 import com.seucorre.usuario.application.dto.LoginRequest;
 import com.seucorre.usuario.application.dto.LoginResponse;
 import com.seucorre.usuario.domain.Usuario;
@@ -24,6 +27,7 @@ class AuthControllerTest {
     private UsuarioRepository repository;
     private JwtService jwtService;
     private PasswordEncoder passwordEncoder;
+    private GoogleIdTokenVerifier googleIdTokenVerifier;
     private AuthController controller;
 
     @BeforeEach
@@ -31,7 +35,30 @@ class AuthControllerTest {
         repository = mock(UsuarioRepository.class);
         jwtService = mock(JwtService.class);
         passwordEncoder = mock(PasswordEncoder.class);
-        controller = new AuthController(repository, jwtService, passwordEncoder);
+        googleIdTokenVerifier = mock(GoogleIdTokenVerifier.class);
+        controller = new AuthController(repository, jwtService, passwordEncoder, googleIdTokenVerifier, mock(UsuarioAppService.class));
+    }
+
+    @Test
+    void loginComSenhaEmContaCriadaPeloGoogleOrientaUsarOGoogle() {
+        Usuario usuario = new Usuario();
+        usuario.setEmail("ana@gmail.com");
+
+        when(repository.findByEmail("ana@gmail.com")).thenReturn(Optional.of(usuario));
+
+        ResponseEntity<?> response = controller.login(new LoginRequest("ana@gmail.com", "qualquer"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+        assertThat(response.getBody()).isEqualTo(ApiResponse.erro("Esta conta entra pelo Google."));
+    }
+
+    @Test
+    void googleComTokenInvalidoRetornaUnauthorized() {
+        when(googleIdTokenVerifier.verificar("token-falso")).thenReturn(Optional.empty());
+
+        ResponseEntity<?> response = controller.google(new GoogleLoginRequest("token-falso"));
+
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     }
 
     @Test

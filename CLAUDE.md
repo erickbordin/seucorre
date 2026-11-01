@@ -22,6 +22,7 @@ Guardrails vivem no Java, nunca só no prompt:
 ## Fluxos que não podem quebrar
 
 - **Acesso**: visitante → login ou cadastro → `GET /api/usuarios/me` → sem onboarding vai para `/onboarding` → depois as rotas privadas. Um 401 tenta refresh uma vez em `lib/api.js` antes de encerrar a sessão.
+- **Login com Google**: o botão oficial (Google Identity Services, `components/auth/GoogleSignInButton.jsx`) entrega um ID token; `POST /auth/google` valida assinatura, emissor, audiência e validade em `GoogleIdTokenVerifier` e entra pela mesma conta do e-mail verificado (`google_id` vinculado). Conta criada pelo Google não tem senha. `GOOGLE_CLIENT_ID` vazio esconde o botão e desliga o endpoint.
 - **Geração de plano**: `seucorre.treino.geracao.mode` escolhe `preset` (padrão) ou `ia`; `fallback-to-ia` cobre combinação fora do catálogo, senão a geração falha de forma explícita.
 - **Agenda**: `AgendaDeTreino` ignora datas vindas da IA e agenda nos dias de treino do usuário, a partir de hoje, no fuso `America/Sao_Paulo` (bean `Clock`).
 - **Check-in**: `CheckinSemanal` calcula o risco. Risco acima de `BAIXO`, provider com IA e semanas pela frente → a reescrita troca, no mesmo plano, só os treinos pendentes depois da semana do check-in; treinos registrados ficam. A análise em texto recebe essa decisão e a explica sem contradizer.

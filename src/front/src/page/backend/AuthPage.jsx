@@ -7,6 +7,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
 import DaySelector from '@/components/onboarding/DaySelector';
 import SelectionCard from '@/components/onboarding/SelectionCard';
+import GoogleSignInButton, { GOOGLE_CLIENT_ID } from '@/components/auth/GoogleSignInButton';
 import {
   GENDER_OPTIONS,
   ageFromBirthDate,
@@ -300,21 +301,9 @@ const Field = ({ label, error, children }) => (
   </label>
 );
 
-const GoogleButton = ({ label, onClick }) => (
-  <Button
-    type="button"
-    variant="outline"
-    onClick={onClick}
-    className="h-12 w-full rounded-xl border-border bg-card text-foreground hover:bg-secondary"
-  >
-    <span className="mr-2 flex h-5 w-5 items-center justify-center rounded-full bg-foreground text-[11px] font-bold text-background">G</span>
-    {label}
-  </Button>
-);
-
 export default function AuthPage({ mode = 'register' }) {
   const navigate = useNavigate();
-  const { hasCompletedOnboarding, login, reloadUser, user } = useAuth();
+  const { hasCompletedOnboarding, login, loginWithGoogle, reloadUser, user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [form, setForm] = useState(createEmptyForm);
@@ -539,8 +528,18 @@ export default function AuthPage({ mode = 'register' }) {
     setProfileStep((current) => Math.min(current + 1, profileSteps.length - 1));
   };
 
-  const handleGoogle = () => {
-    setError('Entrada com Google ainda precisa ser conectada no backend.');
+  const handleGoogleCredential = async (credential) => {
+    setLoading(true);
+    setError('');
+    try {
+      const currentUser = await loginWithGoogle(credential);
+      const shouldCompleteProfile = !currentUser?.objetivo || !currentUser?.nivelCondicionamento;
+      navigate(shouldCompleteProfile ? '/onboarding' : '/');
+    } catch (err) {
+      setError(err.message || 'Não foi possível entrar com o Google.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const renderProgress = () => (
@@ -738,16 +737,17 @@ export default function AuthPage({ mode = 'register' }) {
               </div>
               <h1 className="text-3xl font-bold text-foreground">{isLogin ? 'Entrar' : 'Criar conta'}</h1>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {isLogin ? 'Entre com email e senha ou continue pelo Google.' : 'Crie sua conta com email e senha ou continue pelo Google.'}
+                {isLogin ? 'Entre com email e senha' : 'Crie sua conta com email e senha'}
+                {GOOGLE_CLIENT_ID ? ' ou continue pelo Google.' : '.'}
               </p>
             </div>
           )}
         </div>
 
         <form onSubmit={submit} className="flex flex-1 flex-col gap-5 pb-28">
-          {!isProfileOnly && (
+          {!isProfileOnly && GOOGLE_CLIENT_ID && (
             <>
-              <GoogleButton label={isLogin ? 'Entrar com Google' : 'Criar conta com Google'} onClick={handleGoogle} />
+              <GoogleSignInButton text={isLogin ? 'signin_with' : 'signup_with'} onCredential={handleGoogleCredential} onError={setError} />
               <div className="flex items-center gap-3 text-xs text-muted-foreground">
                 <span className="h-px flex-1 bg-border" />
                 ou

@@ -9,6 +9,9 @@ spring:
 
 # Configurações de Negócio (Ciência da Corrida)
 seucorre:
+  auth:
+    google:
+      client-id: ${GOOGLE_CLIENT_ID:}
   treino:
     frequencia-max-padrao: 220
     geracao:
