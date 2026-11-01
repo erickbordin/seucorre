@@ -4,7 +4,9 @@ import { useQuery } from '@tanstack/react-query';
 import { Bell, ChevronRight, Plus } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
+import { latestCheckin } from '@/lib/checkin';
 import { currentWeekDates, localIsoDate } from '@/lib/date';
+import CheckinInsightCard from '@/components/home/CheckinInsightCard';
 import TodayWorkoutCard from '@/components/home/TodayWorkoutCard';
 import WeekStrip from '@/components/home/WeekStrip';
 
@@ -15,6 +17,10 @@ export default function Home() {
   const { data: plans = [], isLoading } = useQuery({
     queryKey: ['meus-planos'],
     queryFn: api.planos.listarMeus,
+  });
+  const { data: checkins = [] } = useQuery({
+    queryKey: ['checkins', 'historico'],
+    queryFn: api.checkins.historico,
   });
 
   const plan = plans.find((item) => item.status === 'ativo') || plans[0];
@@ -78,6 +84,10 @@ export default function Home() {
                 <p className="text-xs text-muted-foreground">Você concluiu os treinos do plano ou ele está pausado.</p>
               </div>
             )}
+          </section>
+
+          <section className="mb-6">
+            <CheckinInsightCard checkin={latestCheckin(checkins)} currentWeek={currentWeek} />
           </section>
 
           <Link to="/plano" className="block rounded-2xl bg-card border border-border p-4 transition-transform active:scale-[0.98]">

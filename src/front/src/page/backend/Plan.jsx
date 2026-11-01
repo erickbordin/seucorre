@@ -58,7 +58,7 @@ export default function Plan() {
     const weeks = new Set();
     for (let week = 1; week <= totalWeeks; week += 1) {
       const items = sessions.filter((session) => session.semana === week);
-      if (items.length > 0 && items.every((session) => session.status !== 'pendente')) {
+      if (items.every((session) => session.status !== 'pendente') && items.some((session) => session.status === 'concluido' || session.status === 'parcial')) {
         weeks.add(week);
       }
     }

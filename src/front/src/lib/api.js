@@ -140,7 +140,7 @@ export function normalizePlan(plan) {
     ...plan,
     nome: 'Plano de Corrida',
     descricao: plan.resumoIA,
-    semana_atual: current?.semana || 1,
+    semana_atual: current?.semana || Math.max(1, ...sessoes.map((session) => session.semana || 1)),
     total_semanas: plan.totalSemanas || 4,
     status: normalizeStatus(plan.status),
     sessoes,
