@@ -108,7 +108,7 @@ export default function CheckIn() {
                 <h2 className="text-lg font-bold text-foreground">Semana {currentWeek} de {activePlan.total_semanas}</h2>
               </div>
               {latestWeekCheckin && (
-                <span className={`px-3 py-1 rounded-full text-[10px] font-semibold ${RISK_STYLES[latestWeekCheckin.nivelRisco] || 'bg-primary/10 text-primary'}`}>
+                <span className={`px-3 py-1 rounded-full text-[0.625rem] font-semibold ${RISK_STYLES[latestWeekCheckin.nivelRisco] || 'bg-primary/10 text-primary'}`}>
                   {latestWeekCheckin.nivelRiscoLabel || latestWeekCheckin.nivelRisco}
                 </span>
               )}
@@ -146,7 +146,7 @@ export default function CheckIn() {
             <section className="space-y-3">
               <div className="flex items-center justify-between">
                 <h2 className="text-sm font-semibold text-foreground">Resumo subjetivo</h2>
-                <span className="text-[10px] font-semibold text-muted-foreground tabular-nums">Opcional · {form.avaliacao.length}/{AVALIACAO_MAX}</span>
+                <span className="text-[0.625rem] font-semibold text-muted-foreground tabular-nums">Opcional · {form.avaliacao.length}/{AVALIACAO_MAX}</span>
               </div>
               <Textarea
                 value={form.avaliacao}
@@ -170,10 +170,10 @@ export default function CheckIn() {
                   <Brain className="w-5 h-5 text-primary mt-0.5" />
                   <div>
                     <h2 className="text-sm font-semibold text-foreground">Análise da IA</h2>
-                    <p className="text-xs text-muted-foreground">Semana {mutation.data.semana} • {mutation.data.dataCheckin}</p>
+                    <p className="text-xs text-muted-foreground">Semana {mutation.data.semana} • {mutation.data.dataLabel}</p>
                   </div>
                 </div>
-                <span className={`px-3 py-1 rounded-full text-[10px] font-semibold ${RISK_STYLES[mutation.data.nivelRisco] || 'bg-primary/10 text-primary'}`}>
+                <span className={`px-3 py-1 rounded-full text-[0.625rem] font-semibold ${RISK_STYLES[mutation.data.nivelRisco] || 'bg-primary/10 text-primary'}`}>
                   {mutation.data.nivelRiscoLabel || mutation.data.nivelRisco}
                 </span>
               </div>
@@ -184,9 +184,9 @@ export default function CheckIn() {
                 )}
               </div>
               <div className="flex flex-wrap gap-2">
-                {mutation.data.sobrecarga && <span className="px-3 py-1 rounded-full bg-orange-400/10 text-orange-400 text-[10px] font-semibold">Sobrecarga detectada</span>}
-                {mutation.data.recuperacaoInsuficiente && <span className="px-3 py-1 rounded-full bg-destructive/10 text-destructive text-[10px] font-semibold">Recuperação insuficiente</span>}
-                {mutation.data.planoReescrito && <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-semibold">Plano reescrito</span>}
+                {mutation.data.sobrecarga && <span className="px-3 py-1 rounded-full bg-orange-400/10 text-orange-400 text-[0.625rem] font-semibold">Sobrecarga detectada</span>}
+                {mutation.data.recuperacaoInsuficiente && <span className="px-3 py-1 rounded-full bg-destructive/10 text-destructive text-[0.625rem] font-semibold">Recuperação insuficiente</span>}
+                {mutation.data.planoReescrito && <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-[0.625rem] font-semibold">Plano reescrito</span>}
               </div>
             </section>
           )}
@@ -223,15 +223,15 @@ export default function CheckIn() {
                 <div className="flex items-start justify-between gap-4 mb-2">
                   <div>
                     <p className="text-sm font-semibold text-foreground">Semana {item.semana}</p>
-                    <p className="text-xs text-muted-foreground">{item.dataCheckin}</p>
+                    <p className="text-xs text-muted-foreground">{item.dataLabel}</p>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-semibold ${RISK_STYLES[item.nivelRisco] || 'bg-primary/10 text-primary'}`}>
+                  <span className={`px-3 py-1 rounded-full text-[0.625rem] font-semibold ${RISK_STYLES[item.nivelRisco] || 'bg-primary/10 text-primary'}`}>
                     {item.nivelRiscoLabel || item.nivelRisco}
                   </span>
                 </div>
                 <p className="text-xs text-muted-foreground mb-3">{item.analiseIA || item.avaliacao || 'Sem comentário adicional nesta semana.'}</p>
                 <div className="flex flex-wrap gap-2">
-                  {item.planoReescrito && <span className="px-2 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-semibold inline-flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Plano reescrito</span>}
+                  {item.planoReescrito && <span className="px-2 py-1 rounded-full bg-primary/10 text-primary text-[0.625rem] font-semibold inline-flex items-center gap-1"><CheckCircle2 className="w-3 h-3" /> Plano reescrito</span>}
                 </div>
               </div>
             ))}

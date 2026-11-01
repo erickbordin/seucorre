@@ -42,7 +42,7 @@ export default function DaySelector({ selected, onChange, max = DAYS.length }) {
             }`}
           >
             <span className="text-xs font-medium">{FULL_LABELS[key]}</span>
-            <span className="text-[10px] opacity-70">{label}</span>
+            <span className="text-[0.625rem] opacity-70">{label}</span>
           </motion.button>
         );
       })}

@@ -25,7 +25,7 @@ export default function Profile() {
   const { user, logout } = useAuth();
 
   const rows = [
-    { icon: Scale, label: 'Peso', value: user?.pesoKg ? `${user.pesoKg} kg` : '-' },
+    { icon: Scale, label: 'Peso', value: user?.pesoKg ? `${Number(user.pesoKg).toLocaleString('pt-BR')} kg` : '-' },
     { icon: Ruler, label: 'Altura', value: user?.alturaCm ? `${user.alturaCm} cm` : '-' },
     { icon: Heart, label: 'FC repouso', value: user?.fcRepouso ? `${user.fcRepouso} bpm` : '-' },
     { icon: Activity, label: 'Nível', value: LEVEL_LABELS[user?.nivelCondicionamento] || '-' },
@@ -40,12 +40,12 @@ export default function Profile() {
   return (
     <div className="px-5 pt-14 pb-28">
       <div className="flex items-center gap-4 mb-8">
-        <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+        <div className="w-16 h-16 shrink-0 rounded-full bg-primary/10 flex items-center justify-center">
           <User className="w-7 h-7 text-primary" />
         </div>
-        <div>
-          <h1 className="text-xl font-bold text-foreground">{user?.nome || 'Meu Perfil'}</h1>
-          <p className="text-xs text-muted-foreground">{user?.email}</p>
+        <div className="min-w-0">
+          <h1 className="text-xl font-bold text-foreground [overflow-wrap:anywhere]">{user?.nome || 'Meu Perfil'}</h1>
+          <p className="text-xs text-muted-foreground [overflow-wrap:anywhere]">{user?.email}</p>
         </div>
       </div>
 
@@ -55,7 +55,7 @@ export default function Profile() {
             <p className="text-xs text-muted-foreground mb-1">Status para treinar</p>
             <p className="text-sm font-semibold text-foreground">{user?.aptoParaTreinar ? 'Apto para treinar' : 'Revisar condições antes de treinar'}</p>
           </div>
-          <div className={`px-3 py-1 rounded-full text-[10px] font-semibold ${user?.aptoParaTreinar ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
+          <div className={`px-3 py-1 rounded-full text-[0.625rem] font-semibold ${user?.aptoParaTreinar ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'}`}>
             {user?.aptoParaTreinar ? 'OK' : 'Atenção'}
           </div>
         </div>
@@ -71,7 +71,7 @@ export default function Profile() {
                 <Icon className="w-4 h-4 text-muted-foreground" />
               </div>
               <div className="flex-1">
-                <p className="text-[10px] text-muted-foreground">{row.label}</p>
+                <p className="text-[0.625rem] text-muted-foreground">{row.label}</p>
                 <p className="text-sm font-medium text-foreground">{row.value}</p>
               </div>
             </div>
@@ -118,7 +118,7 @@ export default function Profile() {
               <Shield className="w-4 h-4 text-muted-foreground" />
             </div>
             <div className="flex-1">
-              <p className="text-[10px] text-muted-foreground">VO₂ estimado e zonas</p>
+              <p className="text-[0.625rem] text-muted-foreground">VO₂ estimado e zonas</p>
               <p className="text-sm font-medium text-foreground">
                 VO₂ {user.perfilCorrida.vo2Estimado || '-'} • {(user.perfilCorrida.zonasFc || []).length} zonas disponíveis
               </p>

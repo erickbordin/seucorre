@@ -24,7 +24,7 @@ export default function TabBar() {
                 <Link
                   key={tab.path}
                   to={tab.path}
-                  className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-transform duration-100 active:scale-95 ${
+                  className={`flex min-w-0 flex-1 flex-col items-center gap-0.5 py-1.5 rounded-xl transition-transform duration-100 active:scale-95 ${
                     isActive
                       ? 'text-primary'
                       : 'text-muted-foreground'
@@ -35,7 +35,7 @@ export default function TabBar() {
                   }`}>
                     <Icon className="w-5 h-5" strokeWidth={isActive ? 2.5 : 1.8} />
                   </div>
-                  <span className="text-[10px] font-medium">{tab.label}</span>
+                  <span className="text-[0.625rem] font-medium max-w-full truncate">{tab.label}</span>
                 </Link>
               );
             })}

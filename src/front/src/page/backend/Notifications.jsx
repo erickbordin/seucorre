@@ -75,8 +75,8 @@ export default function Notifications() {
                 <div className="w-10 h-10 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
                   <Icon className="w-4 h-4 text-primary" />
                 </div>
-                <div className="flex-1">
-                  <div className="flex items-center justify-between gap-4 mb-1">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 mb-1">
                     <p className="text-sm font-semibold text-foreground">{item.title}</p>
                     <Switch checked={settings[item.key]} onCheckedChange={(checked) => updateSetting(item.key, checked)} />
                   </div>
@@ -88,7 +88,7 @@ export default function Notifications() {
         })}
       </div>
 
-      <Button onClick={handleSave} className="w-full h-14 rounded-2xl font-semibold text-base mb-4">
+      <Button onClick={handleSave} className="w-full h-auto min-h-14 whitespace-normal py-3 rounded-2xl font-semibold text-base mb-4">
         Testar preferências nesta tela
       </Button>
 

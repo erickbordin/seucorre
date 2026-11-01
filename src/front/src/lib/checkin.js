@@ -5,6 +5,13 @@ export const RISK_STYLES = {
   CRITICO: 'bg-destructive/10 text-destructive',
 };
 
+export const RISK_LABELS = {
+  BAIXO: 'Baixo',
+  MODERADO: 'Moderado',
+  ALTO: 'Alto',
+  CRITICO: 'Crítico',
+};
+
 export function latestCheckin(history) {
   return (history || []).reduce((latest, item) => {
     if (!latest) return item;
