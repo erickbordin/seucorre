@@ -1,5 +1,6 @@
 package com.seucorre.usuario.application;
 
+import com.seucorre.infra.security.GoogleIdTokenVerifier.IdentidadeGoogle;
 import com.seucorre.shared.domain.enums.QualidadeSono;
 import com.seucorre.shared.domain.enums.NivelCondicionamento;
 import com.seucorre.shared.domain.enums.Objetivo;
@@ -48,6 +49,56 @@ class UsuarioAppServiceTest {
         repository = mock(UsuarioRepository.class);
         passwordEncoder = mock(PasswordEncoder.class);
         service = new UsuarioAppService(repository, passwordEncoder);
+    }
+
+    @Test
+    void googleComEmailNovoCriaContaSemSenhaParaFazerOnboarding() {
+        when(repository.findByGoogleId("google-123")).thenReturn(Optional.empty());
+        when(repository.findByEmailIgnoreCase("ana@gmail.com")).thenReturn(Optional.empty());
+        when(repository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Usuario usuario = service.entrarComGoogle(new IdentidadeGoogle("google-123", "ana@gmail.com", true, "Ana Souza"));
+
+        assertThat(usuario.getId()).isNotNull();
+        assertThat(usuario.getNome()).isEqualTo("Ana Souza");
+        assertThat(usuario.getGoogleId()).isEqualTo("google-123");
+        assertThat(usuario.getSenhaHash()).isNull();
+    }
+
+    @Test
+    void googleComEmailJaCadastradoVinculaAMesmaConta() {
+        Usuario existente = new Usuario();
+        existente.setId(UUID.randomUUID());
+        existente.setEmail("Ana@Gmail.com");
+        existente.setSenhaHash("hash-bcrypt");
+        when(repository.findByGoogleId("google-123")).thenReturn(Optional.empty());
+        when(repository.findByEmailIgnoreCase("ana@gmail.com")).thenReturn(Optional.of(existente));
+        when(repository.save(any(Usuario.class))).thenAnswer(invocation -> invocation.getArgument(0));
+
+        Usuario usuario = service.entrarComGoogle(new IdentidadeGoogle("google-123", "ana@gmail.com", true, "Ana Souza"));
+
+        assertThat(usuario).isSameAs(existente);
+        assertThat(usuario.getGoogleId()).isEqualTo("google-123");
+        assertThat(usuario.getSenhaHash()).isEqualTo("hash-bcrypt");
+    }
+
+    @Test
+    void googleRecusaEmailNaoConfirmado() {
+        assertThatThrownBy(() -> service.entrarComGoogle(new IdentidadeGoogle("google-123", "ana@gmail.com", false, "Ana")))
+                .isInstanceOf(BusinessRuleException.class);
+    }
+
+    @Test
+    void googleRecusaEmailJaVinculadoAOutraContaGoogle() {
+        Usuario existente = new Usuario();
+        existente.setEmail("ana@gmail.com");
+        existente.setGoogleId("google-antigo");
+        when(repository.findByGoogleId("google-123")).thenReturn(Optional.empty());
+        when(repository.findByEmailIgnoreCase("ana@gmail.com")).thenReturn(Optional.of(existente));
+
+        assertThatThrownBy(() -> service.entrarComGoogle(new IdentidadeGoogle("google-123", "ana@gmail.com", true, "Ana")))
+                .isInstanceOf(BusinessRuleException.class)
+                .hasMessageContaining("outra conta Google");
     }
 
     @Test

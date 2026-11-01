@@ -1,5 +1,6 @@
 package com.seucorre.usuario.application;
 
+import com.seucorre.infra.security.GoogleIdTokenVerifier.IdentidadeGoogle;
 import com.seucorre.shared.domain.valueobjects.IMC;
 import com.seucorre.shared.exception.BusinessRuleException;
 import com.seucorre.shared.exception.EntityNotFoundException;
@@ -62,6 +63,36 @@ public class UsuarioAppService {
         PerfilCorrida perfilCorridaSalvo = salvarPerfilCorrida(usuarioSalvo, perfilCorrida);
         anexarPerfilCorrida(usuarioSalvo, perfilCorridaSalvo);
         return UsuarioResponse.from(usuarioSalvo);
+    }
+
+    @Transactional
+    public Usuario entrarComGoogle(IdentidadeGoogle identidade) {
+        if (!identidade.emailVerificado() || identidade.email() == null || identidade.email().isBlank()) {
+            throw new BusinessRuleException("O Google não confirmou este e-mail.");
+        }
+
+        return repository.findByGoogleId(identidade.googleId())
+                .or(() -> repository.findByEmailIgnoreCase(identidade.email()).map(usuario -> vincularGoogle(usuario, identidade)))
+                .orElseGet(() -> criarUsuarioGoogle(identidade));
+    }
+
+    private Usuario vincularGoogle(Usuario usuario, IdentidadeGoogle identidade) {
+        if (usuario.getGoogleId() != null) {
+            throw new BusinessRuleException("Este e-mail já está vinculado a outra conta Google.");
+        }
+        usuario.setGoogleId(identidade.googleId());
+        return repository.save(usuario);
+    }
+
+    private Usuario criarUsuarioGoogle(IdentidadeGoogle identidade) {
+        Usuario usuario = new Usuario();
+        usuario.setId(UuidGenerator.generateUuid());
+        usuario.setNome(identidade.nome() == null || identidade.nome().isBlank()
+                ? identidade.email().split("@")[0]
+                : identidade.nome());
+        usuario.setEmail(identidade.email());
+        usuario.setGoogleId(identidade.googleId());
+        return repository.save(usuario);
     }
 
     @Transactional
