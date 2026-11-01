@@ -44,7 +44,7 @@ class PlanoPresetServiceTest {
                     planoTreino.calcularVolumeSemanal(semana)
             )).isFalse();
         }
-        assertThat(planoTreino.getResumoIA()).contains("preset");
+        assertThat(planoTreino.getResumoIA()).startsWith("Plano de 8 semanas");
     }
 
     @Test

@@ -1,19 +1,25 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Play, Clock, MapPin, Zap, ChevronRight } from 'lucide-react';
+import { localIsoDate } from '@/lib/date';
 
 const TYPE_STYLES = {
-  easy_run: { color: 'text-green-400', bg: 'bg-green-400/10', label: 'Corrida Leve' },
+  easy_run: { color: 'text-green-400', bg: 'bg-green-400/10', label: 'Corrida leve' },
   intervals: { color: 'text-orange-400', bg: 'bg-orange-400/10', label: 'Intervalado' },
   long_run: { color: 'text-blue-400', bg: 'bg-blue-400/10', label: 'Longão' },
   recovery: { color: 'text-purple-400', bg: 'bg-purple-400/10', label: 'Recuperação' },
-  tempo: { color: 'text-yellow-400', bg: 'bg-yellow-400/10', label: 'Tempo Run' },
+  tempo: { color: 'text-yellow-400', bg: 'bg-yellow-400/10', label: 'Fartlek' },
 };
 
 export default function TodayWorkoutCard({ session, planoId, sessionIndex }) {
   if (!session) return null;
 
   const style = TYPE_STYLES[session.tipo] || TYPE_STYLES.easy_run;
+  const when = !session.dataPrevista
+    ? 'Próximo treino'
+    : session.dataPrevista === localIsoDate()
+    ? 'Hoje'
+    : new Date(`${session.dataPrevista}T00:00:00`).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'short' });
 
   return (
     <Link to={`/treino/${planoId}/${sessionIndex}`}>
@@ -26,13 +32,11 @@ export default function TodayWorkoutCard({ session, planoId, sessionIndex }) {
 
         <div className="relative z-10">
           <div className="flex items-center justify-between mb-3">
-            <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${style.bg} ${style.color}`}>
-              {style.label}
-            </span>
+            <span className="text-xs font-semibold uppercase tracking-wide text-primary">{when}</span>
             <ChevronRight className="w-5 h-5 text-muted-foreground" />
           </div>
 
-          <h3 className="text-lg font-bold text-foreground mb-1">{session.titulo}</h3>
+          <h3 className="text-2xl font-bold text-foreground mb-1">{style.label}</h3>
           <p className="text-xs text-muted-foreground mb-4 line-clamp-2">{session.descricao}</p>
 
           <div className="flex items-center gap-4">
@@ -43,7 +47,7 @@ export default function TodayWorkoutCard({ session, planoId, sessionIndex }) {
             {session.distancia_km > 0 && (
               <div className="flex items-center gap-1.5">
                 <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="text-xs text-muted-foreground">{session.distancia_km} km</span>
+                <span className="text-xs text-muted-foreground">{String(session.distancia_km).replace('.', ',')} km</span>
               </div>
             )}
             <div className="flex items-center gap-1.5">
@@ -54,7 +58,7 @@ export default function TodayWorkoutCard({ session, planoId, sessionIndex }) {
 
           <div className="mt-4 flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-2xl py-3 font-semibold text-sm">
             <Play className="w-4 h-4" fill="currentColor" />
-            Ver Treino Completo
+            Ver treino
           </div>
         </div>
       </motion.div>

@@ -131,7 +131,7 @@ export default function CheckIn() {
                   <h2 className="text-sm font-semibold text-foreground">Sono médio por noite</h2>
                   <p className="text-xs text-muted-foreground">Informe quantas horas, em média, você dormiu nesta semana.</p>
                 </div>
-                <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold">{form.horasSonoSemana} h</span>
+                <span className="shrink-0 whitespace-nowrap px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold tabular-nums">{form.horasSonoSemana} h</span>
               </div>
               <div className="grid grid-cols-6 gap-2">
                 {Array.from({ length: 13 }, (_, index) => index).filter((item) => item >= 4).map((option) => (

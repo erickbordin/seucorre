@@ -15,7 +15,7 @@ export default function TabBar() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 safe-bottom">
       <div className="mx-auto max-w-lg">
-        <div className="mx-3 mb-2 rounded-2xl bg-card/90 backdrop-blur-xl border border-border/50 px-2 py-1.5">
+        <div className="material-bar mx-3 mb-2 rounded-2xl px-2 py-1.5">
           <div className="flex items-center justify-around">
             {tabs.map((tab) => {
               const isActive = location.pathname === tab.path;
@@ -24,7 +24,7 @@ export default function TabBar() {
                 <Link
                   key={tab.path}
                   to={tab.path}
-                  className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-all duration-200 ${
+                  className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl transition-transform duration-100 active:scale-95 ${
                     isActive
                       ? 'text-primary'
                       : 'text-muted-foreground'
