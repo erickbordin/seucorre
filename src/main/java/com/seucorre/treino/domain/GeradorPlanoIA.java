@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Clock;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.TreeSet;
@@ -84,42 +85,45 @@ public class GeradorPlanoIA {
             aplicarRegraDeRiscoCritico(planoReescrito, volumeDeReferencia);
         }
         aplicarRegraDosDezPorCento(planoReescrito, volumeDeReferencia);
-        agendaDeTreino.agendar(planoReescrito, planoReescrito.getUsuario().getDiasSemanaTreino());
+        LocalDate ultimoTreinoDaSemana = plano.obterSessoesDaSemana(checkin.getSemana()).stream()
+                .map(SessaoTreino::getDataPrevista)
+                .filter(Objects::nonNull)
+                .max(LocalDate::compareTo)
+                .orElse(null);
+        agendaDeTreino.agendarDepoisDe(planoReescrito, planoReescrito.getUsuario().getDiasSemanaTreino(), ultimoTreinoDaSemana);
         checkin.setPlanoReescrito(true);
         return planoReescrito;
     }
 
-    public String gerarAnaliseCheckin(CheckinSemanal checkin) {
+    public String gerarAnaliseCheckin(CheckinSemanal checkin, boolean planoSeraAjustado) {
         if (checkin == null) {
             throw new IllegalArgumentException("Check-in é obrigatório.");
         }
 
         StringBuilder prompt = new StringBuilder();
-        prompt.append("Voce analisa check-ins semanais do SeuCorre.\n");
-        prompt.append("Contexto do check-in:\n");
-        prompt.append("- ").append(checkin.gerarContextoParaIA()).append('\n');
+        prompt.append("Voce escreve a leitura semanal do check-in para o corredor no app SeuCorre.\n");
+        prompt.append("Dados informados pelo corredor:\n");
+        prompt.append("- esforco percebido: ").append(valorOuNaoInformado(checkin.getNivelEsforco())).append(" de 10\n");
+        prompt.append("- dor: ").append(valorOuNaoInformado(checkin.getNivelDor())).append(" de 10\n");
+        prompt.append("- sono medio: ").append(valorOuNaoInformado(checkin.getHorasSonoSemana())).append(" horas por noite\n");
+        if (checkin.getAvaliacao() != null && !checkin.getAvaliacao().isBlank()) {
+            prompt.append("- comentario: ").append(checkin.getAvaliacao()).append('\n');
+        }
+        prompt.append("Decisao ja tomada pelo sistema, que voce explica e nunca contradiz:\n");
+        prompt.append("- ").append(checkin.avaliarNivelRisco().getDescricao()).append('\n');
+        prompt.append(planoSeraAjustado
+                ? "- as proximas semanas do plano serao ajustadas para reduzir a carga\n"
+                : "- o plano segue como esta\n");
         prompt.append("Tarefa:\n");
-        prompt.append("- classifique o risco atual do corredor\n");
-        prompt.append("- identifique sobrecarga, dor e recuperacao insuficiente\n");
-        prompt.append("- explique se o plano precisa ser reescrito\n");
-        prompt.append("- responda em texto curto e objetivo\n");
+        prompt.append("- escrever de 2 a 3 frases curtas em portugues, falando diretamente com o corredor\n");
+        prompt.append("- dizer o que pesou na decisao (dor, sono ou esforco) e um cuidado pratico para os proximos dias\n");
+        prompt.append("- nao sugerir distancias, paces nem quantidade de treinos: o plano ja define isso\n");
+        prompt.append("- responder em texto puro, sem markdown, listas, titulos, valores true ou false e nomes de campos\n");
         return iaClient.gerarResposta(prompt.toString());
     }
 
-    public String sugerirAjuste(ProgressoSemanal progresso) {
-        if (progresso == null) {
-            throw new IllegalArgumentException("Progresso semanal é obrigatório.");
-        }
-
-        StringBuilder prompt = new StringBuilder();
-        prompt.append("Voce sugere ajustes de treino no SeuCorre.\n");
-        prompt.append("Resumo do progresso semanal:\n");
-        prompt.append("- ").append(progresso.gerarResumo()).append('\n');
-        prompt.append("Tarefa:\n");
-        prompt.append("- sugerir ajuste pratico de volume, intensidade e distribuicao semanal\n");
-        prompt.append("- respeitar a regra dos 10 por cento\n");
-        prompt.append("- responder em texto curto e objetivo\n");
-        return iaClient.gerarResposta(prompt.toString());
+    private static String valorOuNaoInformado(Integer valor) {
+        return valor == null ? "nao informado" : valor.toString();
     }
 
     protected String construirContexto(Usuario usuario) {

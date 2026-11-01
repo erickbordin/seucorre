@@ -49,6 +49,16 @@ public class AgendaDeTreino {
     }
 
     public void agendar(PlanoTreino planoTreino, String diasSemanaTreino) {
+        agendar(planoTreino, diasSemanaTreino, LocalDate.now(clock));
+    }
+
+    public void agendarDepoisDe(PlanoTreino planoTreino, String diasSemanaTreino, LocalDate ultimaDataOcupada) {
+        LocalDate hoje = LocalDate.now(clock);
+        LocalDate inicio = ultimaDataOcupada == null || ultimaDataOcupada.isBefore(hoje) ? hoje : ultimaDataOcupada.plusDays(1);
+        agendar(planoTreino, diasSemanaTreino, inicio);
+    }
+
+    private void agendar(PlanoTreino planoTreino, String diasSemanaTreino, LocalDate inicio) {
         List<DayOfWeek> diasTreino = lerDiasDeTreino(diasSemanaTreino);
         if (diasTreino.isEmpty()) {
             throw new BusinessRuleException("Dias preferenciais de treino são obrigatórios para agendar o plano.");
@@ -59,7 +69,7 @@ public class AgendaDeTreino {
             return;
         }
         sessoes.sort(Comparator.comparing(SessaoTreino::getNumeroSemana, Comparator.nullsLast(Comparator.naturalOrder())));
-        List<LocalDate> calendario = construirCalendario(sessoes.size(), diasTreino);
+        List<LocalDate> calendario = construirCalendario(sessoes.size(), diasTreino, inicio);
         for (int indice = 0; indice < sessoes.size(); indice++) {
             sessoes.get(indice).setDataPrevista(calendario.get(indice));
         }
@@ -79,9 +89,9 @@ public class AgendaDeTreino {
                 .reduce(BigDecimal.ZERO, BigDecimal::add));
     }
 
-    private List<LocalDate> construirCalendario(int totalSessoes, List<DayOfWeek> diasTreino) {
+    private List<LocalDate> construirCalendario(int totalSessoes, List<DayOfWeek> diasTreino, LocalDate inicio) {
         List<LocalDate> datas = new ArrayList<>(totalSessoes);
-        LocalDate cursor = LocalDate.now(clock);
+        LocalDate cursor = inicio;
         while (datas.size() < totalSessoes) {
             if (diasTreino.contains(cursor.getDayOfWeek())) {
                 datas.add(cursor);

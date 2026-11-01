@@ -123,6 +123,30 @@ public class PlanoTreino {
         status = StatusPlano.CONCLUIDO;
     }
 
+    public void substituirSemanasApos(int semana, List<SessaoTreino> novasSessoes) {
+        sessoes.removeIf(sessao -> sessao.getNumeroSemana() != null
+                && sessao.getNumeroSemana() > semana
+                && sessao.estaPendente());
+        for (SessaoTreino novaSessao : List.copyOf(novasSessoes)) {
+            novaSessao.setNumeroSemana(semana + novaSessao.getNumeroSemana());
+            adicionarSessao(novaSessao);
+        }
+        totalSemanas = sessoes.stream()
+                .map(SessaoTreino::getNumeroSemana)
+                .filter(Objects::nonNull)
+                .max(Integer::compareTo)
+                .orElse(semana);
+        dataFim = sessoes.stream()
+                .map(SessaoTreino::getDataPrevista)
+                .filter(Objects::nonNull)
+                .max(LocalDate::compareTo)
+                .orElse(dataFim);
+        kmTotais = sessoes.stream()
+                .map(SessaoTreino::getDistanciaKm)
+                .filter(Objects::nonNull)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
     public void adicionarSessao(SessaoTreino sessaoTreino) {
         if (sessaoTreino == null) {
             return;

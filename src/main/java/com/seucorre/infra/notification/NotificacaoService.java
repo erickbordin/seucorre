@@ -23,7 +23,7 @@ public class NotificacaoService {
         enviarPush(
                 event.usuarioId(),
                 "Plano atualizado",
-                "Seu plano da semana " + event.semana() + " foi reescrito com base no check-in."
+                "As próximas semanas do seu plano foram ajustadas com base no check-in da semana " + event.semana() + "."
         );
     }
 
