@@ -1,13 +1,14 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigate, useParams } from 'react-router-dom';
-import { AlertTriangle, ArrowLeft, CheckCircle2, ChevronDown, Clock, Heart, Loader2, MapPin, Save, Zap } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, ChevronDown, Clock, Heart, Loader2, MapPin, Save, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { api } from '@/lib/api';
+import BackButton from '@/components/layout/BackButton';
 
 const STATUS_OPTIONS = [
   {
@@ -165,9 +166,7 @@ export default function WorkoutDetail() {
 
   return (
     <div className="min-h-screen bg-background max-w-lg mx-auto px-5 pt-14 pb-10">
-      <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-sm text-muted-foreground mb-6">
-        <ArrowLeft className="w-4 h-4" /> Voltar
-      </button>
+      <BackButton fallback="/plano" />
 
       <div className="mb-6">
         <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-primary/10 text-primary">Semana {session.semana}</span>
