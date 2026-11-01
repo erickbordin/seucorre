@@ -84,15 +84,15 @@ export default function Plan() {
 
             <div className="grid grid-cols-3 gap-3 mb-4">
               <div className="rounded-2xl bg-background border border-border px-3 py-4 text-center">
-                <p className="text-lg font-bold text-foreground">{completedWeekSessions}/{weekSessions.length || 0}</p>
+                <p className="text-lg font-bold text-foreground tabular-nums">{completedWeekSessions}/{weekSessions.length || 0}</p>
                 <p className="text-[10px] text-muted-foreground">Sessões</p>
               </div>
               <div className="rounded-2xl bg-background border border-border px-3 py-4 text-center">
-                <p className="text-lg font-bold text-foreground">{weekDistance.toFixed(1)} km</p>
+                <p className="text-lg font-bold text-foreground tabular-nums">{weekDistance.toFixed(1)} km</p>
                 <p className="text-[10px] text-muted-foreground">Volume</p>
               </div>
               <div className="rounded-2xl bg-background border border-border px-3 py-4 text-center">
-                <p className="text-lg font-bold text-foreground">{plan.total_semanas}</p>
+                <p className="text-lg font-bold text-foreground tabular-nums">{plan.total_semanas}</p>
                 <p className="text-[10px] text-muted-foreground">Semanas</p>
               </div>
             </div>

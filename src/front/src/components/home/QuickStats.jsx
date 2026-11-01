@@ -21,7 +21,7 @@ export default function QuickStats({ currentWeek = 1, sessions = [] }) {
             <div className={`w-8 h-8 rounded-xl ${s.bg} flex items-center justify-center mx-auto mb-2`}>
               <Icon className={`w-4 h-4 ${s.color}`} />
             </div>
-            <p className="text-lg font-bold text-foreground">{s.value}</p>
+            <p className="text-lg font-bold text-foreground tabular-nums">{s.value}</p>
             <p className="text-[10px] text-muted-foreground">{s.label}</p>
           </div>
         );

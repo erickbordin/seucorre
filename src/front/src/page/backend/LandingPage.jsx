@@ -16,8 +16,7 @@ export default function LandingPage() {
       <div className="relative mx-auto flex min-h-screen max-w-lg flex-col px-6 pb-8 pt-10">
         <header className="flex items-center justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-primary">SeuCorre</p>
-            <h1 className="mt-3 text-5xl font-black leading-none text-white">SeuCorre</h1>
+            <h1 className="text-5xl font-black leading-none text-white">SeuCorre</h1>
           </div>
           <div className="rounded-full border border-white/20 bg-black/20 px-3 py-1 text-xs font-semibold text-white/85 backdrop-blur">
             IA para corrida

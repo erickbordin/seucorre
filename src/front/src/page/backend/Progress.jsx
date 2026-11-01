@@ -51,7 +51,7 @@ export default function Progress() {
               <div className={`w-9 h-9 rounded-xl ${stat.bg} flex items-center justify-center mb-2`}>
                 <Icon className={`w-4 h-4 ${stat.color}`} />
               </div>
-              <p className="text-xl font-bold text-foreground">{stat.value}</p>
+              <p className="text-xl font-bold text-foreground tabular-nums">{stat.value}</p>
               <p className="text-[10px] text-muted-foreground">{stat.label}</p>
             </div>
           );
