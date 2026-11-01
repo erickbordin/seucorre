@@ -3,7 +3,9 @@ package com.seucorre.treino.domain;
 import com.seucorre.avaliacao.domain.CheckinSemanal;
 import com.seucorre.avaliacao.domain.ProgressoSemanal;
 import com.seucorre.shared.domain.RegraDezPorCento;
+import com.seucorre.shared.domain.enums.NivelRisco;
 import com.seucorre.shared.domain.enums.Objetivo;
+import com.seucorre.shared.domain.enums.TipoTreino;
 import com.seucorre.shared.exception.BusinessRuleException;
 import com.seucorre.usuario.domain.Usuario;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ import java.util.TreeSet;
 public class GeradorPlanoIA {
 
     private static final int SCALE_DISTANCIA = 2;
+    private static final BigDecimal FATOR_MAXIMO_RISCO_CRITICO = new BigDecimal("0.70");
 
     private final IAClient iaClient;
     private final PromptBuilder promptBuilder;
@@ -76,7 +79,11 @@ public class GeradorPlanoIA {
 
         PlanoTreino planoReescrito = parsearResposta(resposta, plano.getUsuario());
         herdarMetadadosBasicos(plano, planoReescrito);
-        aplicarRegraDosDezPorCento(planoReescrito, plano.calcularVolumeSemanal(checkin.getSemana()));
+        BigDecimal volumeDeReferencia = plano.calcularVolumeSemanal(checkin.getSemana());
+        if (checkin.avaliarNivelRisco() == NivelRisco.CRITICO) {
+            aplicarRegraDeRiscoCritico(planoReescrito, volumeDeReferencia);
+        }
+        aplicarRegraDosDezPorCento(planoReescrito, volumeDeReferencia);
         agendaDeTreino.agendar(planoReescrito, planoReescrito.getUsuario().getDiasSemanaTreino());
         checkin.setPlanoReescrito(true);
         return planoReescrito;
@@ -181,6 +188,32 @@ public class GeradorPlanoIA {
                     .multiply(limiteAceito)
                     .divide(volumeAtual, SCALE_DISTANCIA, RoundingMode.DOWN);
             sessaoTreino.setDistanciaKm(distanciaAjustada);
+        }
+    }
+
+    private void aplicarRegraDeRiscoCritico(PlanoTreino planoTreino, BigDecimal volumeDeReferencia) {
+        Integer primeiraSemana = planoTreino.getSessoes().stream()
+                .map(SessaoTreino::getNumeroSemana)
+                .filter(Objects::nonNull)
+                .min(Integer::compareTo)
+                .orElse(null);
+        if (primeiraSemana == null) {
+            return;
+        }
+
+        for (SessaoTreino sessaoTreino : planoTreino.obterSessoesDaSemana(primeiraSemana)) {
+            if (sessaoTreino.getTipo() == TipoTreino.INTERVALADO) {
+                sessaoTreino.setTipo(TipoTreino.REGENERATIVO);
+                sessaoTreino.setIntensidade("leve");
+                sessaoTreino.setPaceAlvo(null);
+                sessaoTreino.setDescricao("Rodagem leve no lugar do intervalado: o check-in indicou risco crítico de lesão.");
+            }
+        }
+
+        BigDecimal limite = volumeDeReferencia.multiply(FATOR_MAXIMO_RISCO_CRITICO);
+        BigDecimal volumeAtual = planoTreino.calcularVolumeSemanal(primeiraSemana);
+        if (limite.signum() > 0 && volumeAtual.compareTo(limite) > 0) {
+            ajustarVolumeSemanal(planoTreino, primeiraSemana, limite, volumeAtual);
         }
     }
 

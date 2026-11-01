@@ -22,6 +22,26 @@ public class PromptBuilder {
 
     private static final int LIMITE_PLANOS_HISTORICO = 3;
     private static final int LIMITE_SESSOES_RESUMO = 6;
+    private static final String ESTRUTURA_JSON_PLANO = """
+            {
+              "plano": {
+                "resumoIA": "texto curto",
+                "guiaTiposTreino": "texto curto",
+                "sessoes": [
+                  {
+                    "numeroSemana": 1,
+                    "tipo": "REGENERATIVO",
+                    "distanciaKm": 3.5,
+                    "duracaoMinutos": 25,
+                    "intensidade": "leve",
+                    "zonaFcAlvo": "Z2",
+                    "paceAlvo": null,
+                    "descricao": "texto curto"
+                  }
+                ]
+              }
+            }
+            """;
     private static final String GUIA_TIPOS_TREINO = String.join("\n",
             "- regenerativo: baixa intensidade para recuperacao ativa",
             "- rodagem leve: base aerobica em zona confortavel",
@@ -58,7 +78,7 @@ public class PromptBuilder {
         adicionarHistoricoProgressos(prompt, progressos);
         adicionarCheckin(prompt, checkin);
         adicionarRegrasTreino(prompt, plano == null ? null : plano.getGuiaTiposTreino());
-        adicionarInstrucaoSaidaReescrita(prompt);
+        adicionarInstrucaoSaidaReescrita(prompt, contarSemanasRestantes(plano, checkin));
 
         return prompt.toString();
     }
@@ -175,37 +195,31 @@ public class PromptBuilder {
         prompt.append("- usar somente os tipos de treino: REGENERATIVO, INTERVALADO, LONGO ou FARTLAKE\n");
         prompt.append("- manter a saida curta e objetiva para garantir JSON valido\n");
         prompt.append("- preferir uma lista unica de sessoes em vez de blocos muito grandes por semana\n");
-        prompt.append("- usar a estrutura abaixo, podendo omitir totalSemanas, dataInicio, dataFim e kmTotais se necessario:\n");
-        prompt.append("""
-                {
-                  "plano": {
-                    "resumoIA": "texto curto",
-                    "guiaTiposTreino": "texto curto",
-                    "sessoes": [
-                      {
-                        "numeroSemana": 1,
-                        "dataPrevista": "YYYY-MM-DD",
-                        "tipo": "REGENERATIVO",
-                        "distanciaKm": 0,
-                        "duracaoMinutos": 0,
-                        "intensidade": "leve",
-                        "zonaFcAlvo": "Z1",
-                        "paceAlvo": 0,
-                        "descricao": "texto curto"
-                      }
-                    ]
-                  }
-                }
-                """);
+        prompt.append("- nao incluir datas: o sistema agenda as sessoes nos dias de treino do corredor\n");
+        prompt.append("- usar exatamente a estrutura abaixo:\n");
+        prompt.append(ESTRUTURA_JSON_PLANO);
     }
 
-    private void adicionarInstrucaoSaidaReescrita(StringBuilder prompt) {
+    private void adicionarInstrucaoSaidaReescrita(StringBuilder prompt, Integer semanasRestantes) {
         prompt.append("Saida esperada:\n");
         prompt.append("- reescrever apenas o necessario para reduzir risco e preservar continuidade\n");
         prompt.append("- se houver alerta relevante, reduzir volume ou intensidade antes de progredir\n");
+        if (semanasRestantes != null) {
+            prompt.append("- o plano reescrito comeca nesta semana: gerar todas as semanas de 1 a ")
+                    .append(semanasRestantes).append(", com totalSemanas igual a ").append(semanasRestantes).append('\n');
+        }
         prompt.append("- responder apenas JSON puro, sem markdown, sem comentarios e sem texto antes ou depois\n");
         prompt.append("- usar somente os tipos de treino: REGENERATIVO, INTERVALADO, LONGO ou FARTLAKE\n");
-        prompt.append("- manter a mesma estrutura JSON enxuta exigida para o plano\n");
+        prompt.append("- nao incluir datas: o sistema agenda as sessoes nos dias de treino do corredor\n");
+        prompt.append("- usar exatamente a estrutura abaixo:\n");
+        prompt.append(ESTRUTURA_JSON_PLANO);
+    }
+
+    private Integer contarSemanasRestantes(PlanoTreino plano, CheckinSemanal checkin) {
+        if (plano == null || plano.getTotalSemanas() == null || checkin == null || checkin.getSemana() == null) {
+            return null;
+        }
+        return Math.max(1, plano.getTotalSemanas() - checkin.getSemana() + 1);
     }
 
     private String resumirSessoes(PlanoTreino plano) {
