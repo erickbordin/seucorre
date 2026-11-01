@@ -53,7 +53,37 @@ class PlanoPresetServiceTest {
 
         assertThatThrownBy(() -> service.gerarPlano(usuario, Objetivo.COMPLETAR_MARATONA))
                 .isInstanceOf(BusinessRuleException.class)
-                .hasMessageContaining("ainda não possui plano preset");
+                .hasMessageContaining("ainda não tem plano disponível");
+    }
+
+    @Test
+    void geraMeiaMaratonaDe12SemanasQueTerminaNaProvaSemQuebrarARegraDosDezPorCento() {
+        for (NivelCondicionamento nivel : new NivelCondicionamento[]{NivelCondicionamento.INICIANTE, NivelCondicionamento.INTERMEDIARIO}) {
+            for (String dias : new String[]{"SEG,QUA,SAB", "SEG,QUA,SEX,DOM"}) {
+                Usuario usuario = criarUsuario(Objetivo.COMPLETAR_MEIA_MARATONA, nivel, dias.split(",").length, dias);
+
+                PlanoTreino planoTreino = service.gerarPlano(usuario, Objetivo.COMPLETAR_MEIA_MARATONA);
+
+                assertThat(planoTreino.getTotalSemanas()).isEqualTo(12);
+                assertThat(planoTreino.getSessoes().get(planoTreino.getSessoes().size() - 1).getDistanciaKm())
+                        .isEqualByComparingTo("21.1");
+                for (int semana = 2; semana <= 12; semana++) {
+                    assertThat(RegraDezPorCento.excede(
+                            planoTreino.calcularVolumeSemanal(semana - 1),
+                            planoTreino.calcularVolumeSemanal(semana)
+                    )).isFalse();
+                }
+            }
+        }
+    }
+
+    @Test
+    void nivelAvancadoUsaOPlanoIntermediario() {
+        Usuario usuario = criarUsuario(Objetivo.COMPLETAR_10K, NivelCondicionamento.AVANCADO, 4, "SEG,QUA,SEX,DOM");
+
+        PlanoTreino planoTreino = service.gerarPlano(usuario, Objetivo.COMPLETAR_10K);
+
+        assertThat(planoTreino.getResumoIA()).contains("nível intermediario");
     }
 
     private Usuario criarUsuario(Objetivo objetivo,

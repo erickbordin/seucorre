@@ -15,7 +15,7 @@ Guardrails vivem no Java, nunca só no prompt:
 ## Mapa
 
 - Backend `src/main/java/com/seucorre`: `usuario` (auth, onboarding, perfil), `treino` (plano, sessões, registros, IA), `avaliacao` (check-in, progresso, risco), `shared`, `infra` (segurança, providers de IA, notificações, scheduler). Camadas `api` → `application` → `domain` → `infrastructure`.
-- Presets: `src/main/resources/planos-presets/<objetivo>/<nivel>/<3|4>-dias.json`, com `saude_geral`, `completar_5k` e `completar_10k` × `iniciante` e `intermediario`, 8 semanas.
+- Presets: `src/main/resources/planos-presets/<objetivo>/<nivel>/<3|4>-dias.json`, com `saude_geral`, `completar_5k` e `completar_10k` (8 semanas) e `completar_meia_maratona` (12 semanas, a última sessão é a prova) × `iniciante` e `intermediario`. `AVANCADO` usa o plano `intermediario`. Objetivo sem preset aparece como "em breve" no onboarding (`soon` em `RUNNER_GOALS`).
 - Frontend `src/front/src`: rotas em `App.jsx`; telas ativas em `page/backend` (`page/` é legado, exceto `page/Paywall.jsx`); HTTP, refresh de token e normalização de payload em `lib/api.js`; gate de auth e onboarding em `lib/AuthContext.jsx`; componentes por domínio em `components/<dominio>`, base em `components/ui`, casca em `components/layout`.
 - Eval da IA: `eval/rodar_eval.py` + `eval/casos.json`, resultados versionados em `eval/resultados/`.
 
