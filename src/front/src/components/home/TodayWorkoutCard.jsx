@@ -15,7 +15,9 @@ export default function TodayWorkoutCard({ session, planoId, sessionIndex }) {
   if (!session) return null;
 
   const style = TYPE_STYLES[session.tipo] || TYPE_STYLES.easy_run;
-  const when = session.dataPrevista === localIsoDate()
+  const when = !session.dataPrevista
+    ? 'Próximo treino'
+    : session.dataPrevista === localIsoDate()
     ? 'Hoje'
     : new Date(`${session.dataPrevista}T00:00:00`).toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'short' });
 
