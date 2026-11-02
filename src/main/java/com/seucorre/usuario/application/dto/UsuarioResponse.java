@@ -33,7 +33,9 @@ public record UsuarioResponse(
         boolean aptoParaTreinar,
         PerfilCorridaResponse perfilCorrida,
         List<CondicaoSaudeResponse> condicoesSaude,
-        LocalDate criadoEm
+        LocalDate criadoEm,
+        LocalDate dataProva,
+        String nomeProva
 ) {
 
     public static UsuarioResponse from(Usuario usuario) {
@@ -57,7 +59,9 @@ public record UsuarioResponse(
                 usuario.estaAptoParaTreinar(),
                 PerfilCorridaResponse.from(usuario.getPerfilAtleta() == null ? null : usuario.getPerfilAtleta().getPerfilCorrida()),
                 usuario.getCondicoesSaude().stream().map(CondicaoSaudeResponse::from).toList(),
-                usuario.getCriadoEm()
+                usuario.getCriadoEm(),
+                usuario.getPerfilAtleta() == null ? null : usuario.getPerfilAtleta().getDataProva(),
+                usuario.getPerfilAtleta() == null ? null : usuario.getPerfilAtleta().getNomeProva()
         );
     }
 

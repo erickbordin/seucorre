@@ -172,7 +172,9 @@ class TreinoAppServiceTest {
                 "Plano ativo",
                 null,
                 10.0d,
-                List.of(sessaoSemanaDois, sessaoSemanaUm)
+                List.of(sessaoSemanaDois, sessaoSemanaUm),
+                null,
+                null
         );
 
         when(planoAppService.buscarPlanoAtivo(usuarioId)).thenReturn(planoAtivo);

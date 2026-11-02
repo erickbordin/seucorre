@@ -98,7 +98,9 @@ class UsuarioControllerTest {
                 true,
                 null,
                 List.of(),
-                LocalDate.of(2026, 5, 5)
+                LocalDate.of(2026, 5, 5),
+                null,
+                null
         );
     }
 }

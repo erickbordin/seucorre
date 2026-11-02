@@ -25,6 +25,7 @@ Guardrails vivem no Java, nunca só no prompt:
 - **Login com Google**: o botão oficial (Google Identity Services, `components/auth/GoogleSignInButton.jsx`) entrega um ID token; `POST /auth/google` valida assinatura, emissor, audiência e validade em `GoogleIdTokenVerifier` e entra pela mesma conta do e-mail verificado (`google_id` vinculado). Conta criada pelo Google não tem senha. `GOOGLE_CLIENT_ID` vazio esconde o botão e desliga o endpoint.
 - **Geração de plano**: `seucorre.treino.geracao.mode` escolhe `preset` (padrão) ou `ia`; `fallback-to-ia` cobre combinação fora do catálogo, senão a geração falha de forma explícita.
 - **Agenda**: `AgendaDeTreino` ignora datas vindas da IA e agenda nos dias de treino do usuário, a partir de hoje, no fuso `America/Sao_Paulo` (bean `Clock`).
+- **Data da prova**: opcional no perfil (`dataProva`, `nomeProva`) para 5 km, 10 km e meia. Com data, `agendarAteAProva` põe a última sessão (a prova) no dia e ocupa os dias de treino anteriores; sobra de tempo vira até 4 semanas de base (cópias da semana 1) e, além disso, o plano começa mais tarde; falta de tempo recusa informando a primeira data possível. A reescrita do check-in mantém a última sessão no dia da prova.
 - **Check-in**: `CheckinSemanal` calcula o risco. Risco acima de `BAIXO`, provider com IA e semanas pela frente → a reescrita troca, no mesmo plano, só os treinos pendentes depois da semana do check-in; treinos registrados ficam. A análise em texto recebe essa decisão e a explica sem contradizer.
 
 ## IA

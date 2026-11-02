@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { api } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
+import { localIsoDate } from '@/lib/date';
 import DaySelector from '@/components/onboarding/DaySelector';
 import SelectionCard from '@/components/onboarding/SelectionCard';
 import GoogleSignInButton, { GOOGLE_CLIENT_ID } from '@/components/auth/GoogleSignInButton';
@@ -26,7 +27,7 @@ const DISTANCE_GOALS = [
 
 const RUNNER_GOALS = [
   { value: 'COMPLETAR_5K', label: '5 km', description: 'Completar a distância com boa base' },
-  { value: 'COMPLETAR_10K', label: '10 km', description: 'Evoluir resistencia e ritmo' },
+  { value: 'COMPLETAR_10K', label: '10 km', description: 'Evoluir resistência e ritmo' },
   { value: 'COMPLETAR_MEIA_MARATONA', label: '21 km', description: 'Preparar meia maratona' },
   { value: 'COMPLETAR_MARATONA', label: '42 km', description: 'Preparar maratona', soon: true },
   { value: 'MELHORAR_DISTANCIA', label: 'Melhorar marca', description: 'Baixar tempo em uma distância', soon: true },
@@ -72,6 +73,8 @@ const createEmptyForm = () => ({
   nivelCorrida: '',
   distanciaRp: '5',
   paceRp: '',
+  dataProva: '',
+  nomeProva: '',
 });
 
 const PHYSICAL_METRIC_LIMITS = {
@@ -220,6 +223,8 @@ const buildFormFromUser = (user) => {
     objetivoNaoCorredor: user?.objetivo === 'COMPLETAR_10K' ? '10K' : user?.objetivo === 'COMPLETAR_5K' ? '5K' : '5K',
     distanciaRp: storedRacePace.distanciaRp,
     paceRp: storedRacePace.paceRp,
+    dataProva: user?.dataProva || '',
+    nomeProva: user?.nomeProva || '',
   };
 };
 
@@ -268,6 +273,8 @@ const buildProfilePayload = (form) => {
   const nivelCondicionamento = useNoRunnerFlow
     ? form.atividadeNivel === 'MUITO_ATIVO' ? 'INTERMEDIARIO' : 'INICIANTE'
     : runnerLevel;
+  const objetivo = useNoRunnerFlow ? getNoRunnerGoal(form.objetivoNaoCorredor) : getRunnerGoal(form);
+  const hasRace = Boolean(RACE_PLAN_WEEKS[objetivo] && form.dataProva);
 
   return {
     telefone: form.telefone || null,
@@ -283,14 +290,50 @@ const buildProfilePayload = (form) => {
     },
     perfilAtleta: {
       nivelCondicionamento,
-      objetivo: useNoRunnerFlow ? getNoRunnerGoal(form.objetivoNaoCorredor) : getRunnerGoal(form),
+      objetivo,
       jaCorre: Boolean(form.jaCorre),
       diasDisponiveisSemana: form.diasSemanaTreino.length,
       diasSemanaTreino: serializeTrainingDays(form.diasSemanaTreino),
+      dataProva: hasRace ? form.dataProva : null,
+      nomeProva: hasRace ? form.nomeProva.trim() || null : null,
     },
     perfilCorrida: useNoRunnerFlow ? null : buildPerfilCorrida(form),
     condicoesSaude: [],
   };
+};
+
+const RACE_PLAN_WEEKS = {
+  COMPLETAR_5K: 8,
+  COMPLETAR_10K: 8,
+  COMPLETAR_MEIA_MARATONA: 12,
+};
+
+const earliestRaceDate = (goal) => {
+  const date = new Date();
+  date.setDate(date.getDate() + RACE_PLAN_WEEKS[goal] * 7);
+  return localIsoDate(date);
+};
+
+const RaceFields = ({ goal, form, updateForm }) => {
+  if (!RACE_PLAN_WEEKS[goal]) return null;
+  const minDate = earliestRaceDate(goal);
+  const minLabel = new Date(`${minDate}T00:00:00`).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' });
+  return (
+    <div className="space-y-3 rounded-2xl border border-border bg-card p-4">
+      <div>
+        <p className="text-sm font-semibold text-foreground">Já tem prova marcada?</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Opcional. O plano termina no dia da prova. Ele tem {RACE_PLAN_WEEKS[goal]} semanas, então a data precisa ser a partir de {minLabel}.
+        </p>
+      </div>
+      <Field label="Data da prova">
+        <Input type="date" min={minDate} value={form.dataProva} onChange={(event) => updateForm('dataProva', event.target.value)} className="h-12 rounded-xl border-border bg-background" />
+      </Field>
+      <Field label="Nome da prova (opcional)">
+        <Input maxLength={120} placeholder="Ex.: Meia da minha cidade" value={form.nomeProva} onChange={(event) => updateForm('nomeProva', event.target.value)} className="h-12 rounded-xl border-border bg-background" />
+      </Field>
+    </div>
+  );
 };
 
 const Field = ({ label, error, children }) => (
@@ -659,6 +702,7 @@ export default function AuthPage({ mode = 'register' }) {
               );
             })}
           </div>
+          <RaceFields goal={getNoRunnerGoal(form.objetivoNaoCorredor)} form={form} updateForm={updateForm} />
         </section>
       )}
 
@@ -695,6 +739,7 @@ export default function AuthPage({ mode = 'register' }) {
               />
             ))}
           </div>
+          <RaceFields goal={form.objetivoCorredor} form={form} updateForm={updateForm} />
         </section>
       )}
 
