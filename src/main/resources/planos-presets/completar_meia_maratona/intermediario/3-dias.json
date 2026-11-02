@@ -1,0 +1,391 @@
+{
+  "totalSemanas": 12,
+  "resumoIA": "Plano de 12 semanas para completar a meia maratona (21,1 km), 3 dias por semana e nível intermediario. Pressupõe que você já corre 10 km sem parar.",
+  "guiaTiposTreino": "REGENERATIVO = rodagem leve; INTERVALADO = blocos controlados; FARTLEK = variação de ritmo; LONGO = sessão de resistência e, na última semana, a prova.",
+  "semanas": [
+    {
+      "numeroSemana": 1,
+      "sessoes": [
+        {
+          "numeroSemana": 1,
+          "tipo": "REGENERATIVO",
+          "distanciaKm": 7.7,
+          "duracaoMinutos": 46,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Rodagem leve em ritmo de conversa para somar volume sem cansar."
+        },
+        {
+          "numeroSemana": 1,
+          "tipo": "INTERVALADO",
+          "distanciaKm": 6.3,
+          "duracaoMinutos": 35,
+          "intensidade": "moderada a forte",
+          "zonaFcAlvo": "Z3-Z4",
+          "descricao": "Aquecimento de 15 min, 6 × 400 m forte com 1 min 30 s de trote e desaquecimento."
+        },
+        {
+          "numeroSemana": 1,
+          "tipo": "LONGO",
+          "distanciaKm": 11,
+          "duracaoMinutos": 69,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Longão em ritmo de conversa para construir resistência."
+        }
+      ]
+    },
+    {
+      "numeroSemana": 2,
+      "sessoes": [
+        {
+          "numeroSemana": 2,
+          "tipo": "REGENERATIVO",
+          "distanciaKm": 8.4,
+          "duracaoMinutos": 50,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Rodagem leve em ritmo de conversa para somar volume sem cansar."
+        },
+        {
+          "numeroSemana": 2,
+          "tipo": "INTERVALADO",
+          "distanciaKm": 6.9,
+          "duracaoMinutos": 38,
+          "intensidade": "moderada a forte",
+          "zonaFcAlvo": "Z3-Z4",
+          "descricao": "Aquecimento de 15 min, 6 × 400 m forte com 1 min 30 s de trote e desaquecimento."
+        },
+        {
+          "numeroSemana": 2,
+          "tipo": "LONGO",
+          "distanciaKm": 12,
+          "duracaoMinutos": 76,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Longão em ritmo de conversa para construir resistência."
+        }
+      ]
+    },
+    {
+      "numeroSemana": 3,
+      "sessoes": [
+        {
+          "numeroSemana": 3,
+          "tipo": "REGENERATIVO",
+          "distanciaKm": 9.2,
+          "duracaoMinutos": 55,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Rodagem leve em ritmo de conversa para somar volume sem cansar."
+        },
+        {
+          "numeroSemana": 3,
+          "tipo": "INTERVALADO",
+          "distanciaKm": 7.5,
+          "duracaoMinutos": 42,
+          "intensidade": "moderada a forte",
+          "zonaFcAlvo": "Z3-Z4",
+          "descricao": "Aquecimento de 15 min, 6 × 400 m forte com 1 min 30 s de trote e desaquecimento."
+        },
+        {
+          "numeroSemana": 3,
+          "tipo": "LONGO",
+          "distanciaKm": 13,
+          "duracaoMinutos": 82,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Longão em ritmo de conversa para construir resistência."
+        }
+      ]
+    },
+    {
+      "numeroSemana": 4,
+      "sessoes": [
+        {
+          "numeroSemana": 4,
+          "tipo": "REGENERATIVO",
+          "distanciaKm": 8.1,
+          "duracaoMinutos": 49,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Rodagem leve em ritmo de conversa para somar volume sem cansar. Semana mais leve para o corpo absorver o treino."
+        },
+        {
+          "numeroSemana": 4,
+          "tipo": "INTERVALADO",
+          "distanciaKm": 6.6,
+          "duracaoMinutos": 37,
+          "intensidade": "moderada a forte",
+          "zonaFcAlvo": "Z3-Z4",
+          "descricao": "Aquecimento de 15 min, 6 × 400 m forte com 1 min 30 s de trote e desaquecimento."
+        },
+        {
+          "numeroSemana": 4,
+          "tipo": "LONGO",
+          "distanciaKm": 12,
+          "duracaoMinutos": 76,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Longão em ritmo de conversa para construir resistência. Semana mais leve para o corpo absorver o treino."
+        }
+      ]
+    },
+    {
+      "numeroSemana": 5,
+      "sessoes": [
+        {
+          "numeroSemana": 5,
+          "tipo": "REGENERATIVO",
+          "distanciaKm": 8.3,
+          "duracaoMinutos": 50,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Rodagem leve em ritmo de conversa para somar volume sem cansar."
+        },
+        {
+          "numeroSemana": 5,
+          "tipo": "INTERVALADO",
+          "distanciaKm": 6.8,
+          "duracaoMinutos": 38,
+          "intensidade": "moderada a forte",
+          "zonaFcAlvo": "Z3-Z4",
+          "descricao": "Aquecimento de 15 min, 5 × 1 km no ritmo de 10 km com 2 min de trote e desaquecimento."
+        },
+        {
+          "numeroSemana": 5,
+          "tipo": "LONGO",
+          "distanciaKm": 14,
+          "duracaoMinutos": 88,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Longão confortável; nos últimos 2 km, ritmo um pouco mais firme."
+        }
+      ]
+    },
+    {
+      "numeroSemana": 6,
+      "sessoes": [
+        {
+          "numeroSemana": 6,
+          "tipo": "REGENERATIVO",
+          "distanciaKm": 9.2,
+          "duracaoMinutos": 55,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Rodagem leve em ritmo de conversa para somar volume sem cansar."
+        },
+        {
+          "numeroSemana": 6,
+          "tipo": "INTERVALADO",
+          "distanciaKm": 7.5,
+          "duracaoMinutos": 42,
+          "intensidade": "moderada a forte",
+          "zonaFcAlvo": "Z3-Z4",
+          "descricao": "Aquecimento de 15 min, 5 × 1 km no ritmo de 10 km com 2 min de trote e desaquecimento."
+        },
+        {
+          "numeroSemana": 6,
+          "tipo": "LONGO",
+          "distanciaKm": 15,
+          "duracaoMinutos": 94,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Longão confortável; nos últimos 2 km, ritmo um pouco mais firme."
+        }
+      ]
+    },
+    {
+      "numeroSemana": 7,
+      "sessoes": [
+        {
+          "numeroSemana": 7,
+          "tipo": "REGENERATIVO",
+          "distanciaKm": 10.0,
+          "duracaoMinutos": 60,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Rodagem leve em ritmo de conversa para somar volume sem cansar."
+        },
+        {
+          "numeroSemana": 7,
+          "tipo": "INTERVALADO",
+          "distanciaKm": 8.2,
+          "duracaoMinutos": 46,
+          "intensidade": "moderada a forte",
+          "zonaFcAlvo": "Z3-Z4",
+          "descricao": "Aquecimento de 15 min, 5 × 1 km no ritmo de 10 km com 2 min de trote e desaquecimento."
+        },
+        {
+          "numeroSemana": 7,
+          "tipo": "LONGO",
+          "distanciaKm": 16.5,
+          "duracaoMinutos": 104,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Longão confortável; nos últimos 2 km, ritmo um pouco mais firme."
+        }
+      ]
+    },
+    {
+      "numeroSemana": 8,
+      "sessoes": [
+        {
+          "numeroSemana": 8,
+          "tipo": "REGENERATIVO",
+          "distanciaKm": 9.4,
+          "duracaoMinutos": 57,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Rodagem leve em ritmo de conversa para somar volume sem cansar. Semana mais leve para o corpo absorver o treino."
+        },
+        {
+          "numeroSemana": 8,
+          "tipo": "INTERVALADO",
+          "distanciaKm": 7.7,
+          "duracaoMinutos": 43,
+          "intensidade": "moderada a forte",
+          "zonaFcAlvo": "Z3-Z4",
+          "descricao": "Aquecimento de 15 min, 5 × 1 km no ritmo de 10 km com 2 min de trote e desaquecimento."
+        },
+        {
+          "numeroSemana": 8,
+          "tipo": "LONGO",
+          "distanciaKm": 14,
+          "duracaoMinutos": 88,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Longão confortável; nos últimos 2 km, ritmo um pouco mais firme. Semana mais leve para o corpo absorver o treino."
+        }
+      ]
+    },
+    {
+      "numeroSemana": 9,
+      "sessoes": [
+        {
+          "numeroSemana": 9,
+          "tipo": "REGENERATIVO",
+          "distanciaKm": 8.8,
+          "duracaoMinutos": 53,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Rodagem leve em ritmo de conversa para somar volume sem cansar."
+        },
+        {
+          "numeroSemana": 9,
+          "tipo": "INTERVALADO",
+          "distanciaKm": 7.2,
+          "duracaoMinutos": 40,
+          "intensidade": "moderada a forte",
+          "zonaFcAlvo": "Z3-Z4",
+          "descricao": "Aquecimento de 15 min, 3 × 2 km no ritmo da meia maratona com 2 min de trote e desaquecimento."
+        },
+        {
+          "numeroSemana": 9,
+          "tipo": "LONGO",
+          "distanciaKm": 18,
+          "duracaoMinutos": 113,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Longão em ritmo confortável. Treine a hidratação e o gel como vai fazer na prova."
+        }
+      ]
+    },
+    {
+      "numeroSemana": 10,
+      "sessoes": [
+        {
+          "numeroSemana": 10,
+          "tipo": "REGENERATIVO",
+          "distanciaKm": 9.9,
+          "duracaoMinutos": 59,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Rodagem leve em ritmo de conversa para somar volume sem cansar."
+        },
+        {
+          "numeroSemana": 10,
+          "tipo": "INTERVALADO",
+          "distanciaKm": 8.1,
+          "duracaoMinutos": 45,
+          "intensidade": "moderada a forte",
+          "zonaFcAlvo": "Z3-Z4",
+          "descricao": "Aquecimento de 15 min, 3 × 2 km no ritmo da meia maratona com 2 min de trote e desaquecimento."
+        },
+        {
+          "numeroSemana": 10,
+          "tipo": "LONGO",
+          "distanciaKm": 19,
+          "duracaoMinutos": 120,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Longão em ritmo confortável. Treine a hidratação e o gel como vai fazer na prova."
+        }
+      ]
+    },
+    {
+      "numeroSemana": 11,
+      "sessoes": [
+        {
+          "numeroSemana": 11,
+          "tipo": "REGENERATIVO",
+          "distanciaKm": 10.5,
+          "duracaoMinutos": 63,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Rodagem leve em ritmo de conversa para somar volume sem cansar."
+        },
+        {
+          "numeroSemana": 11,
+          "tipo": "INTERVALADO",
+          "distanciaKm": 8.6,
+          "duracaoMinutos": 48,
+          "intensidade": "moderada a forte",
+          "zonaFcAlvo": "Z3-Z4",
+          "descricao": "Aquecimento de 15 min, 4 × 1 km no ritmo da meia maratona com 2 min de trote. Volume menor para chegar descansado."
+        },
+        {
+          "numeroSemana": 11,
+          "tipo": "LONGO",
+          "distanciaKm": 14,
+          "duracaoMinutos": 88,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Longão mais curto para absorver o treino das últimas semanas."
+        }
+      ]
+    },
+    {
+      "numeroSemana": 12,
+      "sessoes": [
+        {
+          "numeroSemana": 12,
+          "tipo": "REGENERATIVO",
+          "distanciaKm": 5,
+          "duracaoMinutos": 30,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Rodagem leve e curta para manter as pernas soltas antes da prova."
+        },
+        {
+          "numeroSemana": 12,
+          "tipo": "REGENERATIVO",
+          "distanciaKm": 4,
+          "duracaoMinutos": 24,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Rodagem leve e curta para manter as pernas soltas antes da prova."
+        },
+        {
+          "numeroSemana": 12,
+          "tipo": "LONGO",
+          "distanciaKm": 21.1,
+          "duracaoMinutos": 127,
+          "intensidade": "prova",
+          "zonaFcAlvo": "Z3",
+          "descricao": "Dia da prova: 21,1 km. Comece mais devagar que o ritmo alvo e só acelere depois do km 15."
+        }
+      ]
+    }
+  ]
+}

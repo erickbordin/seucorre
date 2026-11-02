@@ -28,8 +28,8 @@ const RUNNER_GOALS = [
   { value: 'COMPLETAR_5K', label: '5 km', description: 'Completar a distância com boa base' },
   { value: 'COMPLETAR_10K', label: '10 km', description: 'Evoluir resistencia e ritmo' },
   { value: 'COMPLETAR_MEIA_MARATONA', label: '21 km', description: 'Preparar meia maratona' },
-  { value: 'COMPLETAR_MARATONA', label: '42 km', description: 'Preparar maratona' },
-  { value: 'MELHORAR_DISTANCIA', label: 'Melhorar marca', description: 'Baixar tempo em uma distância' },
+  { value: 'COMPLETAR_MARATONA', label: '42 km', description: 'Preparar maratona', soon: true },
+  { value: 'MELHORAR_DISTANCIA', label: 'Melhorar marca', description: 'Baixar tempo em uma distância', soon: true },
   { value: 'VOLTAR_A_CORRER', label: 'Voltar a correr', description: 'Retomar rotina com progressão' },
 ];
 
@@ -421,7 +421,7 @@ export default function AuthPage({ mode = 'register' }) {
     }
 
     if (currentKey === 'corrida') {
-      return Boolean(form.objetivoCorredor);
+      return Boolean(form.objetivoCorredor) && !RUNNER_GOALS.find((item) => item.value === form.objetivoCorredor)?.soon;
     }
 
     if (currentKey === 'performance') {
@@ -685,7 +685,14 @@ export default function AuthPage({ mode = 'register' }) {
           </div>
           <div className="space-y-2">
             {RUNNER_GOALS.map((item) => (
-              <SelectionCard key={item.value} label={item.label} description={item.description} selected={form.objetivoCorredor === item.value} onClick={() => updateForm('objetivoCorredor', item.value)} />
+              <SelectionCard
+                key={item.value}
+                label={item.soon ? `${item.label} · em breve` : item.label}
+                description={item.description}
+                disabled={item.soon}
+                selected={form.objetivoCorredor === item.value}
+                onClick={() => updateForm('objetivoCorredor', item.value)}
+              />
             ))}
           </div>
         </section>

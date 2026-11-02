@@ -1,13 +1,14 @@
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
 
-export default function SelectionCard({ icon: Icon, label, description, selected, onClick, emoji }) {
+export default function SelectionCard({ icon: Icon, label, description, selected, onClick, emoji, disabled = false }) {
   return (
     <motion.button
       type="button"
-      whileTap={{ scale: 0.97 }}
+      whileTap={disabled ? undefined : { scale: 0.97 }}
       onClick={onClick}
-      className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all duration-200 text-left ${
+      disabled={disabled}
+      className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all duration-200 text-left disabled:cursor-not-allowed disabled:opacity-50 ${
         selected
           ? 'bg-primary/10 border-primary/40 ring-1 ring-primary/20'
           : 'bg-card border-border hover:border-border/80'

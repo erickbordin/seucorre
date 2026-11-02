@@ -28,11 +28,13 @@ public class PlanoPresetService {
     private static final EnumSet<Objetivo> SUPPORTED_OBJECTIVES = EnumSet.of(
             Objetivo.SAUDE_GERAL,
             Objetivo.COMPLETAR_5K,
-            Objetivo.COMPLETAR_10K
+            Objetivo.COMPLETAR_10K,
+            Objetivo.COMPLETAR_MEIA_MARATONA
     );
     private static final EnumSet<NivelCondicionamento> SUPPORTED_LEVELS = EnumSet.of(
             NivelCondicionamento.INICIANTE,
-            NivelCondicionamento.INTERMEDIARIO
+            NivelCondicionamento.INTERMEDIARIO,
+            NivelCondicionamento.AVANCADO
     );
 
     private final ResourceLoader resourceLoader;
@@ -93,13 +95,13 @@ public class PlanoPresetService {
             throw new BusinessRuleException("Dias preferenciais de treino são obrigatórios para gerar plano preset.");
         }
         if (!SUPPORTED_OBJECTIVES.contains(objetivo)) {
-            throw new BusinessRuleException("O objetivo " + objetivo.getDescricao() + " ainda não possui plano preset no MVP.");
+            throw new BusinessRuleException("O objetivo " + objetivo.getDescricao() + " ainda não tem plano disponível no SeuCorre.");
         }
         if (!SUPPORTED_LEVELS.contains(nivel)) {
-            throw new BusinessRuleException("O nível " + nivel.getDescricao() + " ainda não possui plano preset no MVP.");
+            throw new BusinessRuleException("O nível " + nivel.getDescricao() + " ainda não tem plano disponível no SeuCorre.");
         }
         if (diasDisponiveis < 3 || diasDisponiveis > 4) {
-            throw new BusinessRuleException("Os planos preset do MVP estão disponíveis apenas para 3 ou 4 dias por semana.");
+            throw new BusinessRuleException("Os planos do SeuCorre estão disponíveis para 3 ou 4 dias de treino por semana.");
         }
         if (diasTreino.size() < diasDisponiveis) {
             throw new BusinessRuleException("Os dias preferenciais de treino não cobrem a disponibilidade semanal informada.");
@@ -134,6 +136,7 @@ public class PlanoPresetService {
     }
 
     private String normalizarNivel(NivelCondicionamento nivel) {
-        return nivel.name().toLowerCase(java.util.Locale.ROOT);
+        NivelCondicionamento nivelDoCatalogo = nivel == NivelCondicionamento.AVANCADO ? NivelCondicionamento.INTERMEDIARIO : nivel;
+        return nivelDoCatalogo.name().toLowerCase(java.util.Locale.ROOT);
     }
 }
