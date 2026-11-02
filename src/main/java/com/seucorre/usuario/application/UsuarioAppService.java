@@ -174,6 +174,8 @@ public class UsuarioAppService {
         perfilAtleta.setJaCorre(request.jaCorre());
         perfilAtleta.setDiasDisponiveisSemana(request.diasDisponiveisSemana());
         perfilAtleta.setDiasSemanaTreino(request.diasSemanaTreino());
+        perfilAtleta.setDataProva(request.dataProva());
+        perfilAtleta.setNomeProva(request.nomeProva() == null || request.nomeProva().isBlank() ? null : request.nomeProva().trim());
         return perfilAtleta;
     }
 

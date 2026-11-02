@@ -18,7 +18,9 @@ public record PlanoTreinoDTO(
         String resumoIA,
         String guiaTiposTreino,
         double progressoGeral,
-        List<SessaoTreinoDTO> sessoes
+        List<SessaoTreinoDTO> sessoes,
+        LocalDate dataProva,
+        String nomeProva
 ) {
 
     public static PlanoTreinoDTO from(PlanoTreino planoTreino) {
@@ -35,7 +37,9 @@ public record PlanoTreinoDTO(
                 planoTreino.getResumoIA(),
                 planoTreino.getGuiaTiposTreino(),
                 planoTreino.calcularProgressoGeral(),
-                planoTreino.getSessoes().stream().map(SessaoTreinoDTO::from).toList()
+                planoTreino.getSessoes().stream().map(SessaoTreinoDTO::from).toList(),
+                planoTreino.getDataProva(),
+                planoTreino.getNomeProva()
         );
     }
 }

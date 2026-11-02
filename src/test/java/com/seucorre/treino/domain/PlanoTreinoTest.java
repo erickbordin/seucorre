@@ -7,6 +7,8 @@ import com.seucorre.shared.exception.BusinessRuleException;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -65,6 +67,20 @@ class PlanoTreinoTest {
         assertThatThrownBy(planoTreino::reativar).isInstanceOf(BusinessRuleException.class);
         assertThatThrownBy(planoTreino::pausar).isInstanceOf(BusinessRuleException.class);
         assertThat(planoTreino.getStatus()).isEqualTo(StatusPlano.CANCELADO);
+    }
+
+    @Test
+    void reescritaMantemAUltimaSessaoNoDiaDaProva() {
+        PlanoTreino planoTreino = new PlanoTreino();
+        planoTreino.setDataProva(LocalDate.of(2026, 9, 27));
+        planoTreino.adicionarSessao(criarSessao(1, "5.0", TipoTreino.REGENERATIVO));
+        SessaoTreino ultima = criarSessao(1, "21.1", TipoTreino.LONGO);
+        ultima.setDataPrevista(LocalDate.of(2026, 9, 28));
+
+        planoTreino.substituirSemanasApos(1, List.of(criarSessao(1, "4.0", TipoTreino.REGENERATIVO), ultima));
+
+        assertThat(ultima.getDataPrevista()).isEqualTo(LocalDate.of(2026, 9, 27));
+        assertThat(planoTreino.getDataFim()).isEqualTo(LocalDate.of(2026, 9, 27));
     }
 
     private SessaoTreino criarSessao(int semana, String distanciaKm, TipoTreino tipoTreino) {

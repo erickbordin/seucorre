@@ -34,6 +34,20 @@ const GOAL_BADGES = {
 const sumDistance = (items) => items.reduce((acc, session) => acc + Number(session.distancia_km || 0), 0);
 const doneDistance = (session) => Number(session.registro?.distanciaRealKm ?? session.distancia_km ?? 0);
 
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+function describeRace(dataProva) {
+  if (!dataProva) return null;
+  const race = new Date(`${dataProva}T00:00:00`);
+  const days = Math.round((race - new Date(new Date().toDateString())) / DAY_MS);
+  const label = race.toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' });
+  if (days < 0) return `Prova foi em ${label}`;
+  if (days === 0) return 'A prova é hoje';
+  if (days < 7) return `Prova em ${label} · ${days === 1 ? 'falta 1 dia' : `faltam ${days} dias`}`;
+  const weeks = Math.floor(days / 7);
+  return `Prova em ${label} · ${weeks === 1 ? 'falta 1 semana' : `faltam ${weeks} semanas`}`;
+}
+
 export default function Plan() {
   const queryClient = useQueryClient();
   const { user } = useAuth();
@@ -77,6 +91,7 @@ export default function Plan() {
   const endDate = plan?.dataFim
     ? new Date(`${plan.dataFim}T00:00:00`).toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' })
     : null;
+  const raceLine = describeRace(plan?.dataProva);
 
   const statusMutation = useMutation({
     mutationFn: () => plan?.status === 'ativo' ? api.planos.pausar(plan.id) : api.planos.reativar(plan.id),
@@ -102,7 +117,12 @@ export default function Plan() {
               <div className="min-w-0">
                 <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Seu objetivo</p>
                 <h2 className="mt-1 text-xl font-bold text-foreground">{GOAL_LABELS[user?.objetivo] || 'Plano de corrida'}</h2>
-                {endDate && (
+                {plan.nomeProva && <p className="mt-1 text-sm font-medium text-foreground">{plan.nomeProva}</p>}
+                {raceLine ? (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {plan.status === 'ativo' ? raceLine : `Pausado · ${raceLine}`}
+                  </p>
+                ) : endDate && (
                   <p className="mt-1 text-xs text-muted-foreground">
                     {plan.status === 'ativo' ? `Termina em ${endDate}` : `Pausado · terminaria em ${endDate}`}
                   </p>

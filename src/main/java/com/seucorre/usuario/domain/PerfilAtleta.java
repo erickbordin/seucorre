@@ -10,6 +10,7 @@ import jakarta.persistence.Transient;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -37,6 +38,12 @@ public class PerfilAtleta implements Serializable {
 
     @Column(name = "dias_semana_treino", length = 100)
     private String diasSemanaTreino;
+
+    @Column(name = "data_prova")
+    private LocalDate dataProva;
+
+    @Column(name = "nome_prova", length = 120)
+    private String nomeProva;
 
     @Transient
     private PerfilCorrida perfilCorrida;

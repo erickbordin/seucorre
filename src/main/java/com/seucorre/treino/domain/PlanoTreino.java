@@ -62,6 +62,12 @@ public class PlanoTreino {
     @Column(name = "guia_tipos_treino")
     private String guiaTiposTreino;
 
+    @Column(name = "data_prova")
+    private LocalDate dataProva;
+
+    @Column(name = "nome_prova", length = 120)
+    private String nomeProva;
+
     @OneToMany(mappedBy = "plano", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
@@ -131,6 +137,9 @@ public class PlanoTreino {
             novaSessao.setNumeroSemana(semana + novaSessao.getNumeroSemana());
             adicionarSessao(novaSessao);
         }
+        if (dataProva != null && !novasSessoes.isEmpty()) {
+            novasSessoes.get(novasSessoes.size() - 1).setDataPrevista(dataProva);
+        }
         totalSemanas = sessoes.stream()
                 .map(SessaoTreino::getNumeroSemana)
                 .filter(Objects::nonNull)
@@ -145,6 +154,31 @@ public class PlanoTreino {
                 .map(SessaoTreino::getDistanciaKm)
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public void adicionarSemanasDeBase(int semanas) {
+        if (semanas <= 0) {
+            return;
+        }
+        List<SessaoTreino> primeiraSemana = obterSessoesDaSemana(1);
+        sessoes.forEach(sessao -> sessao.setNumeroSemana(sessao.getNumeroSemana() + semanas));
+        for (int semana = 1; semana <= semanas; semana++) {
+            for (SessaoTreino modelo : primeiraSemana) {
+                SessaoTreino base = new SessaoTreino();
+                base.setNumeroSemana(semana);
+                base.setTipo(modelo.getTipo());
+                base.setDistanciaKm(modelo.getDistanciaKm());
+                base.setDuracaoMinutos(modelo.getDuracaoMinutos());
+                base.setIntensidade(modelo.getIntensidade());
+                base.setZonaFcAlvo(modelo.getZonaFcAlvo());
+                base.setPaceAlvo(modelo.getPaceAlvo());
+                base.setDescricao("Semana de base: " + modelo.getDescricao());
+                adicionarSessao(base);
+            }
+        }
+        totalSemanas = (totalSemanas == null ? 0 : totalSemanas) + semanas;
+        resumoIA = (resumoIA == null ? "" : resumoIA + " ")
+                + "Começa com " + semanas + (semanas == 1 ? " semana" : " semanas") + " de base para terminar no dia da prova.";
     }
 
     public void adicionarSessao(SessaoTreino sessaoTreino) {

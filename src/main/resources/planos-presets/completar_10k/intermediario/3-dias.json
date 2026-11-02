@@ -233,29 +233,29 @@
         {
           "numeroSemana": 8,
           "tipo": "REGENERATIVO",
-          "distanciaKm": 6.79,
-          "duracaoMinutos": 42,
+          "distanciaKm": 4,
+          "duracaoMinutos": 24,
           "intensidade": "leve",
           "zonaFcAlvo": "Z2",
-          "descricao": "Sessão 1 da semana 8 de rodagem leve para sustentar o plano."
+          "descricao": "Rodagem leve e curta para manter as pernas soltas antes da prova."
         },
         {
           "numeroSemana": 8,
-          "tipo": "INTERVALADO",
-          "distanciaKm": 5.66,
-          "duracaoMinutos": 31,
-          "intensidade": "moderada a forte",
-          "zonaFcAlvo": "Z3-Z4",
-          "descricao": "Sessão 2 da semana 8 com blocos controlados para evoluir base para 10 km."
+          "tipo": "REGENERATIVO",
+          "distanciaKm": 4,
+          "duracaoMinutos": 24,
+          "intensidade": "leve",
+          "zonaFcAlvo": "Z2",
+          "descricao": "Rodagem leve e curta para manter as pernas soltas antes da prova."
         },
         {
           "numeroSemana": 8,
           "tipo": "LONGO",
-          "distanciaKm": 10.18,
-          "duracaoMinutos": 65,
-          "intensidade": "leve",
-          "zonaFcAlvo": "Z2",
-          "descricao": "Sessão 3 da semana 8 focada em resistência aeróbia e regularidade."
+          "distanciaKm": 10,
+          "duracaoMinutos": 60,
+          "intensidade": "prova",
+          "zonaFcAlvo": "Z3",
+          "descricao": "Dia da prova: 10 km. Comece num ritmo confortável e acelere só na metade final."
         }
       ]
     }

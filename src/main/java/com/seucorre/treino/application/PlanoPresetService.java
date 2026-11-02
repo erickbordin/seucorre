@@ -17,6 +17,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Clock;
 import java.time.DayOfWeek;
+import java.time.LocalDate;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
@@ -27,6 +28,11 @@ public class PlanoPresetService {
     private static final String BASE_RESOURCE_PATH = "classpath:planos-presets/";
     private static final EnumSet<Objetivo> SUPPORTED_OBJECTIVES = EnumSet.of(
             Objetivo.SAUDE_GERAL,
+            Objetivo.COMPLETAR_5K,
+            Objetivo.COMPLETAR_10K,
+            Objetivo.COMPLETAR_MEIA_MARATONA
+    );
+    private static final EnumSet<Objetivo> OBJETIVOS_COM_PROVA = EnumSet.of(
             Objetivo.COMPLETAR_5K,
             Objetivo.COMPLETAR_10K,
             Objetivo.COMPLETAR_MEIA_MARATONA
@@ -65,7 +71,14 @@ public class PlanoPresetService {
 
         String resourcePath = construirResourcePath(objetivoEfetivo, nivel, diasDisponiveis);
         PlanoTreino planoTreino = planoTreinoParser.parsear(lerResource(resourcePath), usuario);
-        agendaDeTreino.agendar(planoTreino, usuario.getDiasSemanaTreino());
+        LocalDate dataProva = perfilAtleta.getDataProva();
+        if (dataProva != null && objetivoEfetivo == perfilAtleta.getObjetivo() && OBJETIVOS_COM_PROVA.contains(objetivoEfetivo)) {
+            planoTreino.setDataProva(dataProva);
+            planoTreino.setNomeProva(perfilAtleta.getNomeProva());
+            agendaDeTreino.agendarAteAProva(planoTreino, usuario.getDiasSemanaTreino(), dataProva);
+        } else {
+            agendaDeTreino.agendar(planoTreino, usuario.getDiasSemanaTreino());
+        }
         return planoTreino;
     }
 
